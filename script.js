@@ -1,6 +1,6 @@
 import { quizQuestions } from "./quizQuestion.js";
 
-// Éléments du DOM
+// ==================== ÉLÉMENTS DU DOM ====================
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
 const resultScreen = document.getElementById("result-screen");
@@ -30,22 +30,22 @@ const rulesContent = document.getElementById("rules-content");
 const toggleRulesBtn = document.getElementById("toggle-rules");
 const progressPercentSpan = document.getElementById("progress-percent");
 
-// NOUVEAUX ÉLÉMENTS pour le bouton "Voir plus"
+// Boutons "Voir plus"
 const showMoreScoresBtn = document.getElementById("show-more-scores");
 const showMoreScoresResultBtn = document.getElementById("show-more-scores-result");
 
-// Variables pour gérer l'affichage des scores
+// ==================== VARIABLES GLOBALES ====================
 let visibleScoresCount = 4;
 let allHighscores = [];
 let isExpandedStart = false;
 let isExpandedResult = false;
 
-// Variables pour le système de vies
+// Système de vies
 let lives = 2;
 let livesDisplay = null;
 let livesCount = null;
 
-// Quiz state
+// État du quiz
 let currentQuestionIndex = 0;
 let score = 0;
 let answersDisabled = false;
@@ -56,10 +56,12 @@ let playerName = "";
 let gameStopped = false;
 const TOTAL_QUESTIONS = 100;
 
-// Au chargement, afficher les meilleurs scores
+// ==================== INITIALISATION ====================
 window.addEventListener('DOMContentLoaded', () => {
-    console.log("Page chargée, questions disponibles:", quizQuestions.length);
-    loadAndDisplayHighscores();
+    console.log("🎮 QUIZ CHAMPIONS - SUPABASE EDITION");
+    
+    // Charger les scores depuis Supabase
+    loadScoresFromSupabase();
     
     // Activer/désactiver le bouton start selon le nom
     if (playerNameInput && startButton) {
@@ -73,12 +75,10 @@ window.addEventListener('DOMContentLoaded', () => {
     // Gestion du toggle des règles
     if (toggleRulesBtn && rulesContent) {
         toggleRulesBtn.addEventListener('click', () => {
-            rulesContent.classList.toggle('visible');
-            if (rulesContent.classList.contains('visible')) {
-                toggleRulesBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Masquer les règles';
-            } else {
-                toggleRulesBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Voir les règles du jeu';
-            }
+            const isVisible = rulesContent.classList.toggle('visible');
+            toggleRulesBtn.innerHTML = isVisible 
+                ? '<i class="fa-solid fa-eye-slash"></i> Masquer les règles'
+                : '<i class="fa-solid fa-eye"></i> Voir les règles du jeu';
         });
     }
     
@@ -97,9 +97,11 @@ window.addEventListener('DOMContentLoaded', () => {
             updateHighscoresResultDisplay();
         });
     }
+    
+    console.log("✅ Initialisation terminée");
 });
 
-// Event listeners
+// ==================== ÉVÉNEMENTS ====================
 if (startButton) {
     startButton.addEventListener("click", startQuiz);
 }
@@ -107,61 +109,86 @@ if (restartButton) {
     restartButton.addEventListener("click", restartQuiz);
 }
 
-// Fonction pour charger et afficher les high scores
-function loadAndDisplayHighscores() {
-    allHighscores = JSON.parse(localStorage.getItem("quizHighscores")) || [];
-    allHighscores.sort((a, b) => b.score - a.score);
-    updateHighscoresDisplay();
+// ==================== FONCTIONS SUPABASE ====================
+async function loadScoresFromSupabase() {
+    console.log("📥 Chargement des scores depuis Supabase...");
+    
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getHighScoresFromSupabase) {
+            showMessage("⚠️ Supabase non configuré", "error");
+            return;
+        }
+        
+        const result = await window.supabaseFunctions.getHighScoresFromSupabase(20);
+        
+        if (result.success && result.data) {
+            allHighscores = result.data.map(item => ({
+                name: item.name,
+                score: item.score,
+                date: item.date ? formatDate(item.date) : "Aujourd'hui",
+                timestamp: item.date ? new Date(item.date).getTime() : Date.now()
+            }));
+            
+            console.log(`✅ ${allHighscores.length} scores chargés`);
+            updateHighscoresDisplay();
+            updateHighscoresResultDisplay();
+            
+        } else {
+            showMessage("⚠️ Aucun score trouvé", "warning");
+            allHighscores = [];
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur chargement scores:", error);
+        showMessage("❌ Impossible de charger les scores", "error");
+        allHighscores = [];
+    }
 }
 
-// Fonction pour tirer des questions uniques
+async function saveScoreToSupabase(name, score) {
+    console.log(`💾 Sauvegarde sur Supabase: ${name} - ${score}`);
+    
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.saveScoreToSupabase) {
+            throw new Error("Fonctions Supabase non disponibles");
+        }
+        
+        const result = await window.supabaseFunctions.saveScoreToSupabase(name, score);
+        
+        if (result.success) {
+            console.log("✅ Score sauvegardé avec succès");
+            showMessage("✅ Score enregistré !", "success");
+            
+            // Recharger les scores après un délai
+            setTimeout(() => loadScoresFromSupabase(), 2000);
+            return true;
+            
+        } else {
+            throw new Error(result.error || "Erreur inconnue");
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur sauvegarde:", error);
+        showMessage(`❌ Échec sauvegarde: ${error.message}`, "error");
+        return false;
+    }
+}
+
+// ==================== FONCTIONS DU QUIZ ====================
 function getRandomQuiz(quizQuestions, numQuestions = TOTAL_QUESTIONS) {
     const shuffled = [...quizQuestions];
     
-    // Mélanger
     for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
-    // Prendre les premières 'numQuestions'
     return shuffled.slice(0, Math.min(numQuestions, shuffled.length));
 }
 
-// Fonction pour mettre à jour l'affichage des vies
-function updateLivesDisplay() {
-    if (livesCount) {
-        livesCount.textContent = lives;
-        
-        // Changer la couleur selon le nombre de vies
-        if (livesDisplay) {
-            if (lives === 2) {
-                livesDisplay.style.background = "linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)";
-                livesDisplay.style.borderRadius = "20px"
-                livesDisplay.style.padding = "10px 20px"
-            } else if (lives === 1) {
-                livesDisplay.style.background = "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)";
-            } else {
-                livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
-            }
-        }
-    }
-}
-
-// Fonction pour secouer l'affichage des vies
-function shakeLivesDisplay() {
-    if (livesDisplay) {
-        livesDisplay.classList.add('shake');
-        setTimeout(() => {
-            livesDisplay.classList.remove('shake');
-        }, 500);
-    }
-}
-
 function startQuiz() {
-    console.log("Démarrage du quiz...");
+    console.log("🚀 Démarrage du quiz...");
     
-    // Récupérer le nom
     if (!playerNameInput) {
         alert("Erreur: Champ nom manquant!");
         return;
@@ -174,47 +201,30 @@ function startQuiz() {
         return;
     }
     
-    playerName = playerName.substring(0, 10);
+    playerName = playerName.substring(0, 15);
     
-    // RÉINITIALISER LES VIES
-    lives = 2;
-    
-    // Mettre à jour le nom du joueur dans l'écran quiz
-    if (currentPlayerSpan) {
-        currentPlayerSpan.textContent = playerName;
-    }
-
     // Réinitialiser l'état
+    lives = 2;
     currentQuestionIndex = 0;
     score = 0;
     gameStopped = false;
     
-    // Récupérer les éléments d'affichage des vies
+    // Mettre à jour l'affichage
+    if (currentPlayerSpan) currentPlayerSpan.textContent = playerName;
+    
     livesDisplay = document.getElementById("lives-display");
     livesCount = document.getElementById("lives-count");
     
-    // Mettre à jour l'affichage initial des vies
-    if (livesCount) {
-        livesCount.textContent = lives;
-    }
-    if (livesDisplay) {
-        updateLivesDisplay();
-    }
+    if (livesCount) livesCount.textContent = lives;
+    if (livesDisplay) updateLivesDisplay();
+    if (scoreSpan) scoreSpan.textContent = score;
     
-    // Mettre à jour le score si l'élément existe
-    if (scoreSpan) {
-        scoreSpan.textContent = score;
-    }
-
     // Générer les questions
     quizSession = getRandomQuiz(quizQuestions, TOTAL_QUESTIONS);
-    console.log(`${quizSession.length} questions générées`);
-
-    // Mettre à jour le total si l'élément existe
-    if (totalQuestionsSpan) {
-        totalQuestionsSpan.textContent = quizSession.length;
-    }
-
+    console.log(`📝 ${quizSession.length} questions générées`);
+    
+    if (totalQuestionsSpan) totalQuestionsSpan.textContent = quizSession.length;
+    
     // Changer d'écran
     if (startScreen && quizScreen) {
         startScreen.classList.remove("active");
@@ -225,63 +235,41 @@ function startQuiz() {
 
 function showQuestion() {
     if (gameStopped) return;
-
+    
     answersDisabled = false;
     timeLeft = 10;
     
     if (timerDisplay) {
         timerDisplay.textContent = timeLeft;
-        timerDisplay.style.color = "#ffffffff";
+        timerDisplay.style.color = "#ffffff";
     }
     
-    // Réinitialiser l'affichage des vies au début de chaque question
-    if (livesDisplay && livesDisplay.classList.contains('shake')) {
-        livesDisplay.classList.remove('shake');
-    }
-    
-    // Arrêter le timer précédent
-    if (timer) {
-        clearInterval(timer);
-    }
-    
-    // Démarrer le timer
+    if (timer) clearInterval(timer);
     timer = setInterval(updateTimer, 1000);
-
+    
     const currentQuestion = quizSession[currentQuestionIndex];
     
-    // Mettre à jour l'affichage
-    if (currentQuestionSpan) {
-        currentQuestionSpan.textContent = currentQuestionIndex + 1;
-    }
+    if (currentQuestionSpan) currentQuestionSpan.textContent = currentQuestionIndex + 1;
     
     if (progressBar) {
         const progressPercent = ((currentQuestionIndex + 1) / quizSession.length) * 100;
         progressBar.style.width = progressPercent + "%";
-        
-        // Mettre à jour le pourcentage de progression
-        if (progressPercentSpan) {
-            progressPercentSpan.textContent = Math.round(progressPercent) + "%";
-        }
+        if (progressPercentSpan) progressPercentSpan.textContent = Math.round(progressPercent) + "%";
     }
     
-    if (questionText) {
-        questionText.textContent = currentQuestion.question;
-    }
-
-    // Créer les boutons de réponse
+    if (questionText) questionText.textContent = currentQuestion.question;
+    
     if (answersContainer) {
         answersContainer.innerHTML = "";
+        
         currentQuestion.answers.forEach((answer, index) => {
             const button = document.createElement("button");
             button.textContent = answer.text;
             button.classList.add("answer-btn");
             button.dataset.correct = answer.correct;
-            button.addEventListener("click", selectAnswer);
-            
-            // Animation d'apparition
             button.style.animationDelay = `${index * 0.1}s`;
             button.classList.add('fade-in');
-            
+            button.addEventListener("click", selectAnswer);
             answersContainer.appendChild(button);
         });
     }
@@ -294,12 +282,10 @@ function updateTimer() {
         timerDisplay.textContent = timeLeft;
         
         if (timeLeft <= 3) {
-            timerDisplay.style.color = "#ffffffff";
+            timerDisplay.style.color = "#ff4444";
             timerDisplay.style.fontWeight = "bold";
         } else if (timeLeft <= 5) {
-            timerDisplay.style.color = "#ffffffff";
-        } else {
-            timerDisplay.style.color = "#ffffffff";
+            timerDisplay.style.color = "#ff9800";
         }
     }
     
@@ -311,15 +297,15 @@ function updateTimer() {
 
 function selectAnswer(event) {
     if (answersDisabled || gameStopped) return;
-
+    
     clearInterval(timer);
     answersDisabled = true;
-    const selectButton = event.target;
-    const isCorrect = selectButton.dataset.correct === "true";
-
-    // Marquer les réponses
+    
+    const selectedButton = event.target;
+    const isCorrect = selectedButton.dataset.correct === "true";
+    
     if (answersContainer) {
-        Array.from(answersContainer.children).forEach((button) => {
+        Array.from(answersContainer.children).forEach(button => {
             if (button.dataset.correct === "true") {
                 button.classList.add("correct");
             } else {
@@ -327,13 +313,11 @@ function selectAnswer(event) {
             }
         });
     }
-
+    
     if (isCorrect) {
         score++;
-        if (scoreSpan) {
-            scoreSpan.textContent = score;
-        }
-
+        if (scoreSpan) scoreSpan.textContent = score;
+        
         setTimeout(() => {
             if (!gameStopped) {
                 currentQuestionIndex++;
@@ -351,32 +335,10 @@ function selectAnswer(event) {
 
 function wrongAnswer() {
     if (lives > 1) {
-        // PERDRE UNE VIE MAIS CONTINUER
         lives--;
-        
-        // Mettre à jour l'affichage des vies
         updateLivesDisplay();
-        
-        // Animation visuelle pour indiquer la perte de vie
         shakeLivesDisplay();
         
-        // Mettre à jour le compteur de vies
-        if (livesCount) {
-            livesCount.textContent = lives;
-        }
-        
-        // Marquer visuellement la mauvaise réponse
-        if (answersContainer) {
-            Array.from(answersContainer.children).forEach((button) => {
-                if (button.dataset.correct === "true") {
-                    button.classList.add("correct");
-                } else {
-                    button.classList.add("incorrect");
-                }
-            });
-        }
-        
-        // Continuer au prochain timer
         setTimeout(() => {
             answersDisabled = false;
             currentQuestionIndex++;
@@ -388,85 +350,59 @@ function wrongAnswer() {
         }, 1500);
         
     } else if (lives === 1) {
-        // DERNIÈRE VIE PERDUE - FIN DU JEU
         lives--;
-        
-        // Mettre à jour l'affichage des vies
         updateLivesDisplay();
         
-        // Animation de fin de vie
         if (livesDisplay) {
             livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
             livesDisplay.classList.add('shake');
         }
         
-        if (livesCount) {
-            livesCount.textContent = "0";
-        }
+        if (livesCount) livesCount.textContent = "0";
         
-        // Marquer visuellement la mauvaise réponse
-        if (answersContainer) {
-            Array.from(answersContainer.children).forEach((button) => {
-                if (button.dataset.correct === "true") {
-                    button.classList.add("correct");
-                } else {
-                    button.classList.add("incorrect");
-                }
-            });
-        }
-        
-        // Arrêter le jeu et afficher les résultats
         gameStopped = true;
         clearInterval(timer);
         
         setTimeout(() => {
             if (quizScreen && resultScreen) {
-                quizScreen.classList.remove("active");
-                resultScreen.classList.add("active");
-                
-                const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
-                
-                if (finalScoreSpan) {
-                    finalScoreSpan.textContent = finalScore;
-                }
-                
-                // METTRE À JOUR LES INFOS DU JOUEUR
-                if (playerResultName) {
-                    playerResultName.textContent = playerName;
-                }
-                
-                if (questionsDoneSpan) {
-                    questionsDoneSpan.textContent = score;
-                }
-                
-                if (percentageSpan) {
-                    percentageSpan.textContent = finalScore + "%";
-                }
-                
-                if (resultMessage) {
-                    // Message spécial pour partie terminée par manque de vies
-                    if (score === 0) {
-                        resultMessage.textContent = "😢 Aucune bonne réponse... Mais ne baisse pas les bras !";
-                    } else if (finalScore < 30) {
-                        resultMessage.textContent = "💔 Plus de vies ! Tu y étais presque, continue à t'entraîner !";
-                    } else if (finalScore < 50) {
-                        resultMessage.textContent = "👊 Dommage ! Plus de vies... Mais bon effort !";
-                    } else if (finalScore < 70) {
-                        resultMessage.textContent = "👍 Bien joué ! Plus de vies mais bon score !";
-                    } else if (finalScore < 90) {
-                        resultMessage.textContent = "🌟 Excellent ! Dommage pour les vies, mais super performance !";
-                    } else {
-                        resultMessage.textContent = "🏆 Impressionnant ! Presque parfait malgré les vies perdues !";
-                    }
-                }
-                
-                // Sauvegarder le score même si partie terminée par manque de vies
-                saveHighscore(playerName, finalScore);
-                loadAndDisplayHighscores();
-                updateHighscoresResultDisplay();
+                showFinalResults();
             }
         }, 1500);
     }
+}
+
+function showFinalResults() {
+    quizScreen.classList.remove("active");
+    resultScreen.classList.add("active");
+    
+    const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
+    
+    if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
+    if (playerResultName) playerResultName.textContent = playerName;
+    if (questionsDoneSpan) questionsDoneSpan.textContent = score;
+    if (percentageSpan) percentageSpan.textContent = finalScore + "%";
+    
+    if (resultMessage) {
+        let message = "";
+        if (score === 0) {
+            message = "😢 Aucune bonne réponse... Essayez encore !";
+        } else if (finalScore < 30) {
+            message = "💔 Plus de vies ! Continue à t'entraîner !";
+        } else if (finalScore < 50) {
+            message = "👊 Dommage ! Bon effort !";
+        } else if (finalScore < 70) {
+            message = "👍 Bien joué ! Bon score !";
+        } else if (finalScore < 90) {
+            message = "🌟 Excellent performance !";
+        } else {
+            message = "🏆 Impressionnant ! Presque parfait !";
+        }
+        resultMessage.textContent = message;
+    }
+    
+    // SAUVEGARDE SUPABASE SEULEMENT
+    saveScoreToSupabase(playerName, finalScore);
+    updateHighscoresResultDisplay();
 }
 
 function showResults() {
@@ -478,180 +414,215 @@ function showResults() {
         
         const finalScore = 100;
         
-        if (finalScoreSpan) {
-            finalScoreSpan.textContent = finalScore;
-        }
-        
-        // METTRE À JOUR LES INFOS DU JOUEUR
-        if (playerResultName) {
-            playerResultName.textContent = playerName;
-        }
-        
-        if (questionsDoneSpan) {
-            questionsDoneSpan.textContent = TOTAL_QUESTIONS;
-        }
-        
-        if (percentageSpan) {
-            percentageSpan.textContent = "100%";
-        }
+        if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
+        if (playerResultName) playerResultName.textContent = playerName;
+        if (questionsDoneSpan) questionsDoneSpan.textContent = TOTAL_QUESTIONS;
+        if (percentageSpan) percentageSpan.textContent = "100%";
         
         if (resultMessage) {
-            // Message spécial pour victoire avec vies restantes
-            if (lives > 0) {
-                resultMessage.textContent = `🎉 INCROYABLE ! 100/100 QUESTIONS ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`;
-            } else {
-                resultMessage.textContent = "🎉 INCROYABLE ! 100/100 QUESTIONS MALGRÉ LES VIES PERDUES ! TU ES UN CHAMPION LÉGENDAIRE ! 🏆";
-            }
+            resultMessage.textContent = lives > 0 
+                ? `🎉 INCROYABLE ! 100/100 ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`
+                : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
         }
-
-        saveHighscore(playerName, finalScore);
-        loadAndDisplayHighscores();
+        
+        // SAUVEGARDE SUPABASE SEULEMENT
+        saveScoreToSupabase(playerName, finalScore);
         updateHighscoresResultDisplay();
     }
 }
 
-function saveHighscore(name, score) {
-    const highscores = JSON.parse(localStorage.getItem("quizHighscores")) || [];
+// ==================== FONCTIONS UTILITAIRES ====================
+function updateLivesDisplay() {
+    if (livesCount) livesCount.textContent = lives;
     
-    const newScore = {
-        name: name,
-        score: score,
-        date: new Date().toLocaleDateString("fr-FR"),
-        timestamp: new Date().getTime()
-    };
-    
-    highscores.push(newScore);
-    highscores.sort((a, b) => b.score - a.score);
-    
-    if (highscores.length > 10) {
-        highscores.length = 10;
+    if (livesDisplay) {
+        if (lives === 2) {
+            livesDisplay.style.background = "linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)";
+        } else if (lives === 1) {
+            livesDisplay.style.background = "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)";
+        } else {
+            livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
+        }
     }
-    
-    localStorage.setItem("quizHighscores", JSON.stringify(highscores));
 }
 
-// Fonction pour afficher les high scores dans l'écran de démarrage (avec limite)
+function shakeLivesDisplay() {
+    if (livesDisplay) {
+        livesDisplay.classList.add('shake');
+        setTimeout(() => livesDisplay.classList.remove('shake'), 500);
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("fr-FR", {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+function showMessage(text, type = "info") {
+    console.log(`📢 ${text}`);
+    
+    // Supprimer les anciens messages
+    const oldMessages = document.querySelectorAll('.quiz-message');
+    oldMessages.forEach(msg => msg.remove());
+    
+    // Créer le nouveau message
+    const message = document.createElement("div");
+    message.className = `quiz-message ${type}`;
+    message.textContent = text;
+    message.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    `;
+    
+    // Couleur selon le type
+    if (type === "success") {
+        message.style.backgroundColor = "#4CAF50";
+    } else if (type === "error") {
+        message.style.backgroundColor = "#f44336";
+    } else if (type === "warning") {
+        message.style.backgroundColor = "#ff9800";
+    } else {
+        message.style.backgroundColor = "#2196F3";
+    }
+    
+    document.body.appendChild(message);
+    
+    // Animation
+    setTimeout(() => {
+        message.style.opacity = "1";
+        message.style.transform = "translateX(0)";
+    }, 10);
+    
+    // Disparaître après 4 secondes
+    setTimeout(() => {
+        message.style.opacity = "0";
+        message.style.transform = "translateX(100px)";
+        setTimeout(() => message.remove(), 300);
+    }, 4000);
+}
+
 function updateHighscoresDisplay() {
-    if (highscoresListStart && showMoreScoresBtn) {
-        highscoresListStart.innerHTML = "";
-        
-        if (allHighscores.length === 0) {
-            highscoresListStart.innerHTML = '<div class="no-scores"><p><i class="fa-regular fa-medal" style="color: #ffffff;"></i> Aucun score enregistré</p><p>Soyez le premier champion !</p></div>';
-            showMoreScoresBtn.style.display = 'none';
-            return;
-        }
-        
-        // Déterminer combien de scores afficher
-        const scoresToShow = isExpandedStart ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
-        
-        // Mettre à jour le texte du bouton
-        if (allHighscores.length > visibleScoresCount) {
-            if (isExpandedStart) {
-                showMoreScoresBtn.innerHTML = '👆 Voir moins de champions';
-                showMoreScoresBtn.classList.add('expanded');
-            } else {
-                showMoreScoresBtn.innerHTML = `👇 Voir plus de champions (${visibleScoresCount}/${allHighscores.length})`;
-                showMoreScoresBtn.classList.remove('expanded');
-            }
-            showMoreScoresBtn.style.display = 'block';
-        } else {
-            showMoreScoresBtn.style.display = 'none';
-        }
-        
-        // Afficher les scores
-        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
-            const scoreElement = document.createElement("div");
-            scoreElement.className = "highscore-item";
-            
-            // Animation
-            scoreElement.style.animationDelay = `${index * 0.15}s`;
-            scoreElement.classList.add('slide-in');
-            
-            // Classes spéciales pour les 3 premiers
-            if (index === 0) scoreElement.classList.add("first-place");
-            if (index === 1) scoreElement.classList.add("second-place");
-            if (index === 2) scoreElement.classList.add("third-place");
-            
-            let rankIcon = `${index + 1}.`;
-            if (index === 0) rankIcon = "🥇";
-            if (index === 1) rankIcon = "🥈";
-            if (index === 2) rankIcon = "🥉";
-            
-            scoreElement.innerHTML = `
-                <div class="highscore-rank">${rankIcon}</div>
-                <div class="highscore-name">${scoreData.name}</div>
-                <div class="highscore-score">${scoreData.score}/100</div>
-                <div class="highscore-date">${scoreData.date}</div>
-            `;
-            highscoresListStart.appendChild(scoreElement);
-        });
+    if (!highscoresListStart || !showMoreScoresBtn) return;
+    
+    highscoresListStart.innerHTML = "";
+    
+    if (allHighscores.length === 0) {
+        highscoresListStart.innerHTML = `
+            <div class="no-scores">
+                <p><i class="fa-regular fa-trophy"></i> Aucun champion encore</p>
+                <p>Soyez le premier !</p>
+            </div>
+        `;
+        showMoreScoresBtn.style.display = 'none';
+        return;
     }
+    
+    const scoresToShow = isExpandedStart ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+    
+    if (allHighscores.length > visibleScoresCount) {
+        showMoreScoresBtn.innerHTML = isExpandedStart 
+            ? '👆 Voir moins' 
+            : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+        showMoreScoresBtn.style.display = 'block';
+    } else {
+        showMoreScoresBtn.style.display = 'none';
+    }
+    
+    allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+        const scoreElement = document.createElement("div");
+        scoreElement.className = "highscore-item";
+        scoreElement.style.animationDelay = `${index * 0.15}s`;
+        scoreElement.classList.add('slide-in');
+        
+        if (index === 0) scoreElement.classList.add("first-place");
+        if (index === 1) scoreElement.classList.add("second-place");
+        if (index === 2) scoreElement.classList.add("third-place");
+        
+        let rankIcon = `${index + 1}.`;
+        if (index === 0) rankIcon = "🥇";
+        if (index === 1) rankIcon = "🥈";
+        if (index === 2) rankIcon = "🥉";
+        
+        scoreElement.innerHTML = `
+            <div class="highscore-rank">${rankIcon}</div>
+            <div class="highscore-name">${scoreData.name}</div>
+            <div class="highscore-score">${scoreData.score}/100</div>
+            <div class="highscore-date">${scoreData.date}</div>
+        `;
+        
+        highscoresListStart.appendChild(scoreElement);
+    });
 }
 
-// Fonction pour afficher les high scores dans l'écran des résultats (avec limite)
 function updateHighscoresResultDisplay() {
-    if (highscoresListResult && showMoreScoresResultBtn) {
-        highscoresListResult.innerHTML = "";
-        
-        if (allHighscores.length === 0) {
-            highscoresListResult.innerHTML = '<div class="no-scores"><p>🏆 Aucun score enregistré</p></div>';
-            showMoreScoresResultBtn.style.display = 'none';
-            return;
-        }
-        
-        // Déterminer combien de scores afficher
-        const scoresToShow = isExpandedResult ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
-        
-        // Mettre à jour le texte du bouton
-        if (allHighscores.length > visibleScoresCount) {
-            if (isExpandedResult) {
-                showMoreScoresResultBtn.innerHTML = '👆 Voir moins de champions';
-                showMoreScoresResultBtn.classList.add('expanded');
-            } else {
-                showMoreScoresResultBtn.innerHTML = `👇 Voir plus de champions (${visibleScoresCount}/${allHighscores.length})`;
-                showMoreScoresResultBtn.classList.remove('expanded');
-            }
-            showMoreScoresResultBtn.style.display = 'block';
-        } else {
-            showMoreScoresResultBtn.style.display = 'none';
-        }
-        
-        // Afficher les scores
-        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
-            const scoreElement = document.createElement("div");
-            scoreElement.className = "highscore-item";
-            
-            // Animation
-            scoreElement.style.animationDelay = `${index * 0.15}s`;
-            scoreElement.classList.add('slide-in');
-            
-            // Classes spéciales pour les 3 premiers
-            if (index === 0) scoreElement.classList.add("first-place");
-            if (index === 1) scoreElement.classList.add("second-place");
-            if (index === 2) scoreElement.classList.add("third-place");
-            
-            let rankIcon = `${index + 1}.`;
-            if (index === 0) rankIcon = "🥇";
-            if (index === 1) rankIcon = "🥈";
-            if (index === 2) rankIcon = "🥉";
-            
-            scoreElement.innerHTML = `
-                <div class="highscore-rank">${rankIcon}</div>
-                <div class="highscore-name">${scoreData.name}</div>
-                <div class="highscore-score">${scoreData.score}/100</div>
-                <div class="highscore-date">${scoreData.date}</div>
-            `;
-            highscoresListResult.appendChild(scoreElement);
-        });
+    if (!highscoresListResult || !showMoreScoresResultBtn) return;
+    
+    highscoresListResult.innerHTML = "";
+    
+    if (allHighscores.length === 0) {
+        highscoresListResult.innerHTML = '<div class="no-scores"><p>🏆 Aucun score enregistré</p></div>';
+        showMoreScoresResultBtn.style.display = 'none';
+        return;
     }
+    
+    const scoresToShow = isExpandedResult ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+    
+    if (allHighscores.length > visibleScoresCount) {
+        showMoreScoresResultBtn.innerHTML = isExpandedResult 
+            ? '👆 Voir moins' 
+            : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+        showMoreScoresResultBtn.style.display = 'block';
+    } else {
+        showMoreScoresResultBtn.style.display = 'none';
+    }
+    
+    allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+        const scoreElement = document.createElement("div");
+        scoreElement.className = "highscore-item";
+        scoreElement.style.animationDelay = `${index * 0.15}s`;
+        scoreElement.classList.add('slide-in');
+        
+        if (index === 0) scoreElement.classList.add("first-place");
+        if (index === 1) scoreElement.classList.add("second-place");
+        if (index === 2) scoreElement.classList.add("third-place");
+        
+        let rankIcon = `${index + 1}.`;
+        if (index === 0) rankIcon = "🥇";
+        if (index === 1) rankIcon = "🥈";
+        if (index === 2) rankIcon = "🥉";
+        
+        scoreElement.innerHTML = `
+            <div class="highscore-rank">${rankIcon}</div>
+            <div class="highscore-name">${scoreData.name}</div>
+            <div class="highscore-score">${scoreData.score}/100</div>
+            <div class="highscore-date">${scoreData.date}</div>
+        `;
+        
+        highscoresListResult.appendChild(scoreElement);
+    });
 }
 
 function restartQuiz() {
     if (resultScreen && startScreen) {
         resultScreen.classList.remove("active");
         startScreen.classList.add("active");
-        // Réinitialiser l'état du bouton "Voir plus"
         isExpandedStart = false;
-        loadAndDisplayHighscores();
+        loadScoresFromSupabase();
     }
 }
+
+console.log("🎯 Script 100% Supabase chargé !");
