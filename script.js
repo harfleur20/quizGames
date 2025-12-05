@@ -1,9 +1,33 @@
 import { quizQuestions } from "./quizQuestion.js";
 
 // ==================== ÉLÉMENTS DU DOM ====================
+// Ajout des nouveaux éléments d'authentification
+const authScreen = document.getElementById("auth-screen");
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
 const resultScreen = document.getElementById("result-screen");
+
+// Auth elements
+const loginTab = document.getElementById("login-tab");
+const registerTab = document.getElementById("register-tab");
+const loginForm = document.getElementById("login-form");
+const registerForm = document.getElementById("register-form");
+const loginEmail = document.getElementById("login-email");
+const loginPassword = document.getElementById("login-password");
+const loginBtn = document.getElementById("login-btn");
+const registerPseudo = document.getElementById("register-pseudo");
+const registerEmail = document.getElementById("register-email");
+const registerPassword = document.getElementById("register-password");
+const registerConfirm = document.getElementById("register-confirm");
+const registerBtn = document.getElementById("register-btn");
+const logoutBtn = document.getElementById("logout-btn");
+
+// User info elements
+const currentUserPseudo = document.getElementById("current-user-pseudo");
+const currentUserEmail = document.getElementById("current-user-email");
+const playerDisplayName = document.getElementById("player-display-name");
+
+// Reste des éléments existants...
 const startButton = document.getElementById("start-btn");
 const questionText = document.getElementById("question-text");
 const answersContainer = document.getElementById("answers-container");
@@ -15,9 +39,7 @@ const resultMessage = document.getElementById("result-message");
 const restartButton = document.getElementById("restart-btn");
 const progressBar = document.getElementById("progress");
 const timerDisplay = document.getElementById("timer");
-const playerNameInput = document.getElementById("player-name");
 
-// Éléments pour les règles et high scores
 const highscoresListStart = document.getElementById("highscores-list-start");
 const highscoresListResult = document.getElementById("highscores-list-result");
 const playerResultName = document.getElementById("player-result-name");
@@ -25,12 +47,10 @@ const questionsDoneSpan = document.getElementById("questions-done");
 const percentageSpan = document.getElementById("percentage");
 const currentPlayerSpan = document.getElementById("current-player");
 
-// Éléments pour les règles
 const rulesContent = document.getElementById("rules-content");
 const toggleRulesBtn = document.getElementById("toggle-rules");
 const progressPercentSpan = document.getElementById("progress-percent");
 
-// Boutons "Voir plus"
 const showMoreScoresBtn = document.getElementById("show-more-scores");
 const showMoreScoresResultBtn = document.getElementById("show-more-scores-result");
 
@@ -52,27 +72,109 @@ let answersDisabled = false;
 let quizSession = [];
 let timer = null;
 let timeLeft = 10;
-let playerName = "";
 let gameStopped = false;
 const TOTAL_QUESTIONS = 100;
 
+// User info
+let currentUser = null;
+
 // ==================== INITIALISATION ====================
-window.addEventListener('DOMContentLoaded', () => {
-    console.log("🎮 QUIZ CHAMPIONS - SUPABASE EDITION");
+window.addEventListener('DOMContentLoaded', async () => {
+    console.log("🎮 QUIZ CHAMPIONS - AUTH EDITION");
     
-    // Charger les scores depuis Supabase
-    loadScoresFromSupabase();
+    // Vérifier si l'utilisateur est déjà connecté
+    await checkExistingSession();
     
-    // Activer/désactiver le bouton start selon le nom
-    if (playerNameInput && startButton) {
-        playerNameInput.addEventListener('input', () => {
-            const hasName = playerNameInput.value.trim().length > 0;
-            startButton.disabled = !hasName;
-            startButton.style.opacity = hasName ? '1' : '0.5';
+    // Setup des événements d'authentification
+    setupAuthEvents();
+    
+    // Setup des autres événements
+    setupQuizEvents();
+    
+    console.log("✅ Initialisation terminée");
+});
+
+async function checkExistingSession() {
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
+            console.log("⚠️ Supabase non chargé");
+            return;
+        }
+        
+        const result = await window.supabaseFunctions.getSessionSupabase();
+        
+        if (result.success && result.user) {
+            // Utilisateur déjà connecté
+            currentUser = {
+                id: result.user.id,
+                email: result.user.email,
+                pseudo: result.user.user_metadata?.pseudo || result.user.email?.split('@')[0]
+            };
+            
+            updateUserDisplay();
+            showScreen('start');
+            loadScoresFromSupabase();
+            
+        } else {
+            // Aucune session, montrer l'écran d'authentification
+            showScreen('auth');
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur vérification session:", error);
+        showScreen('auth');
+    }
+}
+
+function setupAuthEvents() {
+    // Tabs connexion/inscription
+    if (loginTab && registerTab) {
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        });
+        
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
         });
     }
     
-    // Gestion du toggle des règles
+    // Connexion
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleLogin);
+    }
+    
+    // Entrée dans les champs de connexion
+    if (loginPassword) {
+        loginPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+    }
+    
+    // Inscription
+    if (registerBtn) {
+        registerBtn.addEventListener('click', handleRegister);
+    }
+    
+    // Déconnexion
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+}
+
+function setupQuizEvents() {
+    if (startButton) {
+        startButton.addEventListener("click", startQuiz);
+    }
+    if (restartButton) {
+        restartButton.addEventListener("click", restartQuiz);
+    }
+    
     if (toggleRulesBtn && rulesContent) {
         toggleRulesBtn.addEventListener('click', () => {
             const isVisible = rulesContent.classList.toggle('visible');
@@ -82,7 +184,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Bouton "Voir plus" pour l'écran de démarrage
     if (showMoreScoresBtn) {
         showMoreScoresBtn.addEventListener('click', () => {
             isExpandedStart = !isExpandedStart;
@@ -90,26 +191,178 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Bouton "Voir plus" pour l'écran des résultats
     if (showMoreScoresResultBtn) {
         showMoreScoresResultBtn.addEventListener('click', () => {
             isExpandedResult = !isExpandedResult;
             updateHighscoresResultDisplay();
         });
     }
+}
+
+// ==================== GESTION AUTHENTIFICATION ====================
+async function handleLogin() {
+    if (!loginEmail || !loginPassword) return;
     
-    console.log("✅ Initialisation terminée");
-});
-
-// ==================== ÉVÉNEMENTS ====================
-if (startButton) {
-    startButton.addEventListener("click", startQuiz);
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
+    
+    if (!email || !password) {
+        showMessage("⚠️ Veuillez remplir tous les champs", "warning");
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        showMessage("⚠️ Email invalide", "warning");
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion...';
+    
+    try {
+        const result = await window.supabaseFunctions.signInSupabase(email, password);
+        
+        if (result.success) {
+            currentUser = {
+                id: result.user.id,
+                email: result.user.email,
+                pseudo: result.user.user_metadata?.pseudo || email.split('@')[0]
+            };
+            
+            updateUserDisplay();
+            showScreen('start');
+            loadScoresFromSupabase();
+            
+            showMessage("✅ Connexion réussie !", "success");
+            
+        } else {
+            showMessage(`❌ ${result.error}`, "error");
+        }
+        
+    } catch (error) {
+        showMessage("❌ Erreur de connexion", "error");
+        console.error(error);
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
+    }
 }
-if (restartButton) {
-    restartButton.addEventListener("click", restartQuiz);
+
+async function handleRegister() {
+    if (!registerPseudo || !registerEmail || !registerPassword || !registerConfirm) return;
+    
+    const pseudo = registerPseudo.value.trim();
+    const email = registerEmail.value.trim();
+    const password = registerPassword.value;
+    const confirm = registerConfirm.value;
+    
+    // Validation
+    if (!pseudo || !email || !password || !confirm) {
+        showMessage("⚠️ Tous les champs sont requis", "warning");
+        return;
+    }
+    
+    if (pseudo.length < 3 || pseudo.length > 10) {
+        showMessage("⚠️ Pseudo doit faire 3-10 caractères", "warning");
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        showMessage("⚠️ Email invalide", "warning");
+        return;
+    }
+    
+    if (password.length < 6) {
+        showMessage("⚠️ Mot de passe trop court (min 6 caractères)", "warning");
+        return;
+    }
+    
+    if (password !== confirm) {
+        showMessage("⚠️ Les mots de passe ne correspondent pas", "warning");
+        return;
+    }
+    
+    // Vérifier si l'email existe déjà
+    const checkResult = await window.supabaseFunctions.checkEmailExists(email);
+    if (checkResult.exists) {
+        showMessage("⚠️ Cet email est déjà utilisé", "warning");
+        return;
+    }
+    
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Inscription...';
+    
+    try {
+        const result = await window.supabaseFunctions.signUpSupabase(email, password, pseudo);
+        
+        if (result.success) {
+            currentUser = {
+                id: result.user.id,
+                email: result.user.email,
+                pseudo: pseudo
+            };
+            
+            updateUserDisplay();
+            showScreen('start');
+            loadScoresFromSupabase();
+            
+            showMessage("✅ Inscription réussie ! Vous êtes maintenant connecté.", "success");
+            
+        } else {
+            showMessage(`❌ ${result.error}`, "error");
+        }
+        
+    } catch (error) {
+        showMessage("❌ Erreur d'inscription", "error");
+        console.error(error);
+    } finally {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> S\'INSCRIRE';
+    }
 }
 
-// ==================== FONCTIONS SUPABASE ====================
+async function handleLogout() {
+    try {
+        const result = await window.supabaseFunctions.signOutSupabase();
+        
+        if (result.success) {
+            currentUser = null;
+            showScreen('auth');
+            showMessage("✅ Déconnexion réussie", "success");
+            
+            // Réinitialiser les formulaires
+            if (loginEmail) loginEmail.value = '';
+            if (loginPassword) loginPassword.value = '';
+            if (registerPseudo) registerPseudo.value = '';
+            if (registerEmail) registerEmail.value = '';
+            if (registerPassword) registerPassword.value = '';
+            if (registerConfirm) registerConfirm.value = '';
+            
+        } else {
+            showMessage(`❌ ${result.error}`, "error");
+        }
+        
+    } catch (error) {
+        showMessage("❌ Erreur de déconnexion", "error");
+    }
+}
+
+function updateUserDisplay() {
+    if (currentUser) {
+        if (currentUserPseudo) currentUserPseudo.textContent = currentUser.pseudo;
+        if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
+        if (playerDisplayName) playerDisplayName.textContent = currentUser.pseudo;
+        if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
+        if (playerResultName) playerResultName.textContent = currentUser.pseudo;
+    }
+}
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// ==================== FONCTIONS SUPABASE (MODIFIÉES) ====================
 async function loadScoresFromSupabase() {
     console.log("📥 Chargement des scores depuis Supabase...");
     
@@ -122,12 +375,9 @@ async function loadScoresFromSupabase() {
         const result = await window.supabaseFunctions.getHighScoresFromSupabase(20);
         
         if (result.success && result.data) {
-            console.log("📊 Données reçues:", result.data);
-            
             allHighscores = result.data.map(item => ({
-                name: item.name,
+                name: item.pseudo || "Anonyme",
                 score: item.score,
-                // MODIFIÉ : utiliser 'created_at' au lieu de 'date'
                 date: item.created_at ? formatDate(item.created_at) : "Aujourd'hui",
                 timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now()
             }));
@@ -148,15 +398,15 @@ async function loadScoresFromSupabase() {
     }
 }
 
-async function saveScoreToSupabase(name, score) {
-    console.log(`💾 Sauvegarde sur Supabase: ${name} - ${score}`);
+async function saveScoreToSupabase(score) {
+    console.log(`💾 Sauvegarde sur Supabase: ${score}`);
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.saveScoreToSupabase) {
             throw new Error("Fonctions Supabase non disponibles");
         }
         
-        const result = await window.supabaseFunctions.saveScoreToSupabase(name, score);
+        const result = await window.supabaseFunctions.saveScoreToSupabase(score);
         
         if (result.success) {
             console.log("✅ Score sauvegardé avec succès");
@@ -177,34 +427,14 @@ async function saveScoreToSupabase(name, score) {
     }
 }
 
-// ==================== FONCTIONS DU QUIZ ====================
-function getRandomQuiz(quizQuestions, numQuestions = TOTAL_QUESTIONS) {
-    const shuffled = [...quizQuestions];
-    
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    
-    return shuffled.slice(0, Math.min(numQuestions, shuffled.length));
-}
-
+// ==================== FONCTIONS DU QUIZ (MODIFIÉES) ====================
 function startQuiz() {
     console.log("🚀 Démarrage du quiz...");
     
-    if (!playerNameInput) {
-        alert("Erreur: Champ nom manquant!");
+    if (!currentUser) {
+        showMessage("⚠️ Vous devez être connecté pour jouer", "warning");
         return;
     }
-    
-    playerName = playerNameInput.value.trim();
-    if (playerName === "") {
-        alert("Veuillez entrer votre nom pour commencer !");
-        playerNameInput.focus();
-        return;
-    }
-    
-    playerName = playerName.substring(0, 15);
     
     // Réinitialiser l'état
     lives = 2;
@@ -213,8 +443,6 @@ function startQuiz() {
     gameStopped = false;
     
     // Mettre à jour l'affichage
-    if (currentPlayerSpan) currentPlayerSpan.textContent = playerName;
-    
     livesDisplay = document.getElementById("lives-display");
     livesCount = document.getElementById("lives-count");
     
@@ -229,11 +457,21 @@ function startQuiz() {
     if (totalQuestionsSpan) totalQuestionsSpan.textContent = quizSession.length;
     
     // Changer d'écran
-    if (startScreen && quizScreen) {
-        startScreen.classList.remove("active");
-        quizScreen.classList.add("active");
-        showQuestion();
+    showScreen('quiz');
+    showQuestion();
+}
+
+// ... (les autres fonctions du quiz restent identiques, sauf les références à playerName) ...
+
+function getRandomQuiz(quizQuestions, numQuestions = TOTAL_QUESTIONS) {
+    const shuffled = [...quizQuestions];
+    
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    
+    return shuffled.slice(0, Math.min(numQuestions, shuffled.length));
 }
 
 function showQuestion() {
@@ -367,21 +605,17 @@ function wrongAnswer() {
         clearInterval(timer);
         
         setTimeout(() => {
-            if (quizScreen && resultScreen) {
-                showFinalResults();
-            }
+            showFinalResults();
         }, 1500);
     }
 }
 
 function showFinalResults() {
-    quizScreen.classList.remove("active");
-    resultScreen.classList.add("active");
+    showScreen('result');
     
     const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
     
     if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
-    if (playerResultName) playerResultName.textContent = playerName;
     if (questionsDoneSpan) questionsDoneSpan.textContent = score;
     if (percentageSpan) percentageSpan.textContent = finalScore + "%";
     
@@ -403,35 +637,31 @@ function showFinalResults() {
         resultMessage.textContent = message;
     }
     
-    // SAUVEGARDE SUPABASE SEULEMENT
-    saveScoreToSupabase(playerName, finalScore);
+    // SAUVEGARDE SUPABASE
+    saveScoreToSupabase(finalScore);
     updateHighscoresResultDisplay();
 }
 
 function showResults() {
     clearInterval(timer);
     
-    if (quizScreen && resultScreen) {
-        quizScreen.classList.remove("active");
-        resultScreen.classList.add("active");
-        
-        const finalScore = 100;
-        
-        if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
-        if (playerResultName) playerResultName.textContent = playerName;
-        if (questionsDoneSpan) questionsDoneSpan.textContent = TOTAL_QUESTIONS;
-        if (percentageSpan) percentageSpan.textContent = "100%";
-        
-        if (resultMessage) {
-            resultMessage.textContent = lives > 0 
-                ? `🎉 INCROYABLE ! 100/100 ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`
-                : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
-        }
-        
-        // SAUVEGARDE SUPABASE SEULEMENT
-        saveScoreToSupabase(playerName, finalScore);
-        updateHighscoresResultDisplay();
+    showScreen('result');
+    
+    const finalScore = 100;
+    
+    if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
+    if (questionsDoneSpan) questionsDoneSpan.textContent = TOTAL_QUESTIONS;
+    if (percentageSpan) percentageSpan.textContent = "100%";
+    
+    if (resultMessage) {
+        resultMessage.textContent = lives > 0 
+            ? `🎉 INCROYABLE ! 100/100 ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`
+            : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
     }
+    
+    // SAUVEGARDE SUPABASE
+    saveScoreToSupabase(finalScore);
+    updateHighscoresResultDisplay();
 }
 
 // ==================== FONCTIONS UTILITAIRES ====================
@@ -465,14 +695,36 @@ function formatDate(dateString) {
     });
 }
 
+function showScreen(screenName) {
+    // Cacher tous les écrans
+    if (authScreen) authScreen.classList.remove("active");
+    if (startScreen) startScreen.classList.remove("active");
+    if (quizScreen) quizScreen.classList.remove("active");
+    if (resultScreen) resultScreen.classList.remove("active");
+    
+    // Montrer l'écran demandé
+    switch(screenName) {
+        case 'auth':
+            if (authScreen) authScreen.classList.add("active");
+            break;
+        case 'start':
+            if (startScreen) startScreen.classList.add("active");
+            break;
+        case 'quiz':
+            if (quizScreen) quizScreen.classList.add("active");
+            break;
+        case 'result':
+            if (resultScreen) resultScreen.classList.add("active");
+            break;
+    }
+}
+
 function showMessage(text, type = "info") {
     console.log(`📢 ${text}`);
     
-    // Supprimer les anciens messages
     const oldMessages = document.querySelectorAll('.quiz-message');
     oldMessages.forEach(msg => msg.remove());
     
-    // Créer le nouveau message
     const message = document.createElement("div");
     message.className = `quiz-message ${type}`;
     message.textContent = text;
@@ -491,7 +743,6 @@ function showMessage(text, type = "info") {
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     `;
     
-    // Couleur selon le type
     if (type === "success") {
         message.style.backgroundColor = "#4CAF50";
     } else if (type === "error") {
@@ -504,13 +755,11 @@ function showMessage(text, type = "info") {
     
     document.body.appendChild(message);
     
-    // Animation
     setTimeout(() => {
         message.style.opacity = "1";
         message.style.transform = "translateX(0)";
     }, 10);
     
-    // Disparaître après 4 secondes
     setTimeout(() => {
         message.style.opacity = "0";
         message.style.transform = "translateX(100px)";
@@ -620,12 +869,9 @@ function updateHighscoresResultDisplay() {
 }
 
 function restartQuiz() {
-    if (resultScreen && startScreen) {
-        resultScreen.classList.remove("active");
-        startScreen.classList.add("active");
-        isExpandedStart = false;
-        loadScoresFromSupabase();
-    }
+    showScreen('start');
+    isExpandedStart = false;
+    loadScoresFromSupabase();
 }
 
-console.log("🎯 Script 100% Supabase chargé !");
+console.log("🎯 Script avec authentification chargé !");
