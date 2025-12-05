@@ -679,4 +679,474 @@ export const quizQuestions = [
       { text: "Temporaire", correct: false },
     ],
   },
+
+  // 50 questions supplémentaires (total 100)
+{
+  question: "Quelle est la capitale de l'Égypte ?",
+  answers: [
+    { text: "Alexandrie", correct: false },
+    { text: "Le Caire", correct: true },
+    { text: "Louxor", correct: false },
+    { text: "Assouan", correct: false },
+  ],
+},
+{
+  question: "Quel est le plus grand lac d'Afrique ?",
+  answers: [
+    { text: "Lac Victoria", correct: true },
+    { text: "Lac Tanganyika", correct: false },
+    { text: "Lac Malawi", correct: false },
+    { text: "Lac Turkana", correct: false },
+  ],
+},
+{
+  question: "Qui a écrit 'Les Misérables' ?",
+  answers: [
+    { text: "Victor Hugo", correct: true },
+    { text: "Alexandre Dumas", correct: false },
+    { text: "Émile Zola", correct: false },
+    { text: "Gustave Flaubert", correct: false },
+  ],
+},
+{
+  question: "Quelle est la vitesse de la lumière dans le vide ?",
+  answers: [
+    { text: "300 000 km/s", correct: true },
+    { text: "150 000 km/s", correct: false },
+    { text: "450 000 km/s", correct: false },
+    { text: "1 000 000 km/s", correct: false },
+  ],
+},
+{
+  question: "Quel est l'élément chimique avec le symbole Au ?",
+  answers: [
+    { text: "Argent", correct: false },
+    { text: "Or", correct: true },
+    { text: "Aluminium", correct: false },
+    { text: "Argon", correct: false },
+  ],
+},
+{
+  question: "Combien de côtés a un hexagone ?",
+  answers: [
+    { text: "5", correct: false },
+    { text: "6", correct: true },
+    { text: "7", correct: false },
+    { text: "8", correct: false },
+  ],
+},
+{
+  question: "Quelle est la monnaie du Royaume-Uni ?",
+  answers: [
+    { text: "Euro", correct: false },
+    { text: "Dollar", correct: false },
+    { text: "Livre sterling", correct: true },
+    { text: "Franc", correct: false },
+  ],
+},
+{
+  question: "Qui a peint 'La Nuit étoilée' ?",
+  answers: [
+    { text: "Vincent van Gogh", correct: true },
+    { text: "Claude Monet", correct: false },
+    { text: "Pablo Picasso", correct: false },
+    { text: "Salvador Dalí", correct: false },
+  ],
+},
+{
+  question: "Quel est le plus grand organe du corps humain ?",
+  answers: [
+    { text: "Le foie", correct: false },
+    { text: "Le cerveau", correct: false },
+    { text: "La peau", correct: true },
+    { text: "Les poumons", correct: false },
+  ],
+},
+{
+  question: "Quel animal est connu comme 'le roi de la jungle' ?",
+  answers: [
+    { text: "Le tigre", correct: false },
+    { text: "L'éléphant", correct: false },
+    { text: "Le lion", correct: true },
+    { text: "Le gorille", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale de l'Australie ?",
+  answers: [
+    { text: "Sydney", correct: false },
+    { text: "Melbourne", correct: false },
+    { text: "Canberra", correct: true },
+    { text: "Perth", correct: false },
+  ],
+},
+{
+  question: "Combien de jours y a-t-il dans une année bissextile ?",
+  answers: [
+    { text: "364", correct: false },
+    { text: "365", correct: false },
+    { text: "366", correct: true },
+    { text: "367", correct: false },
+  ],
+},
+{
+  question: "Quel est le gaz le plus abondant dans l'atmosphère terrestre ?",
+  answers: [
+    { text: "Oxygène", correct: false },
+    { text: "Azote", correct: true },
+    { text: "Dioxyde de carbone", correct: false },
+    { text: "Argon", correct: false },
+  ],
+},
+{
+  question: "Qui a découvert la pénicilline ?",
+  answers: [
+    { text: "Alexander Fleming", correct: true },
+    { text: "Louis Pasteur", correct: false },
+    { text: "Marie Curie", correct: false },
+    { text: "Albert Einstein", correct: false },
+  ],
+},
+{
+  question: "Quelle est la plus haute montagne d'Afrique ?",
+  answers: [
+    { text: "Mont Kenya", correct: false },
+    { text: "Kilimandjaro", correct: true },
+    { text: "Mont Stanley", correct: false },
+    { text: "Ras Dashan", correct: false },
+  ],
+},
+{
+  question: "Quel est le langage de programmation créé par Guido van Rossum ?",
+  answers: [
+    { text: "Java", correct: false },
+    { text: "Python", correct: true },
+    { text: "JavaScript", correct: false },
+    { text: "C++", correct: false },
+  ],
+},
+{
+  question: "Combien de joueurs dans une équipe de basketball ?",
+  answers: [
+    { text: "4", correct: false },
+    { text: "5", correct: true },
+    { text: "6", correct: false },
+    { text: "7", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale du Brésil ?",
+  answers: [
+    { text: "Rio de Janeiro", correct: false },
+    { text: "São Paulo", correct: false },
+    { text: "Brasilia", correct: true },
+    { text: "Salvador", correct: false },
+  ],
+},
+{
+  question: "Quel est le plus petit os du corps humain ?",
+  answers: [
+    { text: "Os du poignet", correct: false },
+    { text: "L'étrier (oreille)", correct: true },
+    { text: "Os du nez", correct: false },
+    { text: "Vertèbre cervicale", correct: false },
+  ],
+},
+{
+  question: "Qui a écrit 'Roméo et Juliette' ?",
+  answers: [
+    { text: "William Shakespeare", correct: true },
+    { text: "Charles Dickens", correct: false },
+    { text: "Jane Austen", correct: false },
+    { text: "Mark Twain", correct: false },
+  ],
+},
+{
+  question: "Quel est le désert le plus chaud du monde ?",
+  answers: [
+    { text: "Sahara", correct: true },
+    { text: "Désert d'Arabie", correct: false },
+    { text: "Désert de Gobi", correct: false },
+    { text: "Désert de Kalahari", correct: false },
+  ],
+},
+{
+  question: "Combien de planètes dans le système solaire ?",
+  answers: [
+    { text: "7", correct: false },
+    { text: "8", correct: true },
+    { text: "9", correct: false },
+    { text: "10", correct: false },
+  ],
+},
+{
+  question: "Quelle est la monnaie de la Chine ?",
+  answers: [
+    { text: "Yen", correct: false },
+    { text: "Yuan", correct: true },
+    { text: "Won", correct: false },
+    { text: "Ringgit", correct: false },
+  ],
+},
+{
+  question: "Qui a inventé le téléphone portable ?",
+  answers: [
+    { text: "Martin Cooper", correct: true },
+    { text: "Steve Jobs", correct: false },
+    { text: "Bill Gates", correct: false },
+    { text: "Tim Berners-Lee", correct: false },
+  ],
+},
+{
+  question: "Quel est l'animal national de l'Inde ?",
+  answers: [
+    { text: "Lion", correct: false },
+    { text: "Éléphant", correct: false },
+    { text: "Tigre", correct: true },
+    { text: "Paon", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale de l'Italie ?",
+  answers: [
+    { text: "Milan", correct: false },
+    { text: "Venise", correct: false },
+    { text: "Rome", correct: true },
+    { text: "Florence", correct: false },
+  ],
+},
+{
+  question: "Combien de continents commencent par la lettre 'A' ?",
+  answers: [
+    { text: "1", correct: false },
+    { text: "2", correct: true },
+    { text: "3", correct: false },
+    { text: "4", correct: false },
+  ],
+},
+{
+  question: "Quel est le métal le plus conducteur d'électricité ?",
+  answers: [
+    { text: "Cuivre", correct: false },
+    { text: "Aluminium", correct: false },
+    { text: "Argent", correct: true },
+    { text: "Or", correct: false },
+  ],
+},
+{
+  question: "Qui a peint 'Le Cri' ?",
+  answers: [
+    { text: "Edvard Munch", correct: true },
+    { text: "Paul Gauguin", correct: false },
+    { text: "Henri Matisse", correct: false },
+    { text: "Wassily Kandinsky", correct: false },
+  ],
+},
+{
+  question: "Quelle est la langue officielle du Brésil ?",
+  answers: [
+    { text: "Espagnol", correct: false },
+    { text: "Portugais", correct: true },
+    { text: "Anglais", correct: false },
+    { text: "Français", correct: false },
+  ],
+},
+{
+  question: "Combien d'heures dans une journée ?",
+  answers: [
+    { text: "12", correct: false },
+    { text: "24", correct: true },
+    { text: "36", correct: false },
+    { text: "48", correct: false },
+  ],
+},
+{
+  question: "Quel est le fruit le plus consommé au monde ?",
+  answers: [
+    { text: "Pomme", correct: false },
+    { text: "Banane", correct: false },
+    { text: "Tomate", correct: true },
+    { text: "Orange", correct: false },
+  ],
+},
+{
+  question: "Qui a fondé Microsoft ?",
+  answers: [
+    { text: "Steve Jobs", correct: false },
+    { text: "Bill Gates", correct: true },
+    { text: "Mark Zuckerberg", correct: false },
+    { text: "Larry Page", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale du Mexique ?",
+  answers: [
+    { text: "Guadalajara", correct: false },
+    { text: "Cancún", correct: false },
+    { text: "Mexico", correct: true },
+    { text: "Monterrey", correct: false },
+  ],
+},
+{
+  question: "Combien de doigts a une main humaine ?",
+  answers: [
+    { text: "4", correct: false },
+    { text: "5", correct: true },
+    { text: "6", correct: false },
+    { text: "7", correct: false },
+  ],
+},
+{
+  question: "Quel est l'océan le plus petit ?",
+  answers: [
+    { text: "Arctique", correct: true },
+    { text: "Indien", correct: false },
+    { text: "Atlantique", correct: false },
+    { text: "Pacifique", correct: false },
+  ],
+},
+{
+  question: "Qui a écrit 'Harry Potter' ?",
+  answers: [
+    { text: "J.K. Rowling", correct: true },
+    { text: "J.R.R. Tolkien", correct: false },
+    { text: "George R.R. Martin", correct: false },
+    { text: "C.S. Lewis", correct: false },
+  ],
+},
+{
+  question: "Quelle est la planète la plus proche de la Terre ?",
+  answers: [
+    { text: "Mars", correct: false },
+    { text: "Vénus", correct: true },
+    { text: "Mercure", correct: false },
+    { text: "Jupiter", correct: false },
+  ],
+},
+{
+  question: "Combien de lettres dans l'alphabet français ?",
+  answers: [
+    { text: "24", correct: false },
+    { text: "25", correct: false },
+    { text: "26", correct: true },
+    { text: "27", correct: false },
+  ],
+},
+{
+  question: "Quel est le pays le plus peuplé du monde ?",
+  answers: [
+    { text: "Inde", correct: false },
+    { text: "Chine", correct: true },
+    { text: "États-Unis", correct: false },
+    { text: "Indonésie", correct: false },
+  ],
+},
+{
+  question: "Qui a inventé l'avion ?",
+  answers: [
+    { text: "Les frères Wright", correct: true },
+    { text: "Henry Ford", correct: false },
+    { text: "Leonardo da Vinci", correct: false },
+    { text: "Thomas Edison", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale de l'Espagne ?",
+  answers: [
+    { text: "Barcelone", correct: false },
+    { text: "Séville", correct: false },
+    { text: "Madrid", correct: true },
+    { text: "Valence", correct: false },
+  ],
+},
+{
+  question: "Combien de sens a un être humain ?",
+  answers: [
+    { text: "4", correct: false },
+    { text: "5", correct: true },
+    { text: "6", correct: false },
+    { text: "7", correct: false },
+  ],
+},
+{
+  question: "Quel est le métal liquide à température ambiante ?",
+  answers: [
+    { text: "Mercure", correct: true },
+    { text: "Fer", correct: false },
+    { text: "Or", correct: false },
+    { text: "Argent", correct: false },
+  ],
+},
+{
+  question: "Qui a découvert l'Amérique ?",
+  answers: [
+    { text: "Christophe Colomb", correct: true },
+    { text: "Vasco de Gama", correct: false },
+    { text: "Marco Polo", correct: false },
+    { text: "Fernand de Magellan", correct: false },
+  ],
+},
+{
+  question: "Quelle est la langue la plus parlée en Amérique du Sud ?",
+  answers: [
+    { text: "Anglais", correct: false },
+    { text: "Portugais", correct: true },
+    { text: "Espagnol", correct: false },
+    { text: "Français", correct: false },
+  ],
+},
+{
+  question: "Combien de saisons dans une année ?",
+  answers: [
+    { text: "2", correct: false },
+    { text: "3", correct: false },
+    { text: "4", correct: true },
+    { text: "5", correct: false },
+  ],
+},
+{
+  question: "Quel est l'animal le plus rapide du monde ?",
+  answers: [
+    { text: "Guépard", correct: false },
+    { text: "Faucon pèlerin", correct: true },
+    { text: "Antilope", correct: false },
+    { text: "Épaulard", correct: false },
+  ],
+},
+{
+  question: "Qui a peint 'La Cène' ?",
+  answers: [
+    { text: "Michel-Ange", correct: false },
+    { text: "Leonardo da Vinci", correct: true },
+    { text: "Raphaël", correct: false },
+    { text: "Donatello", correct: false },
+  ],
+},
+{
+  question: "Quelle est la capitale de la Corée du Sud ?",
+  answers: [
+    { text: "Busan", correct: false },
+    { text: "Incheon", correct: false },
+    { text: "Séoul", correct: true },
+    { text: "Daegu", correct: false },
+  ],
+},
+{
+  question: "Combien de chromosomes dans une cellule humaine ?",
+  answers: [
+    { text: "23", correct: false },
+    { text: "46", correct: true },
+    { text: "48", correct: false },
+    { text: "50", correct: false },
+  ],
+},
+{
+  question: "Quel est l'os le plus long du corps humain ?",
+  answers: [
+    { text: "Fémur", correct: true },
+    { text: "Tibia", correct: false },
+    { text: "Humérus", correct: false },
+    { text: "Radius", correct: false },
+  ],
+},
 ];

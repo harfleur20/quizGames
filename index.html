@@ -1,53 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="fr">
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-    <title>QUIZZ GAMES</title>
-  </head>
-  <body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>QUIZZ GAMES - 100 QUESTIONS</title>
+</head>
+<body>
     <div class="container">
-      <div class="screen active" id="start-screen">
-        <h1>Quizz Time</h1>
-        <p>Teste tes connaissances avec des questions fun</p>
-        <button id="start-btn">Débuter le Quizz</button>
-      </div>
-
-      <div class="screen" id="quiz-screen">
-        <div class="quiz-header">
-            <h2 id="question-text">Question goes here</h2>
-            <div class="quiz-info">
-                <p>
-                    Question <span id="current-question">1 </span> sur <span id="total-questions"> 5</span>
-                </p>
-
-                <p>
-                    Score: <span id="score">0</span>
-                </p>
+        <!-- Écran de départ -->
+        <div class="screen active" id="start-screen">
+            <div class="start-content">
+                <h1><i class="fa-brands fa-quinscape"></i> MEGA QUIZZ 100</h1>
+                <p class="subtitle">Que le défit ultime commence, seras-tu à la hauteur ?</p>
+                
+                <div class="player-setup">
+                    <input 
+                        type="text" 
+                        id="player-name" 
+                        placeholder="Entre ton nom (max 10 lettres)"
+                        maxlength="10"
+                        class="name-input"
+                    />
+                    <button id="start-btn" class="start-btn" disabled><i class="fa-solid fa-fire"></i> DÉMARRER LE QUIZ</button>
+                    <p class="name-hint">* Le nom est obligatoire pour jouer</p>
+                </div>
+                
+                <div class="rules-section">
+                    <button id="toggle-rules" class="rules-toggle"><i class="fa-solid fa-eye"></i>Voir les règles du jeu</button>
+                    <div id="rules-content" class="rules-content">
+                        <h3> RÈGLES DU JEU :</h3>
+                        <ul>
+                            <li><strong><i class="fa-solid fa-circle-question"></i> 100 QUESTIONS </strong> : Défi ultime de connaissances sur des sujets variés</li>
+                            <li><strong><i class="fa-solid fa-stopwatch"></i> 10 SECONDES </strong> : pour répondre à chaque question</li>
+                            <li><strong>❌ 1 SEULE ERREUR</strong> = GAME OVER immédiat</li>
+                            <li><strong><i class="fa-solid fa-trophy"></i> SCORE SUR 100</strong> - 1 point par bonne réponse</li>
+                            <li><strong><i class="fa-solid fa-user"></i> NOM OBLIGATOIRE</strong> : pour apparaître au classement</li>
+                            <li><strong><i class="fa-solid fa-medal"></i> TOP 10</strong> des meilleurs scores enregistrés</li>
+                        </ul>
+                        <p class="rules-tip"><strong>💡 Astuce :</strong> Concentre-toi et ne te presse pas !</p>
+                    </div>
+                </div>
+                
+                <div class="highscores-section">
+                    <h2> TOP 10 </h2>
+                    <p class="section-subtitle">Les 10 derniers meilleurs scores </p>
+                    <div id="highscores-list-start" class="highscores-list">
+                        <!-- High scores chargés dynamiquement -->
+                    </div>
+                    <button id="show-more-scores" class="show-more-btn">👇 Voir plus de champions (4/10)</button>
+                    <p class="score-note">Score maximum possible : 100/100</p>
+                </div>
             </div>
         </div>
-            <div class="answers-container" id="answers-container">
-                <!-- Reponse à inserrer par Javascript -->
-            </div>
 
+        <!-- Écran du quiz -->
+        <div class="screen" id="quiz-screen">
+            <div class="quiz-header">
+                <div class="player-info">
+                    <span class="player-tag"><i class="fa-solid fa-circle-user"></i> <span id="current-player">Joueur</span></span>
+                    <div class="timer-box">
+                        <i class="fa-solid fa-hourglass-end"></i> <span id="timer">10</span>s
+                    </div>
+                </div>
+                
+                <h2 id="question-text">Question goes here</h2>
+                
+                <div class="quiz-info">
+                    <div class="progress-info">
+                        Question <span id="current-question">1</span>/<span id="total-questions">100</span>
+                    </div>
+                    <div class="score-box">
+                        🏅 Score: <span id="score">0</span>/100
+                    </div>
+                </div>
+            </div>
+            
+            <div class="answers-container" id="answers-container">
+                <!-- Réponses insérées par Javascript -->
+            </div>
+            
             <div class="progress-bar">
                 <div id="progress" class="progress"></div>
+                <div class="progress-text">
+                    <span id="progress-percent">0%</span>
+                </div>
             </div>
-      </div>
-
-      <div class="screen" id="result-screen">
-        <h1>Résultats du Quizz</h1>
-        <div class="result-info">
-            <p>Ton score est de <span id="final-score">0</span> sur <span id="max-score">5</span></p>
-
-            <div id="result-message"></div>
         </div>
-        <button id="restart-btn">Recommencer !</button>
-      </div>
 
+        <!-- Écran des résultats -->
+        <div class="screen" id="result-screen">
+            <div class="result-content">
+                <h1><i class="fa-solid fa-temperature-half"></i> RÉSULTATS FINAUX</h1>
+                
+                <div class="score-display">
+                    <div class="final-score">
+                        <span class="score-label">SCORE FINAL</span>
+                        <span class="score-value" id="final-score">0</span>
+                        <span class="score-max">/ 100</span>
+                    </div>
+                    
+                    <div id="result-message" class="result-message"></div>
+                </div>
+                
+                <div class="player-result">
+                    <div class="result-card">
+                        <h3><i class="fa-solid fa-chart-pie"></i> TES STATISTIQUES</h3>
+                        <p><strong><i class="fa-solid fa-circle-user"></i> Joueur :</strong> <span id="player-result-name">Joueur</span></p>
+                        <p><strong><i class="fa-solid fa-circle-check"></i> Questions réussies :</strong> <span id="questions-done">0</span>/100</p>
+                        <p><strong><i class="fa-solid fa-percent"></i> Pourcentage :</strong> <span id="percentage">0%</span></p>
+                    </div>
+                </div>
+                
+                <div class="highscores-section">
+                    <h3>🏆 CLASSEMENT DES CHAMPIONS</h3>
+                    <p class="section-subtitle">Top 10 des meilleurs scores</p>
+                    <div id="highscores-list-result" class="highscores-list">
+                        <!-- High scores rafraîchis -->
+                    </div>
+                    <button id="show-more-scores-result" class="show-more-btn">👇 Voir plus de champions (4/10)</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="restart-btn" class="restart-btn">🔄 REJOUER</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>
-  </body>
+</body>
 </html>
