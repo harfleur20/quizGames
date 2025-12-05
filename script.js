@@ -40,6 +40,11 @@ let allHighscores = [];
 let isExpandedStart = false;
 let isExpandedResult = false;
 
+// Variables pour le système de vies
+let lives = 2;
+let livesDisplay = null;
+let livesCount = null;
+
 // Quiz state
 let currentQuestionIndex = 0;
 let score = 0;
@@ -123,6 +128,36 @@ function getRandomQuiz(quizQuestions, numQuestions = TOTAL_QUESTIONS) {
     return shuffled.slice(0, Math.min(numQuestions, shuffled.length));
 }
 
+// Fonction pour mettre à jour l'affichage des vies
+function updateLivesDisplay() {
+    if (livesCount) {
+        livesCount.textContent = lives;
+        
+        // Changer la couleur selon le nombre de vies
+        if (livesDisplay) {
+            if (lives === 2) {
+                livesDisplay.style.background = "linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)";
+                livesDisplay.style.borderRadius = "20px"
+                livesDisplay.style.padding = "10px 20px"
+            } else if (lives === 1) {
+                livesDisplay.style.background = "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)";
+            } else {
+                livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
+            }
+        }
+    }
+}
+
+// Fonction pour secouer l'affichage des vies
+function shakeLivesDisplay() {
+    if (livesDisplay) {
+        livesDisplay.classList.add('shake');
+        setTimeout(() => {
+            livesDisplay.classList.remove('shake');
+        }, 500);
+    }
+}
+
 function startQuiz() {
     console.log("Démarrage du quiz...");
     
@@ -141,6 +176,9 @@ function startQuiz() {
     
     playerName = playerName.substring(0, 10);
     
+    // RÉINITIALISER LES VIES
+    lives = 2;
+    
     // Mettre à jour le nom du joueur dans l'écran quiz
     if (currentPlayerSpan) {
         currentPlayerSpan.textContent = playerName;
@@ -150,6 +188,18 @@ function startQuiz() {
     currentQuestionIndex = 0;
     score = 0;
     gameStopped = false;
+    
+    // Récupérer les éléments d'affichage des vies
+    livesDisplay = document.getElementById("lives-display");
+    livesCount = document.getElementById("lives-count");
+    
+    // Mettre à jour l'affichage initial des vies
+    if (livesCount) {
+        livesCount.textContent = lives;
+    }
+    if (livesDisplay) {
+        updateLivesDisplay();
+    }
     
     // Mettre à jour le score si l'élément existe
     if (scoreSpan) {
@@ -182,6 +232,11 @@ function showQuestion() {
     if (timerDisplay) {
         timerDisplay.textContent = timeLeft;
         timerDisplay.style.color = "#ffffffff";
+    }
+    
+    // Réinitialiser l'affichage des vies au début de chaque question
+    if (livesDisplay && livesDisplay.classList.contains('shake')) {
+        livesDisplay.classList.remove('shake');
     }
     
     // Arrêter le timer précédent
@@ -295,56 +350,123 @@ function selectAnswer(event) {
 }
 
 function wrongAnswer() {
-    gameStopped = true;
-    clearInterval(timer);
-    
-    setTimeout(() => {
-        if (quizScreen && resultScreen) {
-            quizScreen.classList.remove("active");
-            resultScreen.classList.add("active");
-            
-            const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
-            
-            if (finalScoreSpan) {
-                finalScoreSpan.textContent = finalScore;
-            }
-            
-            // METTRE À JOUR LES INFOS DU JOUEUR
-            if (playerResultName) {
-                playerResultName.textContent = playerName;
-            }
-            
-            if (questionsDoneSpan) {
-                questionsDoneSpan.textContent = score;
-            }
-            
-            if (percentageSpan) {
-                percentageSpan.textContent = finalScore + "%";
-            }
-            
-            if (resultMessage) {
-                if (finalScore === 100) {
-                    resultMessage.textContent = "🏆 PARFAIT ! 100/100 !";
-                } else if (finalScore >= 90) {
-                    resultMessage.textContent = "🌟 EXCELLENT ! Performance impressionnante !";
-                } else if (finalScore >= 80) {
-                    resultMessage.textContent = "👍 TRÈS BIEN ! Très bon score !";
-                } else if (finalScore >= 70) {
-                    resultMessage.textContent = "👏 BIEN JOUÉ ! Bonne performance !";
-                } else if (finalScore >= 50) {
-                    resultMessage.textContent = "💪 PAS MAL ! Continue à progresser !";
-                } else if (finalScore >= 30) {
-                    resultMessage.textContent = "📚 COURAGE ! Tu peux faire mieux !";
-                } else {
-                    resultMessage.textContent = "🎯 NE baisse pas les bras ! Réessaie !";
-                }
-            }
-
-            saveHighscore(playerName, finalScore);
-            loadAndDisplayHighscores();
-            updateHighscoresResultDisplay();
+    if (lives > 1) {
+        // PERDRE UNE VIE MAIS CONTINUER
+        lives--;
+        
+        // Mettre à jour l'affichage des vies
+        updateLivesDisplay();
+        
+        // Animation visuelle pour indiquer la perte de vie
+        shakeLivesDisplay();
+        
+        // Mettre à jour le compteur de vies
+        if (livesCount) {
+            livesCount.textContent = lives;
         }
-    }, 1000);
+        
+        // Marquer visuellement la mauvaise réponse
+        if (answersContainer) {
+            Array.from(answersContainer.children).forEach((button) => {
+                if (button.dataset.correct === "true") {
+                    button.classList.add("correct");
+                } else {
+                    button.classList.add("incorrect");
+                }
+            });
+        }
+        
+        // Continuer au prochain timer
+        setTimeout(() => {
+            answersDisabled = false;
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizSession.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }, 1500);
+        
+    } else if (lives === 1) {
+        // DERNIÈRE VIE PERDUE - FIN DU JEU
+        lives--;
+        
+        // Mettre à jour l'affichage des vies
+        updateLivesDisplay();
+        
+        // Animation de fin de vie
+        if (livesDisplay) {
+            livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
+            livesDisplay.classList.add('shake');
+        }
+        
+        if (livesCount) {
+            livesCount.textContent = "0";
+        }
+        
+        // Marquer visuellement la mauvaise réponse
+        if (answersContainer) {
+            Array.from(answersContainer.children).forEach((button) => {
+                if (button.dataset.correct === "true") {
+                    button.classList.add("correct");
+                } else {
+                    button.classList.add("incorrect");
+                }
+            });
+        }
+        
+        // Arrêter le jeu et afficher les résultats
+        gameStopped = true;
+        clearInterval(timer);
+        
+        setTimeout(() => {
+            if (quizScreen && resultScreen) {
+                quizScreen.classList.remove("active");
+                resultScreen.classList.add("active");
+                
+                const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
+                
+                if (finalScoreSpan) {
+                    finalScoreSpan.textContent = finalScore;
+                }
+                
+                // METTRE À JOUR LES INFOS DU JOUEUR
+                if (playerResultName) {
+                    playerResultName.textContent = playerName;
+                }
+                
+                if (questionsDoneSpan) {
+                    questionsDoneSpan.textContent = score;
+                }
+                
+                if (percentageSpan) {
+                    percentageSpan.textContent = finalScore + "%";
+                }
+                
+                if (resultMessage) {
+                    // Message spécial pour partie terminée par manque de vies
+                    if (score === 0) {
+                        resultMessage.textContent = "😢 Aucune bonne réponse... Mais ne baisse pas les bras !";
+                    } else if (finalScore < 30) {
+                        resultMessage.textContent = "💔 Plus de vies ! Tu y étais presque, continue à t'entraîner !";
+                    } else if (finalScore < 50) {
+                        resultMessage.textContent = "👊 Dommage ! Plus de vies... Mais bon effort !";
+                    } else if (finalScore < 70) {
+                        resultMessage.textContent = "👍 Bien joué ! Plus de vies mais bon score !";
+                    } else if (finalScore < 90) {
+                        resultMessage.textContent = "🌟 Excellent ! Dommage pour les vies, mais super performance !";
+                    } else {
+                        resultMessage.textContent = "🏆 Impressionnant ! Presque parfait malgré les vies perdues !";
+                    }
+                }
+                
+                // Sauvegarder le score même si partie terminée par manque de vies
+                saveHighscore(playerName, finalScore);
+                loadAndDisplayHighscores();
+                updateHighscoresResultDisplay();
+            }
+        }, 1500);
+    }
 }
 
 function showResults() {
@@ -374,7 +496,12 @@ function showResults() {
         }
         
         if (resultMessage) {
-            resultMessage.textContent = "🎉 INCROYABLE ! 100/100 QUESTIONS ! TU ES UN CHAMPION LÉGENDAIRE ! 🏆";
+            // Message spécial pour victoire avec vies restantes
+            if (lives > 0) {
+                resultMessage.textContent = `🎉 INCROYABLE ! 100/100 QUESTIONS ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`;
+            } else {
+                resultMessage.textContent = "🎉 INCROYABLE ! 100/100 QUESTIONS MALGRÉ LES VIES PERDUES ! TU ES UN CHAMPION LÉGENDAIRE ! 🏆";
+            }
         }
 
         saveHighscore(playerName, finalScore);
