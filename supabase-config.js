@@ -1,4 +1,3 @@
-// supabase-config.js - VERSION CORRIGÉE
 const SUPABASE_URL = 'https://darzscuvrvvguljtuwhg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcnpzY3V2cnZ2Z3VsanR1d2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MzYwNDAsImV4cCI6MjA4MDUxMjA0MH0.drgwBrdS3yXsoXnL8qWFB7BYm9opdAwcN8n5CoUcYIY';
 
@@ -44,14 +43,14 @@ if (typeof window.supabase === 'undefined') {
         }
     }
     
-    // Récupérer les scores - CORRIGÉ : pas de created_at
+    // Récupérer les scores - MODIFIÉ : utiliser created_at
     async function getHighScoresFromSupabase(limit = 10) {
         console.log("📥 Récupération des scores...");
         
         try {
             const { data, error } = await supabase
                 .from('scores')
-                .select('id, name, score, date')  // ← SEULEMENT ces colonnes
+                .select('id, name, score, created_at')  // ← CHANGÉ : 'created_at' au lieu de 'date'
                 .order('score', { ascending: false })
                 .limit(limit);
                 

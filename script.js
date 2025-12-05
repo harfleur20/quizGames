@@ -122,11 +122,14 @@ async function loadScoresFromSupabase() {
         const result = await window.supabaseFunctions.getHighScoresFromSupabase(20);
         
         if (result.success && result.data) {
+            console.log("📊 Données reçues:", result.data);
+            
             allHighscores = result.data.map(item => ({
                 name: item.name,
                 score: item.score,
-                date: item.date ? formatDate(item.date) : "Aujourd'hui",
-                timestamp: item.date ? new Date(item.date).getTime() : Date.now()
+                // MODIFIÉ : utiliser 'created_at' au lieu de 'date'
+                date: item.created_at ? formatDate(item.created_at) : "Aujourd'hui",
+                timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now()
             }));
             
             console.log(`✅ ${allHighscores.length} scores chargés`);
