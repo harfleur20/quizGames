@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>QUIZZ GAMES</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="screen active" id="start-screen">
+        <h1>Quizz Time</h1>
+        <p>Teste tes connaissances avec des questions fun</p>
+        <button id="start-btn">Débuter le Quizz</button>
+      </div>
+
+      <div class="screen" id="quiz-screen">
+        <div class="quiz-header">
+            <h2 id="question-text">Question goes here</h2>
+            <div class="quiz-info">
+                <p>
+                    Question <span id="current-question">1 </span> sur <span id="total-questions"> 5</span>
+                </p>
+
+                <p>
+                    Score: <span id="score">0</span>
+                </p>
+            </div>
+        </div>
+            <div class="answers-container" id="answers-container">
+                <!-- Reponse à inserrer par Javascript -->
+            </div>
+
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+      </div>
+
+      <div class="screen" id="result-screen">
+        <h1>Résultats du Quizz</h1>
+        <div class="result-info">
+            <p>Ton score est de <span id="final-score">0</span> sur <span id="max-score">5</span></p>
+
+            <div id="result-message"></div>
+        </div>
+        <button id="restart-btn">Recommencer !</button>
+      </div>
+
+    </div>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
