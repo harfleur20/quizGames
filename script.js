@@ -409,7 +409,7 @@ function updateHighscoresDisplay() {
         highscoresListStart.innerHTML = "";
         
         if (allHighscores.length === 0) {
-            highscoresListStart.innerHTML = '<div class="no-scores"><p>🏆 Aucun score enregistré</p><p>Soyez le premier champion !</p></div>';
+            highscoresListStart.innerHTML = '<div class="no-scores"><p><i class="fa-regular fa-medal" style="color: #ffffff;"></i> Aucun score enregistré</p><p>Soyez le premier champion !</p></div>';
             showMoreScoresBtn.style.display = 'none';
             return;
         }
@@ -446,9 +446,9 @@ function updateHighscoresDisplay() {
             if (index === 2) scoreElement.classList.add("third-place");
             
             let rankIcon = `${index + 1}.`;
-            if (index === 0) rankIcon = '<i class="fa-solid fa-1"></i>';
-            if (index === 1) rankIcon = '<i class="fa-solid fa-2"></i>';
-            if (index === 2) rankIcon = '<i class="fa-solid fa-3"></i>';
+            if (index === 0) rankIcon = "🥇";
+            if (index === 1) rankIcon = "🥈";
+            if (index === 2) rankIcon = "🥉";
             
             scoreElement.innerHTML = `
                 <div class="highscore-rank">${rankIcon}</div>
