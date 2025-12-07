@@ -56,6 +56,16 @@ const progressPercentSpan = document.getElementById("progress-percent");
 const showMoreScoresBtn = document.getElementById("show-more-scores");
 const showMoreScoresResultBtn = document.getElementById("show-more-scores-result");
 
+// ==================== ÉLÉMENTS DU PANEL STATS ====================
+const statsIcon = document.getElementById("stats-icon");
+const statsPanel = document.getElementById("stats-panel");
+const closeStatsPanelBtn = document.getElementById("close-stats-panel");
+const seeAllStatsBtn = document.getElementById("see-all-stats");
+const statsBestScore = document.getElementById("stats-best-score");
+const statsTotalGames = document.getElementById("stats-total-games");
+const statsAverageScore = document.getElementById("stats-average-score");
+const recentGamesList = document.getElementById("recent-games-list");
+
 // ==================== VARIABLES GLOBALES ====================
 let visibleScoresCount = 4;
 let allHighscores = [];
@@ -245,9 +255,221 @@ function setupQuizEvents() {
         });
     }
     
+    // Configurer le panel des stats
+    setupStatsPanelEvents();
+    
     setTimeout(() => {
         setupRealTimeUpdates();
     }, 2000);
+}
+
+// ==================== FONCTIONS DU PANEL STATS ====================
+function setupStatsPanelEvents() {
+    console.log("🔧 Configuration du panel stats...");
+    
+    if (statsIcon) {
+        statsIcon.addEventListener('click', toggleStatsPanel);
+        console.log("✅ Icône stats configurée");
+    }
+    
+    if (closeStatsPanelBtn) {
+        closeStatsPanelBtn.addEventListener('click', hideStatsPanel);
+    }
+    
+    if (seeAllStatsBtn) {
+        seeAllStatsBtn.addEventListener('click', () => {
+            hideStatsPanel();
+            if (currentUser) {
+                startQuiz();
+            } else {
+                showAuthModal();
+                showMessage("🔒 Connectez-vous pour voir vos statistiques", "warning");
+            }
+        });
+    }
+    
+    // Fermer le panel en cliquant en dehors
+    document.addEventListener('click', (e) => {
+        if (statsPanel && statsPanel.classList.contains('active') && 
+            !statsPanel.contains(e.target) && 
+            !statsIcon.contains(e.target)) {
+            hideStatsPanel();
+        }
+    });
+}
+
+function toggleStatsPanel() {
+    if (statsPanel && statsPanel.classList.contains('active')) {
+        hideStatsPanel();
+    } else {
+        showStatsPanel();
+    }
+}
+
+function showStatsPanel() {
+    if (!statsPanel || !currentUser) return;
+    
+    loadRecentStats();
+    statsPanel.classList.add('active');
+    
+    // Positionner le panel
+    if (statsIcon) {
+        const iconRect = statsIcon.getBoundingClientRect();
+        statsPanel.style.top = `${iconRect.bottom + 10}px`;
+        statsPanel.style.left = `${iconRect.left}px`;
+    }
+}
+
+function hideStatsPanel() {
+    if (statsPanel) {
+        statsPanel.classList.remove('active');
+    }
+}
+
+async function loadRecentStats() {
+    console.log("📊 Chargement des stats récentes...");
+    
+    try {
+        if (!window.supabaseFunctions || !currentUser) {
+            console.log("⚠️ Impossible de charger les stats");
+            return;
+        }
+        
+        // Charger les stats complètes
+        const statsResult = await window.supabaseFunctions.getPlayerStats(currentUser.id);
+        
+        if (statsResult.success && statsResult.data) {
+            updateStatsPanel(statsResult.data);
+        }
+        
+        // Charger l'historique récent
+        const historyResult = await window.supabaseFunctions.getScoreHistory(currentUser.id, 5);
+        
+        if (historyResult.success && historyResult.data) {
+            updateRecentGamesList(historyResult.data);
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur chargement stats récentes:", error);
+        showMessage("⚠️ Impossible de charger les statistiques", "warning");
+    }
+}
+
+function updateStatsPanel(stats) {
+    try {
+        if (statsBestScore) {
+            statsBestScore.textContent = `${stats.bestScore || 0}/100`;
+            
+            // Couleur selon le score
+            if (stats.bestScore >= 90) {
+                statsBestScore.style.color = "#4CAF50";
+            } else if (stats.bestScore >= 70) {
+                statsBestScore.style.color = "#2196F3";
+            } else if (stats.bestScore >= 50) {
+                statsBestScore.style.color = "#ff9800";
+            } else {
+                statsBestScore.style.color = "#f44336";
+            }
+        }
+        
+        if (statsTotalGames) {
+            statsTotalGames.textContent = stats.totalGames || 0;
+        }
+        
+        if (statsAverageScore) {
+            statsAverageScore.textContent = `${stats.averageScore || 0}/100`;
+            
+            if (stats.averageScore >= 80) {
+                statsAverageScore.style.color = "#4CAF50";
+            } else if (stats.averageScore >= 60) {
+                statsAverageScore.style.color = "#2196F3";
+            } else if (stats.averageScore >= 40) {
+                statsAverageScore.style.color = "#ff9800";
+            } else {
+                statsAverageScore.style.color = "#f44336";
+            }
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur updateStatsPanel:", error);
+    }
+}
+
+function updateRecentGamesList(games) {
+    try {
+        if (!recentGamesList) return;
+        
+        recentGamesList.innerHTML = "";
+        
+        if (!games || games.length === 0) {
+            recentGamesList.innerHTML = `
+                <div class="no-recent-games">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>Aucune partie récente</p>
+                </div>
+            `;
+            return;
+        }
+        
+        games.forEach((game, index) => {
+            const gameItem = document.createElement("div");
+            gameItem.className = "recent-game-item";
+            
+            if (index === 0) {
+                gameItem.classList.add('new-entry');
+                setTimeout(() => gameItem.classList.remove('new-entry'), 1000);
+            }
+            
+            const gameDate = game.played_at || game.created_at;
+            const formattedDate = formatGameDate(gameDate);
+            
+            gameItem.innerHTML = `
+                <span class="recent-game-date">${formattedDate}</span>
+                <span class="recent-game-score">${game.score}/100</span>
+            `;
+            
+            const scoreElement = gameItem.querySelector('.recent-game-score');
+            if (game.score >= 90) {
+                scoreElement.style.color = "#4CAF50";
+                scoreElement.innerHTML = `${game.score}/100 ⭐`;
+            } else if (game.score >= 70) {
+                scoreElement.style.color = "#2196F3";
+            } else if (game.score >= 50) {
+                scoreElement.style.color = "#ff9800";
+            }
+            
+            recentGamesList.appendChild(gameItem);
+        });
+        
+    } catch (error) {
+        console.error("❌ Erreur updateRecentGamesList:", error);
+    }
+}
+
+function formatGameDate(dateString) {
+    try {
+        if (!dateString) return "Récemment";
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            return "Aujourd'hui";
+        } else if (diffDays === 1) {
+            return "Hier";
+        } else if (diffDays < 7) {
+            return `Il y a ${diffDays} jours`;
+        } else {
+            return date.toLocaleDateString("fr-FR", {
+                day: '2-digit',
+                month: '2-digit'
+            });
+        }
+    } catch (error) {
+        return "Récemment";
+    }
 }
 
 // ==================== FONCTIONS STATISTIQUES ====================
@@ -269,7 +491,7 @@ async function loadPlayerStats() {
         const result = await window.supabaseFunctions.getPlayerStats(currentUser.id);
         
         if (result.success && result.data) {
-            console.log("✅ Statistiques chargées:", result.data);
+            console.log("✅ Statistiques chargées");
             updatePlayerStatsDisplay(result.data);
         } else {
             console.log("⚠️ Aucune statistique trouvée");
@@ -284,19 +506,16 @@ async function loadPlayerStats() {
 
 function updatePlayerStatsDisplay(stats) {
     try {
-        // Mettre à jour le meilleur score
         const bestScoreValue = document.getElementById("best-score-value");
         if (bestScoreValue) {
             bestScoreValue.textContent = stats.bestScore || 0;
             
-            // Animation si c'est un nouveau record
             if (stats.bestScore > 0) {
                 bestScoreValue.classList.add('score-improved');
                 setTimeout(() => bestScoreValue.classList.remove('score-improved'), 2000);
             }
         }
         
-        // Mettre à jour la date du record
         const bestScoreDate = document.getElementById("best-score-date");
         if (bestScoreDate) {
             if (stats.bestDate) {
@@ -306,36 +525,21 @@ function updatePlayerStatsDisplay(stats) {
             }
         }
         
-        // Mettre à jour le nombre de parties
         const totalGames = document.getElementById("total-games");
         if (totalGames) {
             totalGames.textContent = stats.totalGames || 0;
             
-            // Animation si c'est la première partie
             if (stats.totalGames === 1) {
                 totalGames.classList.add('new-entry');
                 setTimeout(() => totalGames.classList.remove('new-entry'), 2000);
             }
         }
         
-        // Mettre à jour le score moyen
         const averageScore = document.getElementById("average-score");
         if (averageScore) {
             averageScore.textContent = stats.averageScore || 0;
         }
         
-        // Mettre à jour la dernière partie
-        const lastGameScore = document.getElementById("last-game-score");
-        if (lastGameScore && stats.lastGameScore !== undefined) {
-            lastGameScore.textContent = `${stats.lastGameScore}/100`;
-        }
-        
-        const lastGameDate = document.getElementById("last-game-date");
-        if (lastGameDate && stats.lastGameDate) {
-            lastGameDate.textContent = formatDate(stats.lastGameDate);
-        }
-        
-        // Afficher un message personnalisé
         const recordMessage = document.getElementById("record-message");
         if (recordMessage) {
             if (stats.totalGames === 0) {
@@ -360,15 +564,6 @@ function updatePlayerStatsDisplay(stats) {
                 recordMessage.style.display = 'none';
             }
         }
-        
-        // Animer la section des stats
-        const statLines = document.querySelectorAll('.stat-line');
-        statLines.forEach((line, index) => {
-            setTimeout(() => {
-                line.classList.add('update-animation');
-                setTimeout(() => line.classList.remove('update-animation'), 1000);
-            }, index * 100);
-        });
         
     } catch (error) {
         console.error("❌ Erreur mise à jour stats:", error);
@@ -432,6 +627,7 @@ function handleScoreUpdate(payload) {
         loadScoresFromSupabase(true);
         if (currentUser) {
             loadPlayerStats();
+            loadRecentStats();
         }
     }, 1000);
 }
@@ -650,6 +846,7 @@ async function handleLogout() {
             updateUserDisplay();
             loadScoresFromSupabase();
             resetPlayerStats();
+            hideStatsPanel();
             showMessage("✅ Déconnexion réussie", "success");
             
         } else {
@@ -669,6 +866,11 @@ function updateUserDisplay() {
             if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
             if (playerResultName) playerResultName.textContent = currentUser.pseudo;
             
+            if (statsIcon) {
+                statsIcon.style.display = 'flex';
+                statsIcon.title = `Statistiques de ${currentUser.pseudo}`;
+            }
+            
             if (logoutBtn) {
                 logoutBtn.style.display = 'block';
             }
@@ -679,6 +881,10 @@ function updateUserDisplay() {
             if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
             if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
             if (playerResultName) playerResultName.textContent = "Invité";
+            
+            if (statsIcon) {
+                statsIcon.style.display = 'none';
+            }
             
             if (logoutBtn) logoutBtn.style.display = 'none';
             if (loginBtnHeader) loginBtnHeader.style.display = 'block';
@@ -801,6 +1007,7 @@ async function saveScoreToSupabase(score) {
             setTimeout(() => {
                 loadPlayerStats();
                 loadScoresFromSupabase(true);
+                loadRecentStats();
             }, 1000);
             
             return result;
@@ -1426,7 +1633,7 @@ function updateConnectionMessage() {
         }
         
         if (currentUser) {
-            connectionMessage.textContent = `✅ Vous êtes connecté avec votre compte : ${currentUser.pseudo}`;
+            connectionMessage.textContent = `✅ Connecté : ${currentUser.pseudo}`;
             connectionMessage.className = "connection-status connected";
         } else {
             connectionMessage.textContent = "* Connectez-vous pour sauvegarder votre score";

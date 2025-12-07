@@ -1,0 +1,257 @@
+/* Styles pour l'icône des statistiques */
+.stats-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+  margin-left: 10px;
+}
+
+.stats-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4192 100%);
+}
+
+.stats-icon:active {
+  transform: translateY(0);
+}
+
+/* Styles pour le mini-panel */
+.stats-panel {
+  display: none;
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  width: 300px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border: 1px solid #e0e0e0;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-panel.active {
+  display: block;
+}
+
+.stats-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.stats-panel-header h4 {
+  margin: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-stats-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.close-stats-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.stats-panel-content {
+  padding: 20px;
+}
+
+/* Résumé des stats */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  background: #f0f0f0;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-label i {
+  margin-right: 4px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Dernières parties */
+.recent-games h5 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-games-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.recent-game-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  transition: all 0.3s ease;
+}
+
+.recent-game-item:hover {
+  background: #f0f0f0;
+  transform: translateX(5px);
+}
+
+.recent-game-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.recent-game-score {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+.no-recent-games {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.no-recent-games i {
+  font-size: 24px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.no-recent-games p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Actions */
+.stats-actions {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.see-all-stats-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.see-all-stats-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+  background: linear-gradient(135deg, #43a047 0%, #276829 100%);
+}
+
+.see-all-stats-btn:active {
+  transform: translateY(0);
+}
+
+/* Scrollbar personnalisée */
+.recent-games-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-games-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.recent-games-list::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 3px;
+}
+
+.recent-games-list::-webkit-scrollbar-thumb:hover {
+  background: #5a6fd8;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

@@ -11,6 +11,7 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
+    <link rel="stylesheet" href="parametre.css" />
     <title>QUIZZ GAMES - 100 QUESTIONS</title>
     <style>
       /* Styles temporaires pour les stats */
@@ -500,12 +501,22 @@
                 </p>
               </div>
             </div>
-            <button id="logout-btn" class="logout-btn" style="display: none">
-              <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
-            </button>
-            <button id="login-btn-header" class="login-btn-header">
-              <i class="fa-solid fa-right-to-bracket"></i> Connexion
-            </button>
+            <div class="user-actions">
+              <button id="logout-btn" class="logout-btn" style="display: none">
+                <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+              </button>
+              <button id="login-btn-header" class="login-btn-header">
+                <i class="fa-solid fa-right-to-bracket"></i> Connexion
+              </button>
+              <button
+                id="stats-icon"
+                class="stats-icon"
+                title="Voir mes statistiques"
+                style="display: none"
+              >
+                <i class="fa-solid fa-chart-line"></i>
+              </button>
+            </div>
           </div>
 
           <h1><i class="fa-brands fa-quinscape"></i> MEGA QUIZZ 100</h1>
@@ -838,6 +849,59 @@
           </p>
           <p><i class="fa-solid fa-trophy"></i> Sauvegardez vos scores</p>
           <p><i class="fa-solid fa-medal"></i> Accédez au classement</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINI-PANEL DES STATISTIQUES -->
+    <div id="stats-panel" class="stats-panel">
+      <div class="stats-panel-header">
+        <h4><i class="fa-solid fa-chart-line"></i> MES STATISTIQUES</h4>
+        <button id="close-stats-panel" class="close-stats-btn">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <div class="stats-panel-content">
+        <!-- Résumé rapide -->
+        <div class="stats-summary">
+          <div class="stat-item">
+            <span class="stat-label"
+              ><i class="fa-solid fa-trophy"></i> Meilleur</span
+            >
+            <span class="stat-value" id="stats-best-score">0/100</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label"
+              ><i class="fa-solid fa-gamepad"></i> Parties</span
+            >
+            <span class="stat-value" id="stats-total-games">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label"
+              ><i class="fa-solid fa-chart-line"></i> Moyenne</span
+            >
+            <span class="stat-value" id="stats-average-score">0/100</span>
+          </div>
+        </div>
+
+        <!-- Dernières parties -->
+        <div class="recent-games">
+          <h5><i class="fa-solid fa-history"></i> DERNIÈRES PARTIES</h5>
+          <div id="recent-games-list" class="recent-games-list">
+            <!-- Rempli dynamiquement -->
+            <div class="no-recent-games">
+              <i class="fa-solid fa-inbox"></i>
+              <p>Aucune partie récente</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="stats-actions">
+          <button id="see-all-stats" class="see-all-stats-btn">
+            <i class="fa-solid fa-chart-bar"></i> Voir toutes mes statistiques
+          </button>
         </div>
       </div>
     </div>
