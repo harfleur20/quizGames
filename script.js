@@ -249,75 +249,65 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
-    if (!registerPseudo || !registerEmail || !registerPassword || !registerConfirm) return;
+    // Récupérer les valeurs
+    const pseudo = document.getElementById('register-pseudo').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const confirm = document.getElementById('register-confirm').value;
     
-    const pseudo = registerPseudo.value.trim();
-    const email = registerEmail.value.trim();
-    const password = registerPassword.value;
-    const confirm = registerConfirm.value;
-    
-    // Validation
+    // Validation simple
     if (!pseudo || !email || !password || !confirm) {
-        showMessage("⚠️ Tous les champs sont requis", "warning");
-        return;
-    }
-    
-    if (pseudo.length < 3 || pseudo.length > 10) {
-        showMessage("⚠️ Pseudo doit faire 3-10 caractères", "warning");
-        return;
-    }
-    
-    if (!isValidEmail(email)) {
-        showMessage("⚠️ Email invalide", "warning");
-        return;
-    }
-    
-    if (password.length < 6) {
-        showMessage("⚠️ Mot de passe trop court (min 6 caractères)", "warning");
+        showMessage("⚠️ Remplissez tous les champs", "warning");
         return;
     }
     
     if (password !== confirm) {
-        showMessage("⚠️ Les mots de passe ne correspondent pas", "warning");
+        showMessage("⚠️ Mots de passe différents", "warning");
         return;
     }
     
-    // Vérifier si l'email existe déjà
-    const checkResult = await window.supabaseFunctions.checkEmailExists(email);
-    if (checkResult.exists) {
-        showMessage("⚠️ Cet email est déjà utilisé", "warning");
+    if (password.length < 6) {
+        showMessage("⚠️ Mot de passe trop court (6 caractères min)", "warning");
         return;
     }
     
-    registerBtn.disabled = true;
-    registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Inscription...';
+    // Désactiver le bouton
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Inscription...';
     
     try {
+        // Appeler Supabase
         const result = await window.supabaseFunctions.signUpSupabase(email, password, pseudo);
         
         if (result.success) {
+            // Stocker l'utilisateur
             currentUser = {
                 id: result.user.id,
                 email: result.user.email,
-                pseudo: pseudo
+                pseudo: result.user.user_metadata?.pseudo || pseudo
             };
             
+            // Mettre à jour l'affichage
             updateUserDisplay();
+            
+            // Passer à l'écran principal
             showScreen('start');
             loadScoresFromSupabase();
             
-            showMessage("✅ Inscription réussie ! Vous êtes maintenant connecté.", "success");
+            showMessage("✅ Inscription réussie !", "success");
             
         } else {
             showMessage(`❌ ${result.error}`, "error");
         }
         
     } catch (error) {
-        showMessage("❌ Erreur d'inscription", "error");
+        showMessage("❌ Erreur technique", "error");
         console.error(error);
     } finally {
-        registerBtn.disabled = false;
-        registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> S\'INSCRIRE';
+        // Réactiver le bouton
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> S\'INSCRIRE';
     }
 }
 
@@ -573,6 +563,31 @@ function selectAnswer(event) {
         wrongAnswer();
     }
 }
+
+
+// Dans votre composant de démarrage du quiz
+async function checkPlayerProfile() {
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("Utilisateur non connecté");
+    return;
+  }
+  
+  const playerDoc = await db.collection('joueurs').doc(user.uid).get();
+  console.log("Profil joueur existe?", playerDoc.exists);
+  
+  if (!playerDoc.exists) {
+    console.error("Profil joueur manquant - créer maintenant");
+    // Créer le profil ici
+  }
+}
+
+
+
+
+
+
+
 
 function wrongAnswer() {
     if (lives > 1) {

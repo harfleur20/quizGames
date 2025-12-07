@@ -1,134 +1,164 @@
 
-// supabase-config.js - VERSION AVEC AUTHENTIFICATION CORRIGÉE
+// supabase-config.js - VERSION ULTRA SIMPLE
 const SUPABASE_URL = 'https://darzscuvrvvguljtuwhg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcnpzY3V2cnZ2Z3VsanR1d2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MzYwNDAsImV4cCI6MjA4MDUxMjA0MH0.drgwBrdS3yXsoXnL8qWFB7BYm9opdAwcN8n5CoUcYIY';
 
-console.log("🔧 Configuration Supabase avec Auth");
+console.log("🔧 Supabase simple");
 
-// Vérifier que Supabase.js est chargé
 if (typeof window.supabase === 'undefined') {
     console.error("❌ Supabase.js non chargé !");
     window.supabaseFunctions = null;
 } else {
-    console.log("✅ Supabase.js détecté");
+    console.log("✅ Supabase.js OK");
     
     // Créer le client
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // ============ FONCTIONS D'AUTHENTIFICATION ============
+    // ============ INSCRIPTION SIMPLE ============
     
-    // S'inscrire - VERSION SIMPLIFIÉE
     async function signUpSupabase(email, password, pseudo) {
-        console.log(`📝 Inscription: ${email} - ${pseudo}`);
-        
-        try {
-            // 1. Créer l'utilisateur avec Supabase Auth
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        pseudo: pseudo,
-                        created_at: new Date().toISOString()
-                    },
-                    emailRedirectTo: window.location.origin // Pour la confirmation par email
+    console.log(`🚀 INSCRIPTION RÉELLE: ${email} - ${pseudo}`);
+    
+    try {
+        // 1. Créer l'utilisateur dans AUTH
+        console.log("📝 Étape 1: Création du compte auth...");
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    pseudo: pseudo,
+                    created_at: new Date().toISOString()
                 }
+            }
+        });
+        
+        if (authError) {
+            console.error("❌ ERREUR AUTH:", authError.message);
+            return { 
+                success: false, 
+                error: authError.message.includes("already") 
+                    ? "Cet email est déjà utilisé" 
+                    : authError.message 
+            };
+        }
+        
+        console.log("✅ Compte auth créé, ID:", authData.user?.id);
+        
+        // 2. AJOUTER À LA TABLE JOUEURS (LE PLUS IMPORTANT !)
+        console.log("💾 Étape 2: Ajout à la table joueurs...");
+        
+        const joueurData = {
+            user_id: authData.user.id,
+            pseudo: pseudo,
+            email: email,
+            created_at: new Date().toISOString()
+        };
+        
+        console.log("📤 Données joueur:", joueurData);
+        
+        const { data: joueurResult, error: joueurError } = await supabase
+            .from('joueurs')
+            .insert([joueurData])
+            .select();
+        
+        if (joueurError) {
+            console.error("❌ ERREUR TABLE JOUEURS:", {
+                message: joueurError.message,
+                code: joueurError.code,
+                details: joueurError.details
             });
             
-            if (authError) {
-                console.error("❌ Erreur inscription:", authError);
+            // Si c'est une erreur d'unicité, l'email existe déjà
+            if (joueurError.code === '23505') {
                 return { 
                     success: false, 
-                    error: authError.message 
+                    error: "Cet email est déjà utilisé par un autre joueur" 
                 };
             }
             
-            console.log("✅ Utilisateur créé:", authData.user?.id);
-            
-            // Si l'email nécessite confirmation, on ne connecte pas automatiquement
-            if (authData.user?.identities?.length === 0) {
-                console.log("⚠️ Email déjà utilisé ou nécessite confirmation");
-                return { 
-                    success: false, 
-                    error: "Cet email est déjà utilisé ou nécessite une confirmation" 
-                };
-            }
-            
-            // CONNECTER IMMÉDIATEMENT APRÈS L'INSCRIPTION
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-            
-            if (signInError) {
-                console.error("❌ Erreur connexion auto:", signInError);
-                return { 
-                    success: true, 
-                    user: authData.user,
-                    needsConfirmation: true,
-                    message: "Veuillez vérifier votre email pour confirmer votre compte"
-                };
-            }
-            
+            // Sinon, on continue quand même (le compte auth est créé)
+            console.warn("⚠️ Joueur non ajouté à la table, mais compte auth OK");
+        } else {
+            console.log("✅ Joueur ajouté à la table:", joueurResult);
+        }
+        
+        // 3. Connecter automatiquement
+        console.log("🔑 Étape 3: Connexion automatique...");
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (loginError) {
+            console.error("❌ ERREUR CONNEXION:", loginError.message);
             return { 
                 success: true, 
-                user: signInData.user,
-                session: signInData.session
+                user: authData.user,
+                message: "Inscription réussie ! Veuillez vous connecter." 
             };
-            
-        } catch (error) {
-            console.error("❌ Exception inscription:", error);
-            return { success: false, error: error.message };
         }
-    }
-    
-    // Se connecter
-    async function signInSupabase(email, password) {
-        console.log(`🔐 Connexion: ${email}`);
         
+        console.log("✅ Connexion automatique réussie");
+        
+        // 4. VÉRIFICATION FINALE
+        console.log("🔍 Étape 4: Vérification...");
+        const { data: verification } = await supabase
+            .from('joueurs')
+            .select('*')
+            .eq('email', email)
+            .single();
+        
+        if (verification) {
+            console.log("🎯 VÉRIFICATION: Joueur trouvé dans la base!");
+        } else {
+            console.warn("⚠️ VÉRIFICATION: Joueur NON trouvé dans la base");
+        }
+        
+        return { 
+            success: true, 
+            user: loginData.user,
+            session: loginData.session,
+            inDatabase: !!verification
+        };
+        
+    } catch (error) {
+        console.error("💥 ERREUR FATALE inscription:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+
+
+    // ============ CONNEXION ============
+    async function signInSupabase(email, password) {
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
             
-            if (error) {
-                console.error("❌ Erreur connexion:", error);
-                return { 
-                    success: false, 
-                    error: error.message 
-                };
-            }
-            
-            console.log("✅ Utilisateur connecté:", data.user?.id);
-            return { 
-                success: true, 
-                user: data.user,
-                session: data.session
-            };
-            
+            if (error) throw error;
+            return { success: true, user: data.user, session: data.session };
         } catch (error) {
-            console.error("❌ Exception connexion:", error);
             return { success: false, error: error.message };
         }
     }
     
-    // Déconnexion
+    // ============ DÉCONNEXION ============
     async function signOutSupabase() {
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            await supabase.auth.signOut();
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         }
     }
     
-    // Vérifier la session
+    // ============ SESSION ============
     async function getSessionSupabase() {
         try {
-            const { data, error } = await supabase.auth.getSession();
-            if (error) throw error;
+            const { data } = await supabase.auth.getSession();
             return { 
                 success: true, 
                 session: data.session,
@@ -139,162 +169,89 @@ if (typeof window.supabase === 'undefined') {
         }
     }
     
-    // ============ FONCTIONS DE SCORES ============
-    
-    // Sauvegarder un score
+    // ============ SAUVEGARDER SCORE ============
     async function saveScoreToSupabase(score) {
-        console.log(`💾 Sauvegarde score: ${score}`);
-        
         try {
-            // Récupérer l'utilisateur actuel
-            const sessionResult = await getSessionSupabase();
-            const user = sessionResult.user;
-            
-            if (!user) {
-                console.warn("⚠️ Aucun utilisateur connecté, score non sauvegardé");
-                return { 
-                    success: false, 
-                    error: "Utilisateur non connecté" 
-                };
+            // Récupérer l'utilisateur
+            const session = await getSessionSupabase();
+            if (!session.user) {
+                return { success: false, error: "Non connecté" };
             }
             
-            const pseudo = user.user_metadata?.pseudo || user.email?.split('@')[0] || "Anonyme";
+            const user = session.user;
+            const pseudo = user.user_metadata?.pseudo || user.email?.split('@')[0];
             
-            // Préparer les données du score
-            const scoreData = {
-                user_id: user.id,
-                pseudo: pseudo,
-                email: user.email,
-                score: score,
-                created_at: new Date().toISOString()
-            };
-            
-            console.log("📊 Données à sauvegarder:", scoreData);
-            
+            // Sauvegarder le score
             const { data, error } = await supabase
                 .from('scores')
-                .insert([scoreData])
-                .select();
-                
-            if (error) {
-                console.error("❌ Erreur Supabase:", error);
-                
-                // Fallback: essayer sans user_id si colonne n'existe pas
-                const fallbackData = {
+                .insert({
                     pseudo: pseudo,
                     email: user.email,
                     score: score,
                     created_at: new Date().toISOString()
-                };
-                
-                const { data: fallbackResult, error: fallbackError } = await supabase
-                    .from('scores')
-                    .insert([fallbackData])
-                    .select();
-                    
-                if (fallbackError) {
-                    console.error("❌ Erreur fallback:", fallbackError);
-                    throw new Error(`Impossible de sauvegarder: ${fallbackError.message}`);
-                }
-                
-                console.log("✅ Score sauvegardé (fallback):", fallbackResult);
-                return { success: true, data: fallbackResult };
-            }
+                });
             
-            console.log("✅ Score sauvegardé:", data);
+            if (error) throw error;
             return { success: true, data: data };
             
         } catch (error) {
-            console.error("❌ Exception sauvegarde score:", error);
             return { success: false, error: error.message };
         }
     }
     
-    // Récupérer les scores
+    // ============ RÉCUPÉRER LES SCORES ============
     async function getHighScoresFromSupabase(limit = 10) {
-        console.log("📥 Récupération des scores...");
-        
         try {
             const { data, error } = await supabase
                 .from('scores')
-                .select('id, pseudo, score, created_at')
+                .select('*')
                 .order('score', { ascending: false })
                 .limit(limit);
-                
-            if (error) {
-                console.error("❌ Erreur Supabase:", error);
-                return { 
-                    success: false, 
-                    data: [], 
-                    error: `Erreur ${error.code}: ${error.message}` 
-                };
-            }
             
-            console.log(`✅ ${data?.length || 0} scores récupérés`);
+            if (error) throw error;
             return { success: true, data: data || [] };
-            
         } catch (error) {
-            console.error("❌ Exception:", error);
             return { success: false, data: [], error: error.message };
         }
     }
     
-    // Vérifier si un email existe déjà - NOUVELLE VERSION FONCTIONNELLE
+    // ============ VÉRIFIER EMAIL ============
+   
     async function checkEmailExists(email) {
-        console.log(`📧 Vérification email: ${email}`);
-        
-        try {
-            // Méthode 1: Tenter de récupérer l'utilisateur via admin API (simulé)
-            // On utilise une méthode plus simple pour l'instant
-            return { 
-                success: true, 
-                exists: false, // On retourne toujours false pour permettre l'inscription
-                message: "La vérification n'est pas disponible pour le moment"
-            };
-            
-        } catch (error) {
-            console.error("❌ Erreur vérification email:", error);
-            return { 
-                success: false, 
-                exists: false, 
-                error: error.message 
-            };
-        }
-    }
+    console.log(`📧 Vérification email: ${email}`);
     
-    // Exporter toutes les fonctions
+    try {
+        // OPTION SIMPLE : On ne vérifie PAS côté client
+        // On laisse Supabase Auth gérer les doublons lors de l'inscription
+        // Cette fonction retourne TOUJOURS "false" pour permettre l'inscription
+        // C'est Supabase qui refusera si l'email existe vraiment
+        
+        return { 
+            success: true, 
+            exists: false,  // Toujours false = on laisse passer
+            message: "La vérification sera faite par Supabase lors de l'inscription"
+        };
+        
+    } catch (error) {
+        // En cas d'erreur, on laisse quand même passer
+        return { 
+            success: true, 
+            exists: false 
+        };
+    }
+}
+
+
+    // ============ EXPORT ============
     window.supabaseFunctions = {
-        // Auth
         signUpSupabase,
         signInSupabase,
         signOutSupabase,
         getSessionSupabase,
-        checkEmailExists,
-        
-        // Scores
         saveScoreToSupabase,
         getHighScoresFromSupabase,
-        
-        // Test
-        testConnection: async () => {
-            const result = await getHighScoresFromSupabase(1);
-            return result.success;
-        }
+        checkEmailExists
     };
     
-    console.log("✅ Fonctions Supabase avec Auth prêtes");
-    
-    // Vérifier la session au chargement
-    setTimeout(async () => {
-        try {
-            const session = await getSessionSupabase();
-            if (session.success && session.user) {
-                console.log("👤 Session active:", session.user.email);
-            } else {
-                console.log("🔓 Aucune session active");
-            }
-        } catch (error) {
-            console.log("⚠️ Erreur vérification session:", error);
-        }
-    }, 500);
+    console.log("✅ Prêt à utiliser");
 }
