@@ -432,7 +432,7 @@ h1 {
 }
 
 .player-tag {
-  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 10px 25px;
   border-radius: 25px;
@@ -883,6 +883,7 @@ h1 {
 .user-info {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 15px;
 }
 
@@ -895,11 +896,18 @@ h1 {
     margin: 0;
     color: white;
     font-size: 20px;
+    /* text-align: center; */
 }
+
+#current-user-pseudo {
+    color: #667eea;
+    font-size: 18px;
+    font-weight: bold;
+ }   
 
 .user-email {
     margin: 5px 0 0 0;
-    color: #aaa;
+    color: #23043a;
     font-size: 14px;
 }
 
@@ -959,6 +967,7 @@ h1 {
     display: flex;
     gap: 5px;
     justify-content: center;
+    text-align: center;
   }
 
   .result-message{

@@ -80,31 +80,38 @@ const TOTAL_QUESTIONS = 100;
 
 // User info
 let currentUser = null;
-let lastUpdateTime = 0;
 
 // ==================== INITIALISATION ====================
 window.addEventListener('DOMContentLoaded', async () => {
-    console.log("🎮 QUIZ CHAMPIONS - ÉDITION TEMPS RÉEL");
+    console.log("🎮 QUIZ CHAMPIONS - Chargement...");
     
-    await checkExistingSession();
-    setupAuthEvents();
-    setupQuizEvents();
-    
-    console.log("✅ Initialisation terminée");
+    try {
+        await checkExistingSession();
+        setupAuthEvents();
+        setupQuizEvents();
+        
+        console.log("✅ Initialisation terminée");
+    } catch (error) {
+        console.error("❌ Erreur lors de l'initialisation:", error);
+        showScreen('start');
+    }
 });
 
 async function checkExistingSession() {
     try {
+        console.log("🔍 Vérification de la session...");
+        
         if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
-            console.log("⚠️ Supabase non chargé");
+            console.log("⚠️ Supabase non chargé - mode invité");
             showScreen('start');
-            loadScoresFromSupabase();
+            setTimeout(() => loadScoresFromSupabase(), 1000);
             return;
         }
         
         const result = await window.supabaseFunctions.getSessionSupabase();
         
         if (result.success && result.user) {
+            console.log("✅ Utilisateur connecté:", result.user.email);
             currentUser = {
                 id: result.user.id,
                 email: result.user.email,
@@ -114,26 +121,34 @@ async function checkExistingSession() {
             updateUserDisplay();
             showScreen('start');
             loadScoresFromSupabase();
+            loadPlayerStats();
             
         } else {
+            console.log("👤 Mode invité");
             showScreen('start');
             loadScoresFromSupabase();
+            resetPlayerStats();
         }
         
     } catch (error) {
         console.error("❌ Erreur vérification session:", error);
         showScreen('start');
         loadScoresFromSupabase();
+        resetPlayerStats();
     }
 }
 
 function setupAuthEvents() {
+    console.log("🔧 Configuration des événements auth...");
+    
     if (loginBtnHeader) {
         loginBtnHeader.addEventListener('click', showAuthModal);
+        console.log("✅ Bouton connexion configuré");
     }
     
     if (closeAuthModalBtn) {
         closeAuthModalBtn.addEventListener('click', hideAuthModal);
+        console.log("✅ Bouton fermer modal configuré");
     }
     
     if (authModal) {
@@ -158,6 +173,7 @@ function setupAuthEvents() {
             registerFormModal.classList.add('active');
             loginFormModal.classList.remove('active');
         });
+        console.log("✅ Onglets auth configurés");
     }
     
     if (loginBtnModal) {
@@ -195,9 +211,13 @@ function setupAuthEvents() {
 }
 
 function setupQuizEvents() {
+    console.log("🔧 Configuration des événements quiz...");
+    
     if (startButton) {
         startButton.addEventListener("click", startQuiz);
+        console.log("✅ Bouton démarrer configuré");
     }
+    
     if (restartButton) {
         restartButton.addEventListener("click", restartQuiz);
     }
@@ -225,76 +245,239 @@ function setupQuizEvents() {
         });
     }
     
-    setupRealTimeUpdates();
+    setTimeout(() => {
+        setupRealTimeUpdates();
+    }, 2000);
+}
+
+// ==================== FONCTIONS STATISTIQUES ====================
+async function loadPlayerStats() {
+    console.log("📊 Chargement des statistiques personnelles...");
+    
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getPlayerStats) {
+            console.log("⚠️ Fonctions statistiques non disponibles");
+            return;
+        }
+        
+        if (!currentUser || !currentUser.id) {
+            console.log("👤 Utilisateur non connecté - pas de stats");
+            resetPlayerStats();
+            return;
+        }
+        
+        const result = await window.supabaseFunctions.getPlayerStats(currentUser.id);
+        
+        if (result.success && result.data) {
+            console.log("✅ Statistiques chargées:", result.data);
+            updatePlayerStatsDisplay(result.data);
+        } else {
+            console.log("⚠️ Aucune statistique trouvée");
+            resetPlayerStats();
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur chargement stats:", error);
+        resetPlayerStats();
+    }
+}
+
+function updatePlayerStatsDisplay(stats) {
+    try {
+        // Mettre à jour le meilleur score
+        const bestScoreValue = document.getElementById("best-score-value");
+        if (bestScoreValue) {
+            bestScoreValue.textContent = stats.bestScore || 0;
+            
+            // Animation si c'est un nouveau record
+            if (stats.bestScore > 0) {
+                bestScoreValue.classList.add('score-improved');
+                setTimeout(() => bestScoreValue.classList.remove('score-improved'), 2000);
+            }
+        }
+        
+        // Mettre à jour la date du record
+        const bestScoreDate = document.getElementById("best-score-date");
+        if (bestScoreDate) {
+            if (stats.bestDate) {
+                bestScoreDate.textContent = formatDate(stats.bestDate);
+            } else {
+                bestScoreDate.textContent = "Jamais";
+            }
+        }
+        
+        // Mettre à jour le nombre de parties
+        const totalGames = document.getElementById("total-games");
+        if (totalGames) {
+            totalGames.textContent = stats.totalGames || 0;
+            
+            // Animation si c'est la première partie
+            if (stats.totalGames === 1) {
+                totalGames.classList.add('new-entry');
+                setTimeout(() => totalGames.classList.remove('new-entry'), 2000);
+            }
+        }
+        
+        // Mettre à jour le score moyen
+        const averageScore = document.getElementById("average-score");
+        if (averageScore) {
+            averageScore.textContent = stats.averageScore || 0;
+        }
+        
+        // Mettre à jour la dernière partie
+        const lastGameScore = document.getElementById("last-game-score");
+        if (lastGameScore && stats.lastGameScore !== undefined) {
+            lastGameScore.textContent = `${stats.lastGameScore}/100`;
+        }
+        
+        const lastGameDate = document.getElementById("last-game-date");
+        if (lastGameDate && stats.lastGameDate) {
+            lastGameDate.textContent = formatDate(stats.lastGameDate);
+        }
+        
+        // Afficher un message personnalisé
+        const recordMessage = document.getElementById("record-message");
+        if (recordMessage) {
+            if (stats.totalGames === 0) {
+                recordMessage.innerHTML = `
+                    <strong>🎯 Premier défi !</strong><br>
+                    Complétez votre première partie pour établir votre record.
+                `;
+                recordMessage.style.display = 'block';
+            } else if (stats.bestScore >= 90) {
+                recordMessage.innerHTML = `
+                    <strong>🌟 Performance exceptionnelle !</strong><br>
+                    Votre meilleur score est de ${stats.bestScore}/100. Continuez comme ça !
+                `;
+                recordMessage.style.display = 'block';
+            } else if (stats.progression > 0) {
+                recordMessage.innerHTML = `
+                    <strong>📈 En progression !</strong><br>
+                    Vous avez amélioré votre score de +${stats.progression} points depuis votre première partie.
+                `;
+                recordMessage.style.display = 'block';
+            } else {
+                recordMessage.style.display = 'none';
+            }
+        }
+        
+        // Animer la section des stats
+        const statLines = document.querySelectorAll('.stat-line');
+        statLines.forEach((line, index) => {
+            setTimeout(() => {
+                line.classList.add('update-animation');
+                setTimeout(() => line.classList.remove('update-animation'), 1000);
+            }, index * 100);
+        });
+        
+    } catch (error) {
+        console.error("❌ Erreur mise à jour stats:", error);
+    }
+}
+
+function resetPlayerStats() {
+    try {
+        const elements = {
+            "best-score-value": "0",
+            "best-score-date": "Jamais",
+            "total-games": "0",
+            "average-score": "0"
+        };
+        
+        for (const [id, value] of Object.entries(elements)) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        }
+        
+        const recordMessage = document.getElementById("record-message");
+        if (recordMessage) {
+            recordMessage.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur reset stats:", error);
+    }
 }
 
 // ==================== FONCTIONS TEMPS RÉEL ====================
 function setupRealTimeUpdates() {
-    console.log("🔔 Configuration des mises à jour en temps réel...");
+    console.log("🔔 Tentative d'activation des mises à jour temps réel...");
     
     if (!window.supabaseFunctions || !window.supabaseFunctions.subscribeToScores) {
         console.log("⚠️ Fonctions real-time non disponibles");
         return;
     }
     
-    scoreSubscription = window.supabaseFunctions.subscribeToScores(handleScoreUpdate);
-    
-    if (scoreSubscription) {
-        console.log("✅ Abonnement aux mises à jour activé");
+    try {
+        scoreSubscription = window.supabaseFunctions.subscribeToScores(handleScoreUpdate);
+        
+        if (scoreSubscription) {
+            console.log("✅ Abonnement aux mises à jour activé");
+        } else {
+            console.log("⚠️ Échec de l'abonnement");
+        }
+    } catch (error) {
+        console.error("❌ Erreur lors de l'activation du temps réel:", error);
     }
 }
 
 function handleScoreUpdate(payload) {
-    const now = Date.now();
-    
-    if (now - lastUpdateTime < 2000) {
-        return;
-    }
-    
-    lastUpdateTime = now;
-    
-    console.log("🔄 Mise à jour reçue:", payload.eventType);
+    console.log("🔄 Mise à jour temps réel:", payload.eventType);
     
     showUpdateNotification();
     
     setTimeout(() => {
         loadScoresFromSupabase(true);
-    }, 500);
+        if (currentUser) {
+            loadPlayerStats();
+        }
+    }, 1000);
 }
 
 function showUpdateNotification() {
-    const notification = document.createElement("div");
-    notification.className = "score-update-notification";
-    notification.innerHTML = `
-        <i class="fa-solid fa-sync-alt fa-spin"></i>
-        <span>Classement mis à jour...</span>
-    `;
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        z-index: 1001;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        animation: slideDown 0.3s ease, fadeOut 0.3s ease 1.5s forwards;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
+    try {
+        const existingNotification = document.querySelector('.score-update-notification');
+        if (existingNotification) {
+            existingNotification.remove();
         }
-    }, 2000);
+        
+        const notification = document.createElement("div");
+        notification.className = "score-update-notification";
+        notification.innerHTML = `
+            <i class="fa-solid fa-sync-alt fa-spin"></i>
+            <span>Classement mis à jour !</span>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            animation: slideDown 0.3s ease, fadeOut 0.3s ease 2s forwards;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 2500);
+    } catch (error) {
+        console.error("❌ Erreur création notification:", error);
+    }
 }
 
 window.addEventListener('beforeunload', () => {
@@ -305,21 +488,25 @@ window.addEventListener('beforeunload', () => {
 
 // ==================== FONCTIONS MODAL ====================
 function showAuthModal() {
-    if (authModal) {
-        authModal.classList.add('active');
-        if (loginEmailModal) loginEmailModal.value = '';
-        if (loginPasswordModal) loginPasswordModal.value = '';
-        if (registerPseudoModal) registerPseudoModal.value = '';
-        if (registerEmailModal) registerEmailModal.value = '';
-        if (registerPasswordModal) registerPasswordModal.value = '';
-        if (registerConfirmModal) registerConfirmModal.value = '';
-        
-        if (loginTabModal && registerTabModal && loginFormModal && registerFormModal) {
-            loginTabModal.classList.add('active');
-            registerTabModal.classList.remove('active');
-            loginFormModal.classList.add('active');
-            registerFormModal.classList.remove('active');
+    try {
+        if (authModal) {
+            authModal.classList.add('active');
+            if (loginEmailModal) loginEmailModal.value = '';
+            if (loginPasswordModal) loginPasswordModal.value = '';
+            if (registerPseudoModal) registerPseudoModal.value = '';
+            if (registerEmailModal) registerEmailModal.value = '';
+            if (registerPasswordModal) registerPasswordModal.value = '';
+            if (registerConfirmModal) registerConfirmModal.value = '';
+            
+            if (loginTabModal && registerTabModal && loginFormModal && registerFormModal) {
+                loginTabModal.classList.add('active');
+                registerTabModal.classList.remove('active');
+                loginFormModal.classList.add('active');
+                registerFormModal.classList.remove('active');
+            }
         }
+    } catch (error) {
+        console.error("❌ Erreur ouverture modal:", error);
     }
 }
 
@@ -368,6 +555,7 @@ async function handleLoginModal() {
                 
                 updateUserDisplay();
                 loadScoresFromSupabase();
+                loadPlayerStats();
                 showMessage("✅ Connexion réussie !", "success");
                 resolve(true);
                 
@@ -433,6 +621,7 @@ async function handleRegisterModal() {
                 
                 updateUserDisplay();
                 loadScoresFromSupabase();
+                loadPlayerStats();
                 showMessage("✅ Inscription réussie !", "success");
                 resolve(true);
                 
@@ -460,6 +649,7 @@ async function handleLogout() {
             currentUser = null;
             updateUserDisplay();
             loadScoresFromSupabase();
+            resetPlayerStats();
             showMessage("✅ Déconnexion réussie", "success");
             
         } else {
@@ -472,29 +662,33 @@ async function handleLogout() {
 }
 
 function updateUserDisplay() {
-    if (currentUser) {
-        if (currentUserPseudo) currentUserPseudo.textContent = currentUser.pseudo;
-        if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
-        if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
-        if (playerResultName) playerResultName.textContent = currentUser.pseudo;
-        
-        if (logoutBtn) {
-            logoutBtn.style.display = 'block';
-            logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Déconnexion';
+    try {
+        if (currentUser) {
+            if (currentUserPseudo) currentUserPseudo.textContent = currentUser.pseudo;
+            if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
+            if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
+            if (playerResultName) playerResultName.textContent = currentUser.pseudo;
+            
+            if (logoutBtn) {
+                logoutBtn.style.display = 'block';
+            }
+            if (loginBtnHeader) loginBtnHeader.style.display = 'none';
+            
+        } else {
+            if (currentUserPseudo) currentUserPseudo.textContent = "Invité";
+            if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
+            if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
+            if (playerResultName) playerResultName.textContent = "Invité";
+            
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (loginBtnHeader) loginBtnHeader.style.display = 'block';
         }
-        if (loginBtnHeader) loginBtnHeader.style.display = 'none';
         
-    } else {
-        if (currentUserPseudo) currentUserPseudo.textContent = "Invité";
-        if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
-        if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
-        if (playerResultName) playerResultName.textContent = "Invité";
+        updateConnectionMessage();
         
-        if (logoutBtn) logoutBtn.style.display = 'none';
-        if (loginBtnHeader) loginBtnHeader.style.display = 'block';
+    } catch (error) {
+        console.error("❌ Erreur updateUserDisplay:", error);
     }
-    
-    updateConnectionMessage();
 }
 
 function isValidEmail(email) {
@@ -504,11 +698,12 @@ function isValidEmail(email) {
 
 // ==================== FONCTIONS SUPABASE ====================
 async function loadScoresFromSupabase(isUpdate = false) {
-    console.log(`📥 Chargement ${isUpdate ? 'dynamique' : ''} des scores...`);
+    console.log(`📥 ${isUpdate ? 'Mise à jour' : 'Chargement'} des scores...`);
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getHighScoresFromSupabase) {
-            showMessage("⚠️ Supabase non configuré", "error");
+            console.log("⚠️ Fonctions Supabase non disponibles");
+            displayDefaultScores();
             return;
         }
         
@@ -535,22 +730,23 @@ async function loadScoresFromSupabase(isUpdate = false) {
             updateHighscoresResultDisplay(isUpdate);
             
         } else {
-            console.log("⚠️ Aucun score trouvé");
-            allHighscores = [];
-            updateHighscoresDisplay();
-            updateHighscoresResultDisplay();
+            console.log("⚠️ Aucun score trouvé - affichage par défaut");
+            displayDefaultScores();
         }
         
     } catch (error) {
         console.error("❌ Erreur chargement scores:", error);
-        allHighscores = [];
-        updateHighscoresDisplay();
-        updateHighscoresResultDisplay();
+        displayDefaultScores();
     }
 }
 
+function displayDefaultScores() {
+    updateHighscoresDisplay();
+    updateHighscoresResultDisplay();
+}
+
 function animateScoreChanges(oldScores, newScores) {
-    console.log("🎭 Animation des changements de classement...");
+    console.log("🎭 Animation des changements...");
     
     const newEntries = newScores.filter(newScore => 
         !oldScores.some(oldScore => oldScore.id === newScore.id)
@@ -579,7 +775,7 @@ function animateScoreChanges(oldScores, newScores) {
 }
 
 async function saveScoreToSupabase(score) {
-    console.log(`💾 Sauvegarde: ${score}`);
+    console.log(`💾 Sauvegarde détaillée: ${score}`);
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.saveScoreToSupabase) {
@@ -598,7 +794,15 @@ async function saveScoreToSupabase(score) {
         );
         
         if (result.success) {
-            console.log("✅ Score sauvegardé:", result.action);
+            console.log(`✅ Score sauvegardé (type: ${result.messageType})`);
+            
+            displayPersonalizedMessage(result);
+            
+            setTimeout(() => {
+                loadPlayerStats();
+                loadScoresFromSupabase(true);
+            }, 1000);
+            
             return result;
             
         } else {
@@ -710,7 +914,7 @@ function updateTimer() {
             timerDisplay.style.color = "#ff4444";
             timerDisplay.style.fontWeight = "bold";
         } else if (timeLeft <= 5) {
-            timerDisplay.style.color = "#ff9800";
+            timerDisplay.style.color = "#ffffffff";
         }
     }
     
@@ -879,11 +1083,100 @@ function updateLivesDisplay() {
     if (livesDisplay) {
         if (lives === 2) {
             livesDisplay.style.background = "linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)";
+            livesDisplay.style.padding = "10px 20px";
+            livesDisplay.style.borderRadius = "20px";
+
         } else if (lives === 1) {
             livesDisplay.style.background = "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)";
         } else {
             livesDisplay.style.background = "linear-gradient(135deg, #ff4444 0%, #cc0000 100%)";
         }
+    }
+}
+
+function displayPersonalizedMessage(result) {
+    if (!result || !result.success) return;
+    
+    let message = "";
+    let messageType = "info";
+    
+    switch(result.messageType) {
+        case 'first_time':
+            if (result.details?.isPerfect) {
+                message = "🎯 PERFECTION ABSOLUE ! Premier score : 100/100 ! 🌟";
+                messageType = "success";
+            } else {
+                message = `✅ Premier score enregistré : ${result.newScore}/100 ! Bienvenue !`;
+                messageType = "success";
+            }
+            break;
+            
+        case 'record_beaten':
+            const improvement = result.details?.improvement || 0;
+            const level = result.details?.level || 'small';
+            
+            if (result.details?.isPerfect) {
+                message = "🏆 RECORD ABSOLU ATTEINT ! 100/100 - LÉGENDAIRE !";
+                messageType = "success";
+            } else {
+                switch(level) {
+                    case 'huge':
+                        message = `🚀 EXPLOSION ! +${improvement} points - NOUVEAU RECORD !`;
+                        break;
+                    case 'major':
+                        message = `🔥 PROGRESSION MAJEURE ! +${improvement} points - Record battu !`;
+                        break;
+                    case 'good':
+                        message = `📈 BONNE AMÉLIORATION ! +${improvement} points - Meilleur score !`;
+                        break;
+                    default:
+                        message = `👍 PROGRESSION ! +${improvement} points - Record amélioré !`;
+                }
+                messageType = "success";
+            }
+            break;
+            
+        case 'equal_score':
+            message = `⚖️ SCORE IDENTIQUE : ${result.newScore}/100 - Votre record tient bon !`;
+            messageType = "info";
+            break;
+            
+        case 'lower_score':
+            const difference = result.details?.difference || 0;
+            const needed = result.details?.needed || 1;
+            
+            if (difference > 20) {
+                message = `💪 VOTRE RECORD RESTE : ${result.previousScore}/100 - Gardez la motivation !`;
+            } else if (difference > 10) {
+                message = `🛡️ PRESQUE ! Record : ${result.previousScore}/100 - Manqué de ${difference} points`;
+            } else {
+                message = `🎯 TOUT PRÈS ! Record : ${result.previousScore}/100 - Il vous faut ${needed} point${needed > 1 ? 's' : ''} de plus !`;
+            }
+            messageType = "warning";
+            break;
+            
+        default:
+            message = "✅ Score traité !";
+            messageType = "info";
+    }
+    
+    showMessage(message, messageType);
+    
+    if (result.messageType === 'record_beaten' && result.details) {
+        setTimeout(() => {
+            const improvement = result.details.improvement;
+            const percentage = result.details.percentage;
+            
+            let detailMessage = `📊 Progression : ${result.previousScore} → ${result.newScore} (+${improvement} pts, +${percentage}%)`;
+            
+            if (improvement >= 20) {
+                detailMessage += " 🏅";
+            } else if (improvement >= 10) {
+                detailMessage += " ⭐";
+            }
+            
+            showMessage(detailMessage, "info");
+        }, 1500);
     }
 }
 
@@ -895,219 +1188,253 @@ function shakeLivesDisplay() {
 }
 
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("fr-FR", {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch (error) {
+        return "Aujourd'hui";
+    }
 }
 
 function showScreen(screenName) {
-    if (startScreen) startScreen.classList.remove("active");
-    if (quizScreen) quizScreen.classList.remove("active");
-    if (resultScreen) resultScreen.classList.remove("active");
-    
-    switch(screenName) {
-        case 'start':
-            if (startScreen) startScreen.classList.add("active");
-            break;
-        case 'quiz':
-            if (quizScreen) quizScreen.classList.add("active");
-            break;
-        case 'result':
-            if (resultScreen) resultScreen.classList.add("active");
-            break;
+    try {
+        if (startScreen) startScreen.classList.remove("active");
+        if (quizScreen) quizScreen.classList.remove("active");
+        if (resultScreen) resultScreen.classList.remove("active");
+        
+        switch(screenName) {
+            case 'start':
+                if (startScreen) startScreen.classList.add("active");
+                break;
+            case 'quiz':
+                if (quizScreen) quizScreen.classList.add("active");
+                break;
+            case 'result':
+                if (resultScreen) resultScreen.classList.add("active");
+                break;
+        }
+    } catch (error) {
+        console.error("❌ Erreur showScreen:", error);
     }
 }
 
 function showMessage(text, type = "info") {
     console.log(`📢 ${text}`);
     
-    const oldMessages = document.querySelectorAll('.quiz-message');
-    oldMessages.forEach(msg => msg.remove());
-    
-    const message = document.createElement("div");
-    message.className = `quiz-message ${type}`;
-    message.textContent = text;
-    message.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        z-index: 1000;
-        opacity: 0;
-        transform: translateX(100px);
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    `;
-    
-    if (type === "success") {
-        message.style.backgroundColor = "#4CAF50";
-    } else if (type === "error") {
-        message.style.backgroundColor = "#f44336";
-    } else if (type === "warning") {
-        message.style.backgroundColor = "#ff9800";
-    } else {
-        message.style.backgroundColor = "#2196F3";
+    try {
+        const oldMessages = document.querySelectorAll('.quiz-message');
+        oldMessages.forEach(msg => msg.remove());
+        
+        const message = document.createElement("div");
+        message.className = `quiz-message ${type}`;
+        message.textContent = text;
+        message.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        `;
+        
+        if (type === "success") {
+            message.style.backgroundColor = "#4CAF50";
+        } else if (type === "error") {
+            message.style.backgroundColor = "#f44336";
+        } else if (type === "warning") {
+            message.style.backgroundColor = "#310d64ff";
+        } else {
+            message.style.backgroundColor = "#2196F3";
+        }
+        
+        document.body.appendChild(message);
+        
+        setTimeout(() => {
+            message.style.opacity = "1";
+            message.style.transform = "translateX(0)";
+        }, 10);
+        
+        setTimeout(() => {
+            message.style.opacity = "0";
+            message.style.transform = "translateX(100px)";
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 300);
+        }, 4000);
+    } catch (error) {
+        console.error("❌ Erreur showMessage:", error);
     }
-    
-    document.body.appendChild(message);
-    
-    setTimeout(() => {
-        message.style.opacity = "1";
-        message.style.transform = "translateX(0)";
-    }, 10);
-    
-    setTimeout(() => {
-        message.style.opacity = "0";
-        message.style.transform = "translateX(100px)";
-        setTimeout(() => message.remove(), 300);
-    }, 4000);
 }
 
 function updateHighscoresDisplay(isUpdate = false) {
-    if (!highscoresListStart || !showMoreScoresBtn) return;
-    
-    highscoresListStart.innerHTML = "";
-    
-    if (allHighscores.length === 0) {
-        highscoresListStart.innerHTML = `
-            <div class="no-scores">
-                <p><i class="fa-regular fa-trophy"></i> Aucun champion encore</p>
-                <p>Soyez le premier !</p>
-            </div>
-        `;
-        showMoreScoresBtn.style.display = 'none';
-        return;
-    }
-    
-    const scoresToShow = isExpandedStart ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
-    
-    if (allHighscores.length > visibleScoresCount) {
-        showMoreScoresBtn.innerHTML = isExpandedStart 
-            ? '👆 Voir moins' 
-            : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
-        showMoreScoresBtn.style.display = 'block';
-    } else {
-        showMoreScoresBtn.style.display = 'none';
-    }
-    
-    allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
-        const scoreElement = document.createElement("div");
-        scoreElement.className = "highscore-item";
-        scoreElement.dataset.scoreId = scoreData.id;
-        scoreElement.dataset.userId = scoreData.userId;
-        scoreElement.style.animationDelay = `${index * 0.15}s`;
+    try {
+        if (!highscoresListStart || !showMoreScoresBtn) return;
         
-        if (isUpdate) {
-            scoreElement.classList.add('update-animation');
+        highscoresListStart.innerHTML = "";
+        
+        if (allHighscores.length === 0) {
+            highscoresListStart.innerHTML = `
+                <div class="no-scores">
+                    <p><i class="fa-regular fa-trophy"></i> Aucun champion encore</p>
+                    <p>Soyez le premier !</p>
+                </div>
+            `;
+            showMoreScoresBtn.style.display = 'none';
+            return;
         }
         
-        // RÉTABLIR LES CLASSES ORIGINALES POUR LES 3 PREMIÈRES PLACES
-        if (index === 0) {
-            scoreElement.classList.add("first-place");
-        } else if (index === 1) {
-            scoreElement.classList.add("second-place");
-        } else if (index === 2) {
-            scoreElement.classList.add("third-place");
+        const scoresToShow = isExpandedStart ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+        
+        if (allHighscores.length > visibleScoresCount) {
+            showMoreScoresBtn.innerHTML = isExpandedStart 
+                ? '👆 Voir moins' 
+                : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+            showMoreScoresBtn.style.display = 'block';
+        } else {
+            showMoreScoresBtn.style.display = 'none';
         }
         
-        let rankIcon = `${index + 1}.`;
-        if (index === 0) rankIcon = "🥇";
-        if (index === 1) rankIcon = "🥈";
-        if (index === 2) rankIcon = "🥉";
-        
-        scoreElement.innerHTML = `
-            <div class="highscore-rank">${rankIcon}</div>
-            <div class="highscore-name">${scoreData.name}</div>
-            <div class="highscore-score">${scoreData.score}/100</div>
-            <div class="highscore-date">${scoreData.date}</div>
-        `;
-        
-        highscoresListStart.appendChild(scoreElement);
-    });
+        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+            const scoreElement = document.createElement("div");
+            scoreElement.className = "highscore-item";
+            scoreElement.dataset.scoreId = scoreData.id;
+            scoreElement.dataset.userId = scoreData.userId;
+            
+            if (isUpdate) {
+                scoreElement.classList.add('update-animation');
+            }
+            
+            if (index === 0) {
+                scoreElement.classList.add("first-place");
+            } else if (index === 1) {
+                scoreElement.classList.add("second-place");
+            } else if (index === 2) {
+                scoreElement.classList.add("third-place");
+            }
+            
+            let rankIcon = `${index + 1}.`;
+            if (index === 0) rankIcon = "🥇";
+            if (index === 1) rankIcon = "🥈";
+            if (index === 2) rankIcon = "🥉";
+            
+            scoreElement.innerHTML = `
+                <div class="highscore-rank">${rankIcon}</div>
+                <div class="highscore-name">${scoreData.name}</div>
+                <div class="highscore-score">${scoreData.score}/100</div>
+                <div class="highscore-date">${scoreData.date}</div>
+            `;
+            
+            highscoresListStart.appendChild(scoreElement);
+        });
+    } catch (error) {
+        console.error("❌ Erreur updateHighscoresDisplay:", error);
+    }
 }
 
 function updateHighscoresResultDisplay(isUpdate = false) {
-    if (!highscoresListResult || !showMoreScoresResultBtn) return;
-    
-    highscoresListResult.innerHTML = "";
-    
-    if (allHighscores.length === 0) {
-        highscoresListResult.innerHTML = '<div class="no-scores"><p>🏆 Aucun score enregistré</p></div>';
-        showMoreScoresResultBtn.style.display = 'none';
-        return;
-    }
-    
-    const scoresToShow = isExpandedResult ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
-    
-    if (allHighscores.length > visibleScoresCount) {
-        showMoreScoresResultBtn.innerHTML = isExpandedResult 
-            ? '👆 Voir moins' 
-            : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
-        showMoreScoresResultBtn.style.display = 'block';
-    } else {
-        showMoreScoresResultBtn.style.display = 'none';
-    }
-    
-    allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
-        const scoreElement = document.createElement("div");
-        scoreElement.className = "highscore-item";
-        scoreElement.dataset.scoreId = scoreData.id;
-        scoreElement.dataset.userId = scoreData.userId;
-        scoreElement.style.animationDelay = `${index * 0.15}s`;
+    try {
+        if (!highscoresListResult || !showMoreScoresResultBtn) return;
         
-        if (isUpdate) {
-            scoreElement.classList.add('update-animation');
+        highscoresListResult.innerHTML = "";
+        
+        if (allHighscores.length === 0) {
+            highscoresListResult.innerHTML = '<div class="no-scores"><p>🏆 Aucun score enregistré</p></div>';
+            showMoreScoresResultBtn.style.display = 'none';
+            return;
         }
         
-        // RÉTABLIR LES CLASSES ORIGINALES POUR LES 3 PREMIÈRES PLACES
-        if (index === 0) {
-            scoreElement.classList.add("first-place");
-        } else if (index === 1) {
-            scoreElement.classList.add("second-place");
-        } else if (index === 2) {
-            scoreElement.classList.add("third-place");
+        const scoresToShow = isExpandedResult ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+        
+        if (allHighscores.length > visibleScoresCount) {
+            showMoreScoresResultBtn.innerHTML = isExpandedResult 
+                ? '👆 Voir moins' 
+                : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+            showMoreScoresResultBtn.style.display = 'block';
+        } else {
+            showMoreScoresResultBtn.style.display = 'none';
         }
         
-        let rankIcon = `${index + 1}.`;
-        if (index === 0) rankIcon = "🥇";
-        if (index === 1) rankIcon = "🥈";
-        if (index === 2) rankIcon = "🥉";
-        
-        scoreElement.innerHTML = `
-            <div class="highscore-rank">${rankIcon}</div>
-            <div class="highscore-name">${scoreData.name}</div>
-            <div class="highscore-score">${scoreData.score}/100</div>
-            <div class="highscore-date">${scoreData.date}</div>
-        `;
-        
-        highscoresListResult.appendChild(scoreElement);
-    });
+        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+            const scoreElement = document.createElement("div");
+            scoreElement.className = "highscore-item";
+            scoreElement.dataset.scoreId = scoreData.id;
+            scoreElement.dataset.userId = scoreData.userId;
+            
+            if (isUpdate) {
+                scoreElement.classList.add('update-animation');
+            }
+            
+            if (index === 0) {
+                scoreElement.classList.add("first-place");
+            } else if (index === 1) {
+                scoreElement.classList.add("second-place");
+            } else if (index === 2) {
+                scoreElement.classList.add("third-place");
+            }
+            
+            let rankIcon = `${index + 1}.`;
+            if (index === 0) rankIcon = "🥇";
+            if (index === 1) rankIcon = "🥈";
+            if (index === 2) rankIcon = "🥉";
+            
+            scoreElement.innerHTML = `
+                <div class="highscore-rank">${rankIcon}</div>
+                <div class="highscore-name">${scoreData.name}</div>
+                <div class="highscore-score">${scoreData.score}/100</div>
+                <div class="highscore-date">${scoreData.date}</div>
+            `;
+            
+            highscoresListResult.appendChild(scoreElement);
+        });
+    } catch (error) {
+        console.error("❌ Erreur updateHighscoresResultDisplay:", error);
+    }
 }
 
 function restartQuiz() {
-    showScreen('start');
-    isExpandedStart = false;
-    loadScoresFromSupabase();
+    if (currentUser) {
+        loadPlayerStats();
+    }
+    
+    lives = 2;
+    currentQuestionIndex = 0;
+    score = 0;
+    gameStopped = false;
+    
+    startQuiz();
 }
 
 // ==================== FONCTION POUR METTRE À JOUR LE MESSAGE DE CONNEXION ====================
 function updateConnectionMessage() {
-    const connectionMessage = document.getElementById("connection-status-message");
-    if (!connectionMessage) return;
-    
-    if (currentUser) {
-        connectionMessage.textContent = `✅ Vous êtes connecté avec votre compte : ${currentUser.pseudo}`;
-        connectionMessage.className = "connection-status connected";
-    } else {
-        connectionMessage.textContent = "* Connectez-vous pour sauvegarder votre score";
-        connectionMessage.className = "connection-status not-connected";
+    try {
+        const connectionMessage = document.getElementById("connection-status-message");
+        if (!connectionMessage) {
+            console.log("ℹ️ Élément connection-status-message non trouvé");
+            return;
+        }
+        
+        if (currentUser) {
+            connectionMessage.textContent = `✅ Vous êtes connecté avec votre compte : ${currentUser.pseudo}`;
+            connectionMessage.className = "connection-status connected";
+        } else {
+            connectionMessage.textContent = "* Connectez-vous pour sauvegarder votre score";
+            connectionMessage.className = "connection-status not-connected";
+        }
+    } catch (error) {
+        console.error("❌ Erreur updateConnectionMessage:", error);
     }
 }
 
-console.log("🎯 Script avec temps réel chargé !");
+console.log("🎯 Script prêt !");

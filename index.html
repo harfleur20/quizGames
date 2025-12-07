@@ -13,6 +13,55 @@
     />
     <title>QUIZZ GAMES - 100 QUESTIONS</title>
     <style>
+      /* Styles temporaires pour les stats */
+      .stat-line {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid #e0e0e0;
+      }
+
+      .stat-line.highlight {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 215, 0, 0.1) 0%,
+          rgba(255, 193, 7, 0.1) 100%
+        );
+        border: 2px solid #ffd700;
+        font-weight: bold;
+      }
+
+      .stat-icon {
+        width: 30px;
+        color: #667eea;
+        font-size: 18px;
+      }
+
+      .stat-label {
+        flex: 1;
+        color: #555;
+        font-weight: 600;
+        margin-left: 10px;
+      }
+
+      .stat-value {
+        font-weight: bold;
+        color: #333;
+        min-width: 80px;
+        text-align: right;
+      }
+
+      .record-message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border-left: 4px solid #4caf50;
+        font-size: 14px;
+      }
       /* Styles spécifiques pour le modal */
 
       /* Animations pour les mises à jour dynamiques */
@@ -21,79 +70,99 @@
       }
 
       /* Animations pour les mises à jour temps réel */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -100%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, 0);
-    }
-}
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -100%);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
 
-@keyframes pulseUpdate {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
+      @keyframes pulseUpdate {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
 
-@keyframes newEntry {
-    0% { 
-        transform: translateX(-100%); 
-        opacity: 0; 
-    }
-    50% { 
-        transform: translateX(10px); 
-        opacity: 1; 
-    }
-    100% { 
-        transform: translateX(0); 
-        opacity: 1; 
-    }
-}
+      @keyframes newEntry {
+        0% {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        50% {
+          transform: translateX(10px);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
 
-@keyframes scoreUp {
-    0% { transform: scale(1); }
-    25% { transform: scale(1.05); }
-    50% { transform: scale(1); }
-    75% { transform: scale(1.03); }
-    100% { transform: scale(1); }
-}
+      @keyframes scoreUp {
+        0% {
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.05);
+        }
+        50% {
+          transform: scale(1);
+        }
+        75% {
+          transform: scale(1.03);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
 
-.update-animation {
-    animation: pulseUpdate 1s ease;
-}
+      .update-animation {
+        animation: pulseUpdate 1s ease;
+      }
 
-.new-entry {
-    animation: newEntry 1.5s ease;
-    border-left: 6px solid #4CAF50 !important;
-}
+      .new-entry {
+        animation: newEntry 1.5s ease;
+        border-left: 6px solid #4caf50 !important;
+      }
 
-.score-improved {
-    animation: scoreUp 1.5s ease;
-}
+      .score-improved {
+        animation: scoreUp 1.5s ease;
+      }
 
-/* Dégradés pour les 3 premières places (ORIGINAL) */
-.highscore-item.first-place {
-    background: linear-gradient(135deg, #e1ddc8 0%, #fff8c4 100%);
-    border-left: 6px solid #3a3a3a;
-}
+      /* Dégradés pour les 3 premières places (ORIGINAL) */
+      .highscore-item.first-place {
+        background: linear-gradient(135deg, #e1ddc8 0%, #fff8c4 100%);
+        border-left: 6px solid #3a3a3a;
+      }
 
-.highscore-item.second-place {
-    background: linear-gradient(135deg, #e8e8e8 0%, #f0f0f0 100%);
-    border-left: 6px solid #c0c0c0;
-}
+      .highscore-item.second-place {
+        background: linear-gradient(135deg, #e8e8e8 0%, #f0f0f0 100%);
+        border-left: 6px solid #c0c0c0;
+      }
 
-.highscore-item.third-place {
-    background: linear-gradient(135deg, #efeeed 0%, #efefef 100%);
-    border-left: 6px solid #f4d7b9;
-}
+      .highscore-item.third-place {
+        background: linear-gradient(135deg, #efeeed 0%, #efefef 100%);
+        border-left: 6px solid #f4d7b9;
+      }
 
       @keyframes pulseUpdate {
         0% {
@@ -586,25 +655,69 @@
           <div class="player-result">
             <div class="result-card">
               <h3><i class="fa-solid fa-chart-pie"></i> TES STATISTIQUES</h3>
-              <p>
-                <strong
-                  ><i class="fa-solid fa-circle-user"></i> Joueur :</strong
-                >
-                <span id="player-result-name">Joueur</span>
-              </p>
-              <p>
-                <strong
-                  ><i class="fa-solid fa-circle-check"></i> Questions réussies
-                  :</strong
-                >
-                <span id="questions-done">0</span>/100
-              </p>
-              <p>
-                <strong
-                  ><i class="fa-solid fa-percent"></i> Pourcentage :</strong
-                >
-                <span id="percentage">0%</span>
-              </p>
+
+              <!-- Ligne 1 : Joueur -->
+              <div class="stat-line">
+                <span class="stat-icon"><i class="fa-solid fa-user"></i></span>
+                <span class="stat-label">Joueur :</span>
+                <span class="stat-value" id="player-result-name">Invité</span>
+              </div>
+
+              <!-- Ligne 2 : Score actuel -->
+              <div class="stat-line">
+                <span class="stat-icon"><i class="fa-solid fa-star"></i></span>
+                <span class="stat-label">Score actuel :</span>
+                <span class="stat-value">
+                  <span id="questions-done">0</span>/100 (<span id="percentage"
+                    >0%</span
+                  >)
+                </span>
+              </div>
+
+              <!-- Ligne 3 : VOTRE MEILLEUR SCORE (à remplacer "Pourcentage") -->
+              <div class="stat-line highlight">
+                <span class="stat-icon"
+                  ><i class="fa-solid fa-trophy"></i
+                ></span>
+                <span class="stat-label">Votre meilleur :</span>
+                <span class="stat-value" id="best-score-value">0</span>/100
+              </div>
+
+              <!-- Ligne 4 : Date du record -->
+              <div class="stat-line">
+                <span class="stat-icon"
+                  ><i class="fa-solid fa-calendar"></i
+                ></span>
+                <span class="stat-label">Obtenu le :</span>
+                <span class="stat-value" id="best-score-date">Jamais</span>
+              </div>
+
+              <!-- Ligne 5 : Nombre de parties -->
+              <div class="stat-line">
+                <span class="stat-icon"
+                  ><i class="fa-solid fa-gamepad"></i
+                ></span>
+                <span class="stat-label">Parties jouées :</span>
+                <span class="stat-value" id="total-games">0</span>
+              </div>
+
+              <!-- Ligne 6 : Score moyen -->
+              <div class="stat-line">
+                <span class="stat-icon"
+                  ><i class="fa-solid fa-chart-line"></i
+                ></span>
+                <span class="stat-label">Score moyen :</span>
+                <span class="stat-value" id="average-score">0</span>/100
+              </div>
+
+              <!-- Message de progression (optionnel) -->
+              <div
+                id="record-message"
+                class="record-message"
+                style="display: none"
+              >
+                <!-- Sera rempli par JavaScript -->
+              </div>
             </div>
           </div>
 
