@@ -5,12 +5,12 @@ const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
 const resultScreen = document.getElementById("result-screen");
 
-// Modal auth elements (nouveau)
+// Modal auth elements
 const authModal = document.getElementById("auth-modal");
 const closeAuthModalBtn = document.getElementById("close-auth-modal");
 const loginBtnHeader = document.getElementById("login-btn-header");
 
-// Éléments du modal (avec suffixe -modal)
+// Éléments du modal
 const loginTabModal = document.getElementById("login-tab-modal");
 const registerTabModal = document.getElementById("register-tab-modal");
 const loginFormModal = document.getElementById("login-form-modal");
@@ -27,7 +27,6 @@ const registerBtnModal = document.getElementById("register-btn-modal");
 // User info elements
 const currentUserPseudo = document.getElementById("current-user-pseudo");
 const currentUserEmail = document.getElementById("current-user-email");
-const playerDisplayName = document.getElementById("player-display-name");
 const logoutBtn = document.getElementById("logout-btn");
 
 // Quiz elements
@@ -62,6 +61,7 @@ let visibleScoresCount = 4;
 let allHighscores = [];
 let isExpandedStart = false;
 let isExpandedResult = false;
+let scoreSubscription = null;
 
 // Système de vies
 let lives = 2;
@@ -80,10 +80,11 @@ const TOTAL_QUESTIONS = 100;
 
 // User info
 let currentUser = null;
+let lastUpdateTime = 0;
 
 // ==================== INITIALISATION ====================
 window.addEventListener('DOMContentLoaded', async () => {
-    console.log("🎮 QUIZ CHAMPIONS - MODAL EDITION");
+    console.log("🎮 QUIZ CHAMPIONS - ÉDITION TEMPS RÉEL");
     
     await checkExistingSession();
     setupAuthEvents();
@@ -97,7 +98,6 @@ async function checkExistingSession() {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
             console.log("⚠️ Supabase non chargé");
             showScreen('start');
-            // Charger les scores même sans session
             loadScoresFromSupabase();
             return;
         }
@@ -113,35 +113,29 @@ async function checkExistingSession() {
             
             updateUserDisplay();
             showScreen('start');
-            // Charger les scores pour l'utilisateur connecté
             loadScoresFromSupabase();
             
         } else {
-            showScreen('start'); // Toujours montrer start screen
-            // Charger les scores même sans utilisateur
+            showScreen('start');
             loadScoresFromSupabase();
         }
         
     } catch (error) {
         console.error("❌ Erreur vérification session:", error);
         showScreen('start');
-        // Charger les scores même en cas d'erreur
         loadScoresFromSupabase();
     }
 }
 
 function setupAuthEvents() {
-    // Bouton connexion dans l'en-tête
     if (loginBtnHeader) {
         loginBtnHeader.addEventListener('click', showAuthModal);
     }
     
-    // Fermer le modal
     if (closeAuthModalBtn) {
         closeAuthModalBtn.addEventListener('click', hideAuthModal);
     }
     
-    // Fermer le modal en cliquant à l'extérieur
     if (authModal) {
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) {
@@ -150,7 +144,6 @@ function setupAuthEvents() {
         });
     }
     
-    // Tabs du modal
     if (loginTabModal && registerTabModal) {
         loginTabModal.addEventListener('click', () => {
             loginTabModal.classList.add('active');
@@ -167,18 +160,15 @@ function setupAuthEvents() {
         });
     }
     
-    // Bouton connexion dans le modal
     if (loginBtnModal) {
         loginBtnModal.addEventListener('click', async () => {
             const success = await handleLoginModal();
             if (success) {
                 hideAuthModal();
-                // Ne pas démarrer automatiquement, laisser l'utilisateur cliquer
             }
         });
     }
     
-    // Bouton inscription dans le modal
     if (registerBtnModal) {
         registerBtnModal.addEventListener('click', async () => {
             const success = await handleRegisterModal();
@@ -188,7 +178,6 @@ function setupAuthEvents() {
         });
     }
     
-    // Entrée dans les champs du modal
     if (loginPasswordModal) {
         loginPasswordModal.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
@@ -200,7 +189,6 @@ function setupAuthEvents() {
         });
     }
     
-    // Déconnexion
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
@@ -236,13 +224,89 @@ function setupQuizEvents() {
             updateHighscoresResultDisplay();
         });
     }
+    
+    setupRealTimeUpdates();
 }
+
+// ==================== FONCTIONS TEMPS RÉEL ====================
+function setupRealTimeUpdates() {
+    console.log("🔔 Configuration des mises à jour en temps réel...");
+    
+    if (!window.supabaseFunctions || !window.supabaseFunctions.subscribeToScores) {
+        console.log("⚠️ Fonctions real-time non disponibles");
+        return;
+    }
+    
+    scoreSubscription = window.supabaseFunctions.subscribeToScores(handleScoreUpdate);
+    
+    if (scoreSubscription) {
+        console.log("✅ Abonnement aux mises à jour activé");
+    }
+}
+
+function handleScoreUpdate(payload) {
+    const now = Date.now();
+    
+    if (now - lastUpdateTime < 2000) {
+        return;
+    }
+    
+    lastUpdateTime = now;
+    
+    console.log("🔄 Mise à jour reçue:", payload.eventType);
+    
+    showUpdateNotification();
+    
+    setTimeout(() => {
+        loadScoresFromSupabase(true);
+    }, 500);
+}
+
+function showUpdateNotification() {
+    const notification = document.createElement("div");
+    notification.className = "score-update-notification";
+    notification.innerHTML = `
+        <i class="fa-solid fa-sync-alt fa-spin"></i>
+        <span>Classement mis à jour...</span>
+    `;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        animation: slideDown 0.3s ease, fadeOut 0.3s ease 1.5s forwards;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 2000);
+}
+
+window.addEventListener('beforeunload', () => {
+    if (scoreSubscription && window.supabaseFunctions && window.supabaseFunctions.unsubscribeFromScores) {
+        window.supabaseFunctions.unsubscribeFromScores(scoreSubscription);
+    }
+});
 
 // ==================== FONCTIONS MODAL ====================
 function showAuthModal() {
     if (authModal) {
         authModal.classList.add('active');
-        // Réinitialiser les formulaires
         if (loginEmailModal) loginEmailModal.value = '';
         if (loginPasswordModal) loginPasswordModal.value = '';
         if (registerPseudoModal) registerPseudoModal.value = '';
@@ -250,7 +314,6 @@ function showAuthModal() {
         if (registerPasswordModal) registerPasswordModal.value = '';
         if (registerConfirmModal) registerConfirmModal.value = '';
         
-        // Montrer l'onglet connexion par défaut
         if (loginTabModal && registerTabModal && loginFormModal && registerFormModal) {
             loginTabModal.classList.add('active');
             registerTabModal.classList.remove('active');
@@ -304,7 +367,7 @@ async function handleLoginModal() {
                 };
                 
                 updateUserDisplay();
-                loadScoresFromSupabase(); // Recharger les scores après connexion
+                loadScoresFromSupabase();
                 showMessage("✅ Connexion réussie !", "success");
                 resolve(true);
                 
@@ -369,7 +432,7 @@ async function handleRegisterModal() {
                 };
                 
                 updateUserDisplay();
-                loadScoresFromSupabase(); // Recharger les scores après inscription
+                loadScoresFromSupabase();
                 showMessage("✅ Inscription réussie !", "success");
                 resolve(true);
                 
@@ -396,7 +459,7 @@ async function handleLogout() {
         if (result.success) {
             currentUser = null;
             updateUserDisplay();
-            loadScoresFromSupabase(); // Recharger les scores après déconnexion
+            loadScoresFromSupabase();
             showMessage("✅ Déconnexion réussie", "success");
             
         } else {
@@ -412,11 +475,9 @@ function updateUserDisplay() {
     if (currentUser) {
         if (currentUserPseudo) currentUserPseudo.textContent = currentUser.pseudo;
         if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
-        if (playerDisplayName) playerDisplayName.textContent = currentUser.pseudo;
         if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
         if (playerResultName) playerResultName.textContent = currentUser.pseudo;
         
-        // Afficher bouton déconnexion, cacher connexion
         if (logoutBtn) {
             logoutBtn.style.display = 'block';
             logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Déconnexion';
@@ -424,19 +485,15 @@ function updateUserDisplay() {
         if (loginBtnHeader) loginBtnHeader.style.display = 'none';
         
     } else {
-        // Mode invité
         if (currentUserPseudo) currentUserPseudo.textContent = "Invité";
         if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
-        if (playerDisplayName) playerDisplayName.textContent = "Invité";
         if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
         if (playerResultName) playerResultName.textContent = "Invité";
         
-        // Afficher bouton connexion, cacher déconnexion
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (loginBtnHeader) loginBtnHeader.style.display = 'block';
     }
     
-    // Mettre à jour le message de statut de connexion
     updateConnectionMessage();
 }
 
@@ -446,21 +503,22 @@ function isValidEmail(email) {
 }
 
 // ==================== FONCTIONS SUPABASE ====================
-async function loadScoresFromSupabase() {
-    console.log("📥 Chargement des scores depuis Supabase...");
+async function loadScoresFromSupabase(isUpdate = false) {
+    console.log(`📥 Chargement ${isUpdate ? 'dynamique' : ''} des scores...`);
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getHighScoresFromSupabase) {
             showMessage("⚠️ Supabase non configuré", "error");
-            // Afficher un message par défaut
-            displayDefaultScores();
             return;
         }
         
         const result = await window.supabaseFunctions.getHighScoresFromSupabase(20);
         
         if (result.success && result.data) {
+            const oldScores = [...allHighscores];
             allHighscores = result.data.map(item => ({
+                id: item.id,
+                userId: item.user_id,
                 name: item.pseudo || "Anonyme",
                 score: item.score,
                 date: item.created_at ? formatDate(item.created_at) : "Aujourd'hui",
@@ -468,37 +526,60 @@ async function loadScoresFromSupabase() {
             }));
             
             console.log(`✅ ${allHighscores.length} scores chargés`);
-            updateHighscoresDisplay();
-            updateHighscoresResultDisplay();
+            
+            if (isUpdate && oldScores.length > 0) {
+                animateScoreChanges(oldScores, allHighscores);
+            }
+            
+            updateHighscoresDisplay(isUpdate);
+            updateHighscoresResultDisplay(isUpdate);
             
         } else {
-            console.log("⚠️ Aucun score trouvé dans la base de données");
-            // Afficher des scores par défaut ou un message
-            displayDefaultScores();
+            console.log("⚠️ Aucun score trouvé");
+            allHighscores = [];
+            updateHighscoresDisplay();
+            updateHighscoresResultDisplay();
         }
         
     } catch (error) {
         console.error("❌ Erreur chargement scores:", error);
-        // En cas d'erreur, afficher des scores par défaut
-        displayDefaultScores();
+        allHighscores = [];
+        updateHighscoresDisplay();
+        updateHighscoresResultDisplay();
     }
 }
 
-function displayDefaultScores() {
-    // Afficher des scores par défaut ou un message
-    allHighscores = [
-        { name: "Champion 1", score: 95, date: "Aujourd'hui", timestamp: Date.now() },
-        { name: "Joueur 2", score: 87, date: "Hier", timestamp: Date.now() - 86400000 },
-        { name: "Quiz Master", score: 92, date: "05/12/2023", timestamp: Date.now() - 172800000 },
-        { name: "Brainiac", score: 78, date: "03/12/2023", timestamp: Date.now() - 259200000 }
-    ];
+function animateScoreChanges(oldScores, newScores) {
+    console.log("🎭 Animation des changements de classement...");
     
-    updateHighscoresDisplay();
-    updateHighscoresResultDisplay();
+    const newEntries = newScores.filter(newScore => 
+        !oldScores.some(oldScore => oldScore.id === newScore.id)
+    );
+    
+    const improvedScores = newScores.filter(newScore => {
+        const oldScore = oldScores.find(old => old.id === newScore.id);
+        return oldScore && newScore.score > oldScore.score;
+    });
+    
+    newEntries.forEach(score => {
+        const element = document.querySelector(`[data-score-id="${score.id}"]`);
+        if (element) {
+            element.classList.add('new-entry');
+            setTimeout(() => element.classList.remove('new-entry'), 2000);
+        }
+    });
+    
+    improvedScores.forEach(score => {
+        const element = document.querySelector(`[data-score-id="${score.id}"]`);
+        if (element) {
+            element.classList.add('score-improved');
+            setTimeout(() => element.classList.remove('score-improved'), 2000);
+        }
+    });
 }
 
 async function saveScoreToSupabase(score) {
-    console.log(`💾 Sauvegarde sur Supabase: ${score}`);
+    console.log(`💾 Sauvegarde: ${score}`);
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.saveScoreToSupabase) {
@@ -509,8 +590,6 @@ async function saveScoreToSupabase(score) {
             throw new Error("Utilisateur non connecté");
         }
         
-        console.log("🔍 Utilisateur actuel:", currentUser);
-        
         const result = await window.supabaseFunctions.saveScoreToSupabase(
             score,
             currentUser.id,
@@ -519,9 +598,7 @@ async function saveScoreToSupabase(score) {
         );
         
         if (result.success) {
-            console.log("✅ Score sauvegarde result:", result);
-            // Recharger les scores après sauvegarde
-            setTimeout(() => loadScoresFromSupabase(), 2000);
+            console.log("✅ Score sauvegardé:", result.action);
             return result;
             
         } else {
@@ -545,7 +622,6 @@ function startQuiz() {
         return;
     }
     
-    // Si connecté, démarrer le quiz
     startQuizGame();
 }
 
@@ -745,23 +821,18 @@ function showFinalResults() {
         resultMessage.textContent = message;
     }
     
-    // SAUVEGARDE SUPABASE (seulement si connecté)
     if (currentUser) {
         saveScoreToSupabase(finalScore).then(saveResult => {
             if (saveResult.success) {
                 if (saveResult.action === 'updated') {
-                    showMessage("🎉 Nouveau record personnel ! Score mis à jour !", "success");
+                    showMessage("🎉 Nouveau record personnel !", "success");
                 } else if (saveResult.action === 'inserted') {
                     showMessage("✅ Score enregistré !", "success");
-                } else if (saveResult.action === 'skipped') {
-                    showMessage("🏆 Votre meilleur score reste inchangé", "info");
                 }
             } else {
                 showMessage(`❌ Échec sauvegarde: ${saveResult.error}`, "error");
             }
         });
-    } else {
-        showMessage("🔒 Connectez-vous pour enregistrer votre score", "warning");
     }
     
     updateHighscoresResultDisplay();
@@ -784,7 +855,6 @@ function showResults() {
             : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
     }
     
-    // SAUVEGARDE SUPABASE (seulement si connecté)
     if (currentUser) {
         saveScoreToSupabase(finalScore).then(saveResult => {
             if (saveResult.success) {
@@ -792,15 +862,11 @@ function showResults() {
                     showMessage("🎉 NOUVEAU RECORD ! 100/100 !", "success");
                 } else if (saveResult.action === 'inserted') {
                     showMessage("✅ Score parfait enregistré !", "success");
-                } else if (saveResult.action === 'skipped') {
-                    showMessage("🏆 Déjà champion ! Score conservé", "info");
                 }
             } else {
                 showMessage(`❌ Échec sauvegarde: ${saveResult.error}`, "error");
             }
         });
-    } else {
-        showMessage("🔒 Connectez-vous pour enregistrer votre score parfait", "warning");
     }
     
     updateHighscoresResultDisplay();
@@ -903,7 +969,7 @@ function showMessage(text, type = "info") {
     }, 4000);
 }
 
-function updateHighscoresDisplay() {
+function updateHighscoresDisplay(isUpdate = false) {
     if (!highscoresListStart || !showMoreScoresBtn) return;
     
     highscoresListStart.innerHTML = "";
@@ -933,12 +999,22 @@ function updateHighscoresDisplay() {
     allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
         const scoreElement = document.createElement("div");
         scoreElement.className = "highscore-item";
+        scoreElement.dataset.scoreId = scoreData.id;
+        scoreElement.dataset.userId = scoreData.userId;
         scoreElement.style.animationDelay = `${index * 0.15}s`;
-        scoreElement.classList.add('slide-in');
         
-        if (index === 0) scoreElement.classList.add("first-place");
-        if (index === 1) scoreElement.classList.add("second-place");
-        if (index === 2) scoreElement.classList.add("third-place");
+        if (isUpdate) {
+            scoreElement.classList.add('update-animation');
+        }
+        
+        // RÉTABLIR LES CLASSES ORIGINALES POUR LES 3 PREMIÈRES PLACES
+        if (index === 0) {
+            scoreElement.classList.add("first-place");
+        } else if (index === 1) {
+            scoreElement.classList.add("second-place");
+        } else if (index === 2) {
+            scoreElement.classList.add("third-place");
+        }
         
         let rankIcon = `${index + 1}.`;
         if (index === 0) rankIcon = "🥇";
@@ -956,7 +1032,7 @@ function updateHighscoresDisplay() {
     });
 }
 
-function updateHighscoresResultDisplay() {
+function updateHighscoresResultDisplay(isUpdate = false) {
     if (!highscoresListResult || !showMoreScoresResultBtn) return;
     
     highscoresListResult.innerHTML = "";
@@ -981,12 +1057,22 @@ function updateHighscoresResultDisplay() {
     allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
         const scoreElement = document.createElement("div");
         scoreElement.className = "highscore-item";
+        scoreElement.dataset.scoreId = scoreData.id;
+        scoreElement.dataset.userId = scoreData.userId;
         scoreElement.style.animationDelay = `${index * 0.15}s`;
-        scoreElement.classList.add('slide-in');
         
-        if (index === 0) scoreElement.classList.add("first-place");
-        if (index === 1) scoreElement.classList.add("second-place");
-        if (index === 2) scoreElement.classList.add("third-place");
+        if (isUpdate) {
+            scoreElement.classList.add('update-animation');
+        }
+        
+        // RÉTABLIR LES CLASSES ORIGINALES POUR LES 3 PREMIÈRES PLACES
+        if (index === 0) {
+            scoreElement.classList.add("first-place");
+        } else if (index === 1) {
+            scoreElement.classList.add("second-place");
+        } else if (index === 2) {
+            scoreElement.classList.add("third-place");
+        }
         
         let rankIcon = `${index + 1}.`;
         if (index === 0) rankIcon = "🥇";
@@ -1024,4 +1110,4 @@ function updateConnectionMessage() {
     }
 }
 
-console.log("🎯 Script avec modal d'authentification chargé !");
+console.log("🎯 Script avec temps réel chargé !");

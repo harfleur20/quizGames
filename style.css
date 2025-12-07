@@ -1024,3 +1024,18 @@ h1 {
     max-height: 300px;
   }
 }
+
+.highscore-item.first-place {
+    background: linear-gradient(135deg, #e1ddc8 0%, #fff8c4 100%);
+    border-left: 6px solid #3a3a3a;
+}
+
+.highscore-item.second-place {
+    background: linear-gradient(135deg, #e8e8e8 0%, #f0f0f0 100%);
+    border-left: 6px solid #c0c0c0;
+}
+
+.highscore-item.third-place {
+    background: linear-gradient(135deg, #efeeed 0%, #efefef 100%);
+    border-left: 6px solid #f4d7b9;
+}
