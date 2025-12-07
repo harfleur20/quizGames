@@ -255,3 +255,141 @@
   align-items: center;
   gap: 10px;
 }
+
+/* Styles pour la section rang */
+.user-ranking-section {
+    padding: 15px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    text-align: center;
+}
+
+.ranking-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+}
+
+.ranking-loading i {
+    font-size: 20px;
+    color: #667eea;
+}
+
+.ranking-info {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ranking-label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ranking-badge {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 5px 0;
+    padding: 8px 20px;
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    min-width: 100px;
+    transition: all 0.3s ease;
+}
+
+.ranking-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.ranking-badge.rank-1 {
+    background: linear-gradient(135deg, #FFD700 0%, #FFEC8B 100%);
+    color: #333;
+    border: 2px solid #DAA520;
+}
+
+.ranking-badge.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%);
+    color: #333;
+    border: 2px solid #A9A9A9;
+}
+
+.ranking-badge.rank-3 {
+    background: linear-gradient(135deg, #CD7F32 0%, #E6B87F 100%);
+    color: #333;
+    border: 2px solid #8B4513;
+}
+
+.ranking-badge.rank-4-10 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: 2px solid #5a6fd8;
+}
+
+.ranking-badge.rank-11-plus {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    border: 2px solid #545b62;
+}
+
+.ranking-badge.rank-outside {
+    background: linear-gradient(135deg, #adb5bd 0%, #6c757d 100%);
+    color: white;
+    border: 2px solid #868e96;
+}
+
+.ranking-details {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.ranking-distance {
+    display: inline-block;
+    font-size: 12px;
+    color: #ff6b6b;
+    margin-top: 5px;
+    padding: 3px 10px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 12px;
+    font-style: italic;
+}
+
+.ranking-hint {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.ranking-progress {
+    margin-top: 10px;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ranking-progress-bar {
+    height: 100%;
+    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}

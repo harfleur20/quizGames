@@ -114,7 +114,10 @@ async function checkExistingSession() {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
             console.log("⚠️ Supabase non chargé - mode invité");
             showScreen('start');
-            setTimeout(() => loadScoresFromSupabase(), 1000);
+            setTimeout(() => {
+                loadScoresFromSupabase();
+                updateHighscoresDisplay();
+            }, 1000);
             return;
         }
         
@@ -245,6 +248,7 @@ function setupQuizEvents() {
         showMoreScoresBtn.addEventListener('click', () => {
             isExpandedStart = !isExpandedStart;
             updateHighscoresDisplay();
+            loadScoresFromSupabase();
         });
     }
     
@@ -252,6 +256,7 @@ function setupQuizEvents() {
         showMoreScoresResultBtn.addEventListener('click', () => {
             isExpandedResult = !isExpandedResult;
             updateHighscoresResultDisplay();
+            loadScoresFromSupabase();
         });
     }
     
@@ -327,7 +332,7 @@ function hideStatsPanel() {
 }
 
 async function loadRecentStats() {
-    console.log("📊 Chargement des stats récentes...");
+    console.log("📊 Chargement des stats récentes et du rang...");
     
     try {
         if (!window.supabaseFunctions || !currentUser) {
@@ -335,23 +340,40 @@ async function loadRecentStats() {
             return;
         }
         
-        // Charger les stats complètes
+        // Afficher le chargement
+        updateRankingDisplay({ loading: true });
+        
+        // 1. Charger les stats complètes
         const statsResult = await window.supabaseFunctions.getPlayerStats(currentUser.id);
         
         if (statsResult.success && statsResult.data) {
             updateStatsPanel(statsResult.data);
         }
         
-        // Charger l'historique récent
+        // 2. Charger l'historique récent
         const historyResult = await window.supabaseFunctions.getScoreHistory(currentUser.id, 5);
         
         if (historyResult.success && historyResult.data) {
             updateRecentGamesList(historyResult.data);
         }
         
+        // 3. Calculer le rang parmi les 50 premiers
+        if (allHighscores.length > 0) {
+            const ranking = getUserRankingPosition(currentUser.id, allHighscores);
+            updateRankingDisplay(ranking);
+        } else {
+            // Si pas de scores chargés, on charge les 50 premiers
+            const scoresResult = await window.supabaseFunctions.getHighScoresFromSupabase(50);
+            if (scoresResult.success && scoresResult.data) {
+                const ranking = getUserRankingPosition(currentUser.id, scoresResult.data);
+                updateRankingDisplay(ranking);
+            }
+        }
+        
     } catch (error) {
         console.error("❌ Erreur chargement stats récentes:", error);
         showMessage("⚠️ Impossible de charger les statistiques", "warning");
+        updateRankingDisplay({ error: true });
     }
 }
 
@@ -551,7 +573,7 @@ function updatePlayerStatsDisplay(stats) {
             } else if (stats.bestScore >= 90) {
                 recordMessage.innerHTML = `
                     <strong>🌟 Performance exceptionnelle !</strong><br>
-                    Votre meilleur score est de ${stats.bestScore}/100. Continuez comme ça !
+                    Votre meilleur score est de ${stats.bestScore}/100. Continuez comme ça !</span>
                 `;
                 recordMessage.style.display = 'block';
             } else if (stats.progression > 0) {
@@ -913,7 +935,8 @@ async function loadScoresFromSupabase(isUpdate = false) {
             return;
         }
         
-        const result = await window.supabaseFunctions.getHighScoresFromSupabase(20);
+        // Charger 50 scores
+        const result = await window.supabaseFunctions.getHighScoresFromSupabase(50);
         
         if (result.success && result.data) {
             const oldScores = [...allHighscores];
@@ -926,7 +949,7 @@ async function loadScoresFromSupabase(isUpdate = false) {
                 timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now()
             }));
             
-            console.log(`✅ ${allHighscores.length} scores chargés`);
+            console.log(`✅ ${allHighscores.length} scores chargés (top 50)`);
             
             if (isUpdate && oldScores.length > 0) {
                 animateScoreChanges(oldScores, allHighscores);
@@ -934,6 +957,12 @@ async function loadScoresFromSupabase(isUpdate = false) {
             
             updateHighscoresDisplay(isUpdate);
             updateHighscoresResultDisplay(isUpdate);
+            
+            // Mettre à jour le rang si l'utilisateur est connecté
+            if (currentUser && statsPanel && statsPanel.classList.contains('active')) {
+                const ranking = getUserRankingPosition(currentUser.id, allHighscores);
+                updateRankingDisplay(ranking);
+            }
             
         } else {
             console.log("⚠️ Aucun score trouvé - affichage par défaut");
@@ -1485,6 +1514,7 @@ function showMessage(text, type = "info") {
     }
 }
 
+// ==================== FONCTIONS POUR LES HIGH SCORES (ÉCRAN DÉMARRAGE) ====================
 function updateHighscoresDisplay(isUpdate = false) {
     try {
         if (!highscoresListStart || !showMoreScoresBtn) return;
@@ -1502,18 +1532,20 @@ function updateHighscoresDisplay(isUpdate = false) {
             return;
         }
         
-        const scoresToShow = isExpandedStart ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+        // Ajuster l'affichage selon l'état d'expansion
+        const scoresToShow = isExpandedStart ? allHighscores : allHighscores.slice(0, visibleScoresCount);
         
         if (allHighscores.length > visibleScoresCount) {
             showMoreScoresBtn.innerHTML = isExpandedStart 
                 ? '👆 Voir moins' 
-                : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+                : `👇 Voir plus de champions (${scoresToShow.length}/${allHighscores.length})`;
             showMoreScoresBtn.style.display = 'block';
         } else {
             showMoreScoresBtn.style.display = 'none';
         }
         
-        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+        // Afficher les scores
+        scoresToShow.forEach((scoreData, index) => {
             const scoreElement = document.createElement("div");
             scoreElement.className = "highscore-item";
             scoreElement.dataset.scoreId = scoreData.id;
@@ -1545,11 +1577,13 @@ function updateHighscoresDisplay(isUpdate = false) {
             
             highscoresListStart.appendChild(scoreElement);
         });
+        
     } catch (error) {
         console.error("❌ Erreur updateHighscoresDisplay:", error);
     }
 }
 
+// ==================== FONCTIONS POUR LES HIGH SCORES (ÉCRAN RÉSULTATS) ====================
 function updateHighscoresResultDisplay(isUpdate = false) {
     try {
         if (!highscoresListResult || !showMoreScoresResultBtn) return;
@@ -1562,18 +1596,18 @@ function updateHighscoresResultDisplay(isUpdate = false) {
             return;
         }
         
-        const scoresToShow = isExpandedResult ? allHighscores.length : Math.min(visibleScoresCount, allHighscores.length);
+        const scoresToShow = isExpandedResult ? allHighscores : allHighscores.slice(0, visibleScoresCount);
         
         if (allHighscores.length > visibleScoresCount) {
             showMoreScoresResultBtn.innerHTML = isExpandedResult 
                 ? '👆 Voir moins' 
-                : `👇 Voir plus (${scoresToShow}/${allHighscores.length})`;
+                : `👇 Voir plus de champions (${scoresToShow.length}/${allHighscores.length})`;
             showMoreScoresResultBtn.style.display = 'block';
         } else {
             showMoreScoresResultBtn.style.display = 'none';
         }
         
-        allHighscores.slice(0, scoresToShow).forEach((scoreData, index) => {
+        scoresToShow.forEach((scoreData, index) => {
             const scoreElement = document.createElement("div");
             scoreElement.className = "highscore-item";
             scoreElement.dataset.scoreId = scoreData.id;
@@ -1641,6 +1675,198 @@ function updateConnectionMessage() {
         }
     } catch (error) {
         console.error("❌ Erreur updateConnectionMessage:", error);
+    }
+}
+
+// ==================== FONCTION CALCUL RANG ====================
+function getUserRankingPosition(userId, highscores) {
+    console.log("📊 Calcul du rang pour user:", userId);
+    
+    if (!userId || !highscores || highscores.length === 0) {
+        console.log("⚠️ Données insuffisantes pour calculer le rang");
+        return { 
+            position: null, 
+            total: highscores?.length || 0,
+            isInTop: false,
+            score: 0
+        };
+    }
+    
+    // Trier par score décroissant (au cas où)
+    const sortedScores = [...highscores].sort((a, b) => b.score - a.score);
+    
+    // Trouver la position de l'utilisateur
+    const position = sortedScores.findIndex(score => score.userId === userId);
+    
+    if (position === -1) {
+        console.log("ℹ️ Utilisateur non présent dans le top", sortedScores.length);
+        return {
+            position: null,
+            total: sortedScores.length,
+            isInTop: false,
+            score: 0,
+            topScore: sortedScores.length > 0 ? sortedScores[0].score : 0
+        };
+    }
+    
+    const userScore = sortedScores[position].score;
+    const topScore = sortedScores.length > 0 ? sortedScores[0].score : userScore;
+    const distanceToFirst = position > 0 ? topScore - userScore : 0;
+    
+    // Calculer le pourcentage de progression vers le top
+    const progressPercent = topScore > 0 ? Math.round((userScore / topScore) * 100) : 100;
+    
+    console.log(`✅ Rang trouvé: ${position + 1}/${sortedScores.length}, Score: ${userScore}/100`);
+    
+    return {
+        position: position + 1, // 1-based pour l'affichage
+        total: sortedScores.length,
+        score: userScore,
+        topScore: topScore,
+        distanceToFirst: distanceToFirst,
+        progressPercent: progressPercent,
+        isInTop: true,
+        isFirst: position === 0,
+        isTopThree: position < 3,
+        isTopTen: position < 10
+    };
+}
+
+function updateRankingDisplay(rankingData) {
+    try {
+        const rankingElement = document.getElementById("user-ranking");
+        if (!rankingElement) {
+            console.log("⚠️ Élément user-ranking non trouvé");
+            return;
+        }
+        
+        // Cas de chargement
+        if (rankingData.loading) {
+            rankingElement.innerHTML = `
+                <div class="ranking-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>Calcul de votre rang...</span>
+                </div>
+            `;
+            return;
+        }
+        
+        // Cas d'erreur
+        if (rankingData.error) {
+            rankingElement.innerHTML = `
+                <div class="ranking-info">
+                    <span class="ranking-label">🏆 VOTRE RANG</span>
+                    <span class="ranking-details">
+                        <i class="fa-solid fa-exclamation-triangle"></i>
+                        Données indisponibles
+                    </span>
+                </div>
+            `;
+            return;
+        }
+        
+        // Cas utilisateur non connecté ou sans scores
+        if (!rankingData.isInTop || rankingData.position === null) {
+            rankingElement.innerHTML = `
+                <div class="ranking-info">
+                    <span class="ranking-label">🏆 VOTRE RANG</span>
+                    <span class="ranking-badge rank-outside">
+                        Hors top ${rankingData.total || 50}
+                    </span>
+                    <span class="ranking-details">
+                        ${rankingData.total ? `Top ${rankingData.total} actuel` : 'Top 50'}
+                    </span>
+                    <span class="ranking-hint">
+                        Jouez pour entrer dans le classement !
+                    </span>
+                </div>
+            `;
+            return;
+        }
+        
+        // Déterminer la classe CSS pour le badge
+        let rankClass = 'rank-11-plus';
+        if (rankingData.position === 1) rankClass = 'rank-1';
+        else if (rankingData.position === 2) rankClass = 'rank-2';
+        else if (rankingData.position === 3) rankClass = 'rank-3';
+        else if (rankingData.position <= 10) rankClass = 'rank-4-10';
+        
+        // Texte du rang
+        let rankText = `${rankingData.position}ème`;
+        if (rankingData.position === 1) rankText = '🥇 1er';
+        else if (rankingData.position === 2) rankText = '🥈 2ème';
+        else if (rankingData.position === 3) rankText = '🥉 3ème';
+        else if (rankingData.position <= 10) rankText = `🏆 ${rankingData.position}ème`;
+        
+        // Détails supplémentaires
+        let detailsHtml = `
+            <span class="ranking-details">
+                Score: <strong>${rankingData.score}/100</strong>
+            </span>
+        `;
+        
+        // Distance par rapport au premier (sauf si c'est le premier)
+        if (!rankingData.isFirst && rankingData.distanceToFirst > 0) {
+            detailsHtml += `
+                <span class="ranking-distance">
+                    -${rankingData.distanceToFirst} pts du 1er
+                </span>
+            `;
+        }
+        
+        // Conseils selon la position
+        let hintText = '';
+        if (rankingData.position === 1) {
+            hintText = '👑 Champion en titre !';
+        } else if (rankingData.isTopThree) {
+            hintText = 'Presque au sommet !';
+        } else if (rankingData.isTopTen) {
+            hintText = 'Dans le top 10, bravo !';
+        } else if (rankingData.position <= 25) {
+            hintText = 'Top 25, continuez !';
+        } else {
+            hintText = `Plus que ${rankingData.position - 10} places pour le top 10`;
+        }
+        
+        // Barre de progression (optionnelle)
+        let progressBar = '';
+        if (rankingData.topScore > 0 && !rankingData.isFirst) {
+            progressBar = `
+                <div class="ranking-progress">
+                    <div class="ranking-progress-bar" style="width: ${rankingData.progressPercent}%"></div>
+                </div>
+                <span class="ranking-hint">
+                    ${rankingData.progressPercent}% du score maximum
+                </span>
+            `;
+        }
+        
+        // HTML final
+        rankingElement.innerHTML = `
+            <div class="ranking-info">
+                <span class="ranking-label">🏆 VOTRE RANG</span>
+                <span class="ranking-badge ${rankClass}">
+                    ${rankText}
+                </span>
+                ${detailsHtml}
+                <span class="ranking-hint">
+                    ${hintText}
+                </span>
+                ${progressBar}
+            </div>
+        `;
+        
+        // Animation pour les nouveaux classements
+        setTimeout(() => {
+            const badge = rankingElement.querySelector('.ranking-badge');
+            if (badge) {
+                badge.classList.add('update-animation');
+                setTimeout(() => badge.classList.remove('update-animation'), 1000);
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error("❌ Erreur updateRankingDisplay:", error);
     }
 }
 

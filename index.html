@@ -502,7 +502,7 @@
               </div>
             </div>
             <div class="user-actions">
-              <button id="logout-btn" class="logout-btn" style="display: none">
+              <button id="logout-btn" class="logout-btn">
                 <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
               </button>
               <button id="login-btn-header" class="login-btn-header">
@@ -591,7 +591,7 @@
             <div id="highscores-list-start" class="highscores-list">
               <!-- High scores chargés dynamiquement -->
             </div>
-            <button id="show-more-scores" class="show-more-btn">
+            <button id="show-more-scores" class="show-more-btn" style="display: none;">
               👇 Voir plus de champions (4/10)
             </button>
             <p class="score-note">
@@ -862,6 +862,14 @@
         </button>
       </div>
 
+      <div class="user-ranking-section" id="user-ranking">
+    <!-- Rempli dynamiquement -->
+    <div class="ranking-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <span>Calcul de votre rang...</span>
+    </div>
+</div>
+
       <div class="stats-panel-content">
         <!-- Résumé rapide -->
         <div class="stats-summary">
@@ -900,7 +908,7 @@
         <!-- Actions -->
         <div class="stats-actions">
           <button id="see-all-stats" class="see-all-stats-btn">
-            <i class="fa-solid fa-chart-bar"></i> Voir toutes mes statistiques
+            <i class="fa-solid fa-rocket"></i> Lancer une nouvelle partie
           </button>
         </div>
       </div>
