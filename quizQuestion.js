@@ -681,472 +681,1500 @@ export const quizQuestions = [
   },
 
   // 50 questions supplémentaires (total 100)
-{
-  question: "Quelle est la capitale de l'Égypte ?",
-  answers: [
-    { text: "Alexandrie", correct: false },
-    { text: "Le Caire", correct: true },
-    { text: "Louxor", correct: false },
-    { text: "Assouan", correct: false },
-  ],
-},
-{
-  question: "Quel est le plus grand lac d'Afrique ?",
-  answers: [
-    { text: "Lac Victoria", correct: true },
-    { text: "Lac Tanganyika", correct: false },
-    { text: "Lac Malawi", correct: false },
-    { text: "Lac Turkana", correct: false },
-  ],
-},
-{
-  question: "Qui a écrit 'Les Misérables' ?",
-  answers: [
-    { text: "Victor Hugo", correct: true },
-    { text: "Alexandre Dumas", correct: false },
-    { text: "Émile Zola", correct: false },
-    { text: "Gustave Flaubert", correct: false },
-  ],
-},
-{
-  question: "Quelle est la vitesse de la lumière dans le vide ?",
-  answers: [
-    { text: "300 000 km/s", correct: true },
-    { text: "150 000 km/s", correct: false },
-    { text: "450 000 km/s", correct: false },
-    { text: "1 000 000 km/s", correct: false },
-  ],
-},
-{
-  question: "Quel est l'élément chimique avec le symbole Au ?",
-  answers: [
-    { text: "Argent", correct: false },
-    { text: "Or", correct: true },
-    { text: "Aluminium", correct: false },
-    { text: "Argon", correct: false },
-  ],
-},
-{
-  question: "Combien de côtés a un hexagone ?",
-  answers: [
-    { text: "5", correct: false },
-    { text: "6", correct: true },
-    { text: "7", correct: false },
-    { text: "8", correct: false },
-  ],
-},
-{
-  question: "Quelle est la monnaie du Royaume-Uni ?",
-  answers: [
-    { text: "Euro", correct: false },
-    { text: "Dollar", correct: false },
-    { text: "Livre sterling", correct: true },
-    { text: "Franc", correct: false },
-  ],
-},
-{
-  question: "Qui a peint 'La Nuit étoilée' ?",
-  answers: [
-    { text: "Vincent van Gogh", correct: true },
-    { text: "Claude Monet", correct: false },
-    { text: "Pablo Picasso", correct: false },
-    { text: "Salvador Dalí", correct: false },
-  ],
-},
-{
-  question: "Quel est le plus grand organe du corps humain ?",
-  answers: [
-    { text: "Le foie", correct: false },
-    { text: "Le cerveau", correct: false },
-    { text: "La peau", correct: true },
-    { text: "Les poumons", correct: false },
-  ],
-},
-{
-  question: "Quel animal est connu comme 'le roi de la jungle' ?",
-  answers: [
-    { text: "Le tigre", correct: false },
-    { text: "L'éléphant", correct: false },
-    { text: "Le lion", correct: true },
-    { text: "Le gorille", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale de l'Australie ?",
-  answers: [
-    { text: "Sydney", correct: false },
-    { text: "Melbourne", correct: false },
-    { text: "Canberra", correct: true },
-    { text: "Perth", correct: false },
-  ],
-},
-{
-  question: "Combien de jours y a-t-il dans une année bissextile ?",
-  answers: [
-    { text: "364", correct: false },
-    { text: "365", correct: false },
-    { text: "366", correct: true },
-    { text: "367", correct: false },
-  ],
-},
-{
-  question: "Quel est le gaz le plus abondant dans l'atmosphère terrestre ?",
-  answers: [
-    { text: "Oxygène", correct: false },
-    { text: "Azote", correct: true },
-    { text: "Dioxyde de carbone", correct: false },
-    { text: "Argon", correct: false },
-  ],
-},
-{
-  question: "Qui a découvert la pénicilline ?",
-  answers: [
-    { text: "Alexander Fleming", correct: true },
-    { text: "Louis Pasteur", correct: false },
-    { text: "Marie Curie", correct: false },
-    { text: "Albert Einstein", correct: false },
-  ],
-},
-{
-  question: "Quelle est la plus haute montagne d'Afrique ?",
-  answers: [
-    { text: "Mont Kenya", correct: false },
-    { text: "Kilimandjaro", correct: true },
-    { text: "Mont Stanley", correct: false },
-    { text: "Ras Dashan", correct: false },
-  ],
-},
-{
-  question: "Quel est le langage de programmation créé par Guido van Rossum ?",
-  answers: [
-    { text: "Java", correct: false },
-    { text: "Python", correct: true },
-    { text: "JavaScript", correct: false },
-    { text: "C++", correct: false },
-  ],
-},
-{
-  question: "Combien de joueurs dans une équipe de basketball ?",
-  answers: [
-    { text: "4", correct: false },
-    { text: "5", correct: true },
-    { text: "6", correct: false },
-    { text: "7", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale du Brésil ?",
-  answers: [
-    { text: "Rio de Janeiro", correct: false },
-    { text: "São Paulo", correct: false },
-    { text: "Brasilia", correct: true },
-    { text: "Salvador", correct: false },
-  ],
-},
-{
-  question: "Quel est le plus petit os du corps humain ?",
-  answers: [
-    { text: "Os du poignet", correct: false },
-    { text: "L'étrier (oreille)", correct: true },
-    { text: "Os du nez", correct: false },
-    { text: "Vertèbre cervicale", correct: false },
-  ],
-},
-{
-  question: "Qui a écrit 'Roméo et Juliette' ?",
-  answers: [
-    { text: "William Shakespeare", correct: true },
-    { text: "Charles Dickens", correct: false },
-    { text: "Jane Austen", correct: false },
-    { text: "Mark Twain", correct: false },
-  ],
-},
-{
-  question: "Quel est le désert le plus chaud du monde ?",
-  answers: [
-    { text: "Sahara", correct: true },
-    { text: "Désert d'Arabie", correct: false },
-    { text: "Désert de Gobi", correct: false },
-    { text: "Désert de Kalahari", correct: false },
-  ],
-},
-{
-  question: "Combien de planètes dans le système solaire ?",
-  answers: [
-    { text: "7", correct: false },
-    { text: "8", correct: true },
-    { text: "9", correct: false },
-    { text: "10", correct: false },
-  ],
-},
-{
-  question: "Quelle est la monnaie de la Chine ?",
-  answers: [
-    { text: "Yen", correct: false },
-    { text: "Yuan", correct: true },
-    { text: "Won", correct: false },
-    { text: "Ringgit", correct: false },
-  ],
-},
-{
-  question: "Qui a inventé le téléphone portable ?",
-  answers: [
-    { text: "Martin Cooper", correct: true },
-    { text: "Steve Jobs", correct: false },
-    { text: "Bill Gates", correct: false },
-    { text: "Tim Berners-Lee", correct: false },
-  ],
-},
-{
-  question: "Quel est l'animal national de l'Inde ?",
-  answers: [
-    { text: "Lion", correct: false },
-    { text: "Éléphant", correct: false },
-    { text: "Tigre", correct: true },
-    { text: "Paon", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale de l'Italie ?",
-  answers: [
-    { text: "Milan", correct: false },
-    { text: "Venise", correct: false },
-    { text: "Rome", correct: true },
-    { text: "Florence", correct: false },
-  ],
-},
-{
-  question: "Combien de continents commencent par la lettre 'A' ?",
-  answers: [
-    { text: "1", correct: false },
-    { text: "2", correct: true },
-    { text: "3", correct: false },
-    { text: "4", correct: false },
-  ],
-},
-{
-  question: "Quel est le métal le plus conducteur d'électricité ?",
-  answers: [
-    { text: "Cuivre", correct: false },
-    { text: "Aluminium", correct: false },
-    { text: "Argent", correct: true },
-    { text: "Or", correct: false },
-  ],
-},
-{
-  question: "Qui a peint 'Le Cri' ?",
-  answers: [
-    { text: "Edvard Munch", correct: true },
-    { text: "Paul Gauguin", correct: false },
-    { text: "Henri Matisse", correct: false },
-    { text: "Wassily Kandinsky", correct: false },
-  ],
-},
-{
-  question: "Quelle est la langue officielle du Brésil ?",
-  answers: [
-    { text: "Espagnol", correct: false },
-    { text: "Portugais", correct: true },
-    { text: "Anglais", correct: false },
-    { text: "Français", correct: false },
-  ],
-},
-{
-  question: "Combien d'heures dans une journée ?",
-  answers: [
-    { text: "12", correct: false },
-    { text: "24", correct: true },
-    { text: "36", correct: false },
-    { text: "48", correct: false },
-  ],
-},
-{
-  question: "Quel est le fruit le plus consommé au monde ?",
-  answers: [
-    { text: "Pomme", correct: false },
-    { text: "Banane", correct: false },
-    { text: "Tomate", correct: true },
-    { text: "Orange", correct: false },
-  ],
-},
-{
-  question: "Qui a fondé Microsoft ?",
-  answers: [
-    { text: "Steve Jobs", correct: false },
-    { text: "Bill Gates", correct: true },
-    { text: "Mark Zuckerberg", correct: false },
-    { text: "Larry Page", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale du Mexique ?",
-  answers: [
-    { text: "Guadalajara", correct: false },
-    { text: "Cancún", correct: false },
-    { text: "Mexico", correct: true },
-    { text: "Monterrey", correct: false },
-  ],
-},
-{
-  question: "Combien de doigts a une main humaine ?",
-  answers: [
-    { text: "4", correct: false },
-    { text: "5", correct: true },
-    { text: "6", correct: false },
-    { text: "7", correct: false },
-  ],
-},
-{
-  question: "Quel est l'océan le plus petit ?",
-  answers: [
-    { text: "Arctique", correct: true },
-    { text: "Indien", correct: false },
-    { text: "Atlantique", correct: false },
-    { text: "Pacifique", correct: false },
-  ],
-},
-{
-  question: "Qui a écrit 'Harry Potter' ?",
-  answers: [
-    { text: "J.K. Rowling", correct: true },
-    { text: "J.R.R. Tolkien", correct: false },
-    { text: "George R.R. Martin", correct: false },
-    { text: "C.S. Lewis", correct: false },
-  ],
-},
-{
-  question: "Quelle est la planète la plus proche de la Terre ?",
-  answers: [
-    { text: "Mars", correct: false },
-    { text: "Vénus", correct: true },
-    { text: "Mercure", correct: false },
-    { text: "Jupiter", correct: false },
-  ],
-},
-{
-  question: "Combien de lettres dans l'alphabet français ?",
-  answers: [
-    { text: "24", correct: false },
-    { text: "25", correct: false },
-    { text: "26", correct: true },
-    { text: "27", correct: false },
-  ],
-},
-{
-  question: "Quel est le pays le plus peuplé du monde ?",
-  answers: [
-    { text: "Inde", correct: false },
-    { text: "Chine", correct: true },
-    { text: "États-Unis", correct: false },
-    { text: "Indonésie", correct: false },
-  ],
-},
-{
-  question: "Qui a inventé l'avion ?",
-  answers: [
-    { text: "Les frères Wright", correct: true },
-    { text: "Henry Ford", correct: false },
-    { text: "Leonardo da Vinci", correct: false },
-    { text: "Thomas Edison", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale de l'Espagne ?",
-  answers: [
-    { text: "Barcelone", correct: false },
-    { text: "Séville", correct: false },
-    { text: "Madrid", correct: true },
-    { text: "Valence", correct: false },
-  ],
-},
-{
-  question: "Combien de sens a un être humain ?",
-  answers: [
-    { text: "4", correct: false },
-    { text: "5", correct: true },
-    { text: "6", correct: false },
-    { text: "7", correct: false },
-  ],
-},
-{
-  question: "Quel est le métal liquide à température ambiante ?",
-  answers: [
-    { text: "Mercure", correct: true },
-    { text: "Fer", correct: false },
-    { text: "Or", correct: false },
-    { text: "Argent", correct: false },
-  ],
-},
-{
-  question: "Qui a découvert l'Amérique ?",
-  answers: [
-    { text: "Christophe Colomb", correct: true },
-    { text: "Vasco de Gama", correct: false },
-    { text: "Marco Polo", correct: false },
-    { text: "Fernand de Magellan", correct: false },
-  ],
-},
-{
-  question: "Quelle est la langue la plus parlée en Amérique du Sud ?",
-  answers: [
-    { text: "Anglais", correct: false },
-    { text: "Portugais", correct: true },
-    { text: "Espagnol", correct: false },
-    { text: "Français", correct: false },
-  ],
-},
-{
-  question: "Combien de saisons dans une année ?",
-  answers: [
-    { text: "2", correct: false },
-    { text: "3", correct: false },
-    { text: "4", correct: true },
-    { text: "5", correct: false },
-  ],
-},
-{
-  question: "Quel est l'animal le plus rapide du monde ?",
-  answers: [
-    { text: "Guépard", correct: false },
-    { text: "Faucon pèlerin", correct: true },
-    { text: "Antilope", correct: false },
-    { text: "Épaulard", correct: false },
-  ],
-},
-{
-  question: "Qui a peint 'La Cène' ?",
-  answers: [
-    { text: "Michel-Ange", correct: false },
-    { text: "Leonardo da Vinci", correct: true },
-    { text: "Raphaël", correct: false },
-    { text: "Donatello", correct: false },
-  ],
-},
-{
-  question: "Quelle est la capitale de la Corée du Sud ?",
-  answers: [
-    { text: "Busan", correct: false },
-    { text: "Incheon", correct: false },
-    { text: "Séoul", correct: true },
-    { text: "Daegu", correct: false },
-  ],
-},
-{
-  question: "Combien de chromosomes dans une cellule humaine ?",
-  answers: [
-    { text: "23", correct: false },
-    { text: "46", correct: true },
-    { text: "48", correct: false },
-    { text: "50", correct: false },
-  ],
-},
-{
-  question: "Quel est l'os le plus long du corps humain ?",
-  answers: [
-    { text: "Fémur", correct: true },
-    { text: "Tibia", correct: false },
-    { text: "Humérus", correct: false },
-    { text: "Radius", correct: false },
-  ],
-},
+  {
+    question: "Quelle est la capitale de l'Égypte ?",
+    answers: [
+      { text: "Alexandrie", correct: false },
+      { text: "Le Caire", correct: true },
+      { text: "Louxor", correct: false },
+      { text: "Assouan", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le plus grand lac d'Afrique ?",
+    answers: [
+      { text: "Lac Victoria", correct: true },
+      { text: "Lac Tanganyika", correct: false },
+      { text: "Lac Malawi", correct: false },
+      { text: "Lac Turkana", correct: false },
+    ],
+  },
+  {
+    question: "Qui a écrit 'Les Misérables' ?",
+    answers: [
+      { text: "Victor Hugo", correct: true },
+      { text: "Alexandre Dumas", correct: false },
+      { text: "Émile Zola", correct: false },
+      { text: "Gustave Flaubert", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la vitesse de la lumière dans le vide ?",
+    answers: [
+      { text: "300 000 km/s", correct: true },
+      { text: "150 000 km/s", correct: false },
+      { text: "450 000 km/s", correct: false },
+      { text: "1 000 000 km/s", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'élément chimique avec le symbole Au ?",
+    answers: [
+      { text: "Argent", correct: false },
+      { text: "Or", correct: true },
+      { text: "Aluminium", correct: false },
+      { text: "Argon", correct: false },
+    ],
+  },
+  {
+    question: "Combien de côtés a un hexagone ?",
+    answers: [
+      { text: "5", correct: false },
+      { text: "6", correct: true },
+      { text: "7", correct: false },
+      { text: "8", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la monnaie du Royaume-Uni ?",
+    answers: [
+      { text: "Euro", correct: false },
+      { text: "Dollar", correct: false },
+      { text: "Livre sterling", correct: true },
+      { text: "Franc", correct: false },
+    ],
+  },
+  {
+    question: "Qui a peint 'La Nuit étoilée' ?",
+    answers: [
+      { text: "Vincent van Gogh", correct: true },
+      { text: "Claude Monet", correct: false },
+      { text: "Pablo Picasso", correct: false },
+      { text: "Salvador Dalí", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le plus grand organe du corps humain ?",
+    answers: [
+      { text: "Le foie", correct: false },
+      { text: "Le cerveau", correct: false },
+      { text: "La peau", correct: true },
+      { text: "Les poumons", correct: false },
+    ],
+  },
+  {
+    question: "Quel animal est connu comme 'le roi de la jungle' ?",
+    answers: [
+      { text: "Le tigre", correct: false },
+      { text: "L'éléphant", correct: false },
+      { text: "Le lion", correct: true },
+      { text: "Le gorille", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale de l'Australie ?",
+    answers: [
+      { text: "Sydney", correct: false },
+      { text: "Melbourne", correct: false },
+      { text: "Canberra", correct: true },
+      { text: "Perth", correct: false },
+    ],
+  },
+  {
+    question: "Combien de jours y a-t-il dans une année bissextile ?",
+    answers: [
+      { text: "364", correct: false },
+      { text: "365", correct: false },
+      { text: "366", correct: true },
+      { text: "367", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le gaz le plus abondant dans l'atmosphère terrestre ?",
+    answers: [
+      { text: "Oxygène", correct: false },
+      { text: "Azote", correct: true },
+      { text: "Dioxyde de carbone", correct: false },
+      { text: "Argon", correct: false },
+    ],
+  },
+  {
+    question: "Qui a découvert la pénicilline ?",
+    answers: [
+      { text: "Alexander Fleming", correct: true },
+      { text: "Louis Pasteur", correct: false },
+      { text: "Marie Curie", correct: false },
+      { text: "Albert Einstein", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la plus haute montagne d'Afrique ?",
+    answers: [
+      { text: "Mont Kenya", correct: false },
+      { text: "Kilimandjaro", correct: true },
+      { text: "Mont Stanley", correct: false },
+      { text: "Ras Dashan", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel est le langage de programmation créé par Guido van Rossum ?",
+    answers: [
+      { text: "Java", correct: false },
+      { text: "Python", correct: true },
+      { text: "JavaScript", correct: false },
+      { text: "C++", correct: false },
+    ],
+  },
+  {
+    question: "Combien de joueurs dans une équipe de basketball ?",
+    answers: [
+      { text: "4", correct: false },
+      { text: "5", correct: true },
+      { text: "6", correct: false },
+      { text: "7", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale du Brésil ?",
+    answers: [
+      { text: "Rio de Janeiro", correct: false },
+      { text: "São Paulo", correct: false },
+      { text: "Brasilia", correct: true },
+      { text: "Salvador", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le plus petit os du corps humain ?",
+    answers: [
+      { text: "Os du poignet", correct: false },
+      { text: "L'étrier (oreille)", correct: true },
+      { text: "Os du nez", correct: false },
+      { text: "Vertèbre cervicale", correct: false },
+    ],
+  },
+  {
+    question: "Qui a écrit 'Roméo et Juliette' ?",
+    answers: [
+      { text: "William Shakespeare", correct: true },
+      { text: "Charles Dickens", correct: false },
+      { text: "Jane Austen", correct: false },
+      { text: "Mark Twain", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le désert le plus chaud du monde ?",
+    answers: [
+      { text: "Sahara", correct: true },
+      { text: "Désert d'Arabie", correct: false },
+      { text: "Désert de Gobi", correct: false },
+      { text: "Désert de Kalahari", correct: false },
+    ],
+  },
+  {
+    question: "Combien de planètes dans le système solaire ?",
+    answers: [
+      { text: "7", correct: false },
+      { text: "8", correct: true },
+      { text: "9", correct: false },
+      { text: "10", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la monnaie de la Chine ?",
+    answers: [
+      { text: "Yen", correct: false },
+      { text: "Yuan", correct: true },
+      { text: "Won", correct: false },
+      { text: "Ringgit", correct: false },
+    ],
+  },
+  {
+    question: "Qui a inventé le téléphone portable ?",
+    answers: [
+      { text: "Martin Cooper", correct: true },
+      { text: "Steve Jobs", correct: false },
+      { text: "Bill Gates", correct: false },
+      { text: "Tim Berners-Lee", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'animal national de l'Inde ?",
+    answers: [
+      { text: "Lion", correct: false },
+      { text: "Éléphant", correct: false },
+      { text: "Tigre", correct: true },
+      { text: "Paon", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale de l'Italie ?",
+    answers: [
+      { text: "Milan", correct: false },
+      { text: "Venise", correct: false },
+      { text: "Rome", correct: true },
+      { text: "Florence", correct: false },
+    ],
+  },
+  {
+    question: "Combien de continents commencent par la lettre 'A' ?",
+    answers: [
+      { text: "1", correct: false },
+      { text: "2", correct: true },
+      { text: "3", correct: false },
+      { text: "4", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le métal le plus conducteur d'électricité ?",
+    answers: [
+      { text: "Cuivre", correct: false },
+      { text: "Aluminium", correct: false },
+      { text: "Argent", correct: true },
+      { text: "Or", correct: false },
+    ],
+  },
+  {
+    question: "Qui a peint 'Le Cri' ?",
+    answers: [
+      { text: "Edvard Munch", correct: true },
+      { text: "Paul Gauguin", correct: false },
+      { text: "Henri Matisse", correct: false },
+      { text: "Wassily Kandinsky", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la langue officielle du Brésil ?",
+    answers: [
+      { text: "Espagnol", correct: false },
+      { text: "Portugais", correct: true },
+      { text: "Anglais", correct: false },
+      { text: "Français", correct: false },
+    ],
+  },
+  {
+    question: "Combien d'heures dans une journée ?",
+    answers: [
+      { text: "12", correct: false },
+      { text: "24", correct: true },
+      { text: "36", correct: false },
+      { text: "48", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le fruit le plus consommé au monde ?",
+    answers: [
+      { text: "Pomme", correct: false },
+      { text: "Banane", correct: false },
+      { text: "Tomate", correct: true },
+      { text: "Orange", correct: false },
+    ],
+  },
+  {
+    question: "Qui a fondé Microsoft ?",
+    answers: [
+      { text: "Steve Jobs", correct: false },
+      { text: "Bill Gates", correct: true },
+      { text: "Mark Zuckerberg", correct: false },
+      { text: "Larry Page", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale du Mexique ?",
+    answers: [
+      { text: "Guadalajara", correct: false },
+      { text: "Cancún", correct: false },
+      { text: "Mexico", correct: true },
+      { text: "Monterrey", correct: false },
+    ],
+  },
+  {
+    question: "Combien de doigts a une main humaine ?",
+    answers: [
+      { text: "4", correct: false },
+      { text: "5", correct: true },
+      { text: "6", correct: false },
+      { text: "7", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'océan le plus petit ?",
+    answers: [
+      { text: "Arctique", correct: true },
+      { text: "Indien", correct: false },
+      { text: "Atlantique", correct: false },
+      { text: "Pacifique", correct: false },
+    ],
+  },
+  {
+    question: "Qui a écrit 'Harry Potter' ?",
+    answers: [
+      { text: "J.K. Rowling", correct: true },
+      { text: "J.R.R. Tolkien", correct: false },
+      { text: "George R.R. Martin", correct: false },
+      { text: "C.S. Lewis", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la planète la plus proche de la Terre ?",
+    answers: [
+      { text: "Mars", correct: false },
+      { text: "Vénus", correct: true },
+      { text: "Mercure", correct: false },
+      { text: "Jupiter", correct: false },
+    ],
+  },
+  {
+    question: "Combien de lettres dans l'alphabet français ?",
+    answers: [
+      { text: "24", correct: false },
+      { text: "25", correct: false },
+      { text: "26", correct: true },
+      { text: "27", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le pays le plus peuplé du monde ?",
+    answers: [
+      { text: "Inde", correct: false },
+      { text: "Chine", correct: true },
+      { text: "États-Unis", correct: false },
+      { text: "Indonésie", correct: false },
+    ],
+  },
+  {
+    question: "Qui a inventé l'avion ?",
+    answers: [
+      { text: "Les frères Wright", correct: true },
+      { text: "Henry Ford", correct: false },
+      { text: "Leonardo da Vinci", correct: false },
+      { text: "Thomas Edison", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale de l'Espagne ?",
+    answers: [
+      { text: "Barcelone", correct: false },
+      { text: "Séville", correct: false },
+      { text: "Madrid", correct: true },
+      { text: "Valence", correct: false },
+    ],
+  },
+  {
+    question: "Combien de sens a un être humain ?",
+    answers: [
+      { text: "4", correct: false },
+      { text: "5", correct: true },
+      { text: "6", correct: false },
+      { text: "7", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le métal liquide à température ambiante ?",
+    answers: [
+      { text: "Mercure", correct: true },
+      { text: "Fer", correct: false },
+      { text: "Or", correct: false },
+      { text: "Argent", correct: false },
+    ],
+  },
+  {
+    question: "Qui a découvert l'Amérique ?",
+    answers: [
+      { text: "Christophe Colomb", correct: true },
+      { text: "Vasco de Gama", correct: false },
+      { text: "Marco Polo", correct: false },
+      { text: "Fernand de Magellan", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la langue la plus parlée en Amérique du Sud ?",
+    answers: [
+      { text: "Anglais", correct: false },
+      { text: "Portugais", correct: true },
+      { text: "Espagnol", correct: false },
+      { text: "Français", correct: false },
+    ],
+  },
+  {
+    question: "Combien de saisons dans une année ?",
+    answers: [
+      { text: "2", correct: false },
+      { text: "3", correct: false },
+      { text: "4", correct: true },
+      { text: "5", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'animal le plus rapide du monde ?",
+    answers: [
+      { text: "Guépard", correct: false },
+      { text: "Faucon pèlerin", correct: true },
+      { text: "Antilope", correct: false },
+      { text: "Épaulard", correct: false },
+    ],
+  },
+  {
+    question: "Qui a peint 'La Cène' ?",
+    answers: [
+      { text: "Michel-Ange", correct: false },
+      { text: "Leonardo da Vinci", correct: true },
+      { text: "Raphaël", correct: false },
+      { text: "Donatello", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale de la Corée du Sud ?",
+    answers: [
+      { text: "Busan", correct: false },
+      { text: "Incheon", correct: false },
+      { text: "Séoul", correct: true },
+      { text: "Daegu", correct: false },
+    ],
+  },
+  {
+    question: "Combien de chromosomes dans une cellule humaine ?",
+    answers: [
+      { text: "23", correct: false },
+      { text: "46", correct: true },
+      { text: "48", correct: false },
+      { text: "50", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'os le plus long du corps humain ?",
+    answers: [
+      { text: "Fémur", correct: true },
+      { text: "Tibia", correct: false },
+      { text: "Humérus", correct: false },
+      { text: "Radius", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale de la Russie ?",
+    answers: [
+      { text: "Saint-Pétersbourg", correct: false },
+      { text: "Moscou", correct: true },
+      { text: "Kiev", correct: false },
+      { text: "Minsk", correct: false },
+    ],
+  },
+  {
+    question: "Qui est le dieu de la foudre dans la mythologie grecque ?",
+    answers: [
+      { text: "Poséidon", correct: false },
+      { text: "Hadès", correct: false },
+      { text: "Zeus", correct: true },
+      { text: "Apollon", correct: false },
+    ],
+  },
+
+  {
+    question: "Combien d'années y a-t-il dans un millénaire ?",
+    answers: [
+      { text: "100", correct: false },
+      { text: "1000", correct: true },
+      { text: "10 000", correct: false },
+      { text: "1 000 000", correct: false },
+    ],
+  },
+
+  {
+    question:
+      "Quelle est la particularité des mots « Amour », « Délice » et « Orgue » ?",
+    answers: [
+      { text: "Ils sont toujours féminins", correct: false },
+      { text: "Ils sont invariables", correct: false },
+      { text: "Ils changent de genre au pluriel", correct: true }, // Position 3
+      { text: "Ils ne prennent jamais de 's'", correct: false },
+    ],
+  },
+  {
+    question: "Comment écrit-on le pluriel de « Chacal » ?",
+    answers: [
+      { text: "Chacaux", correct: false },
+      { text: "Chacals", correct: true }, // Position 2
+      { text: "Chacauls", correct: false },
+      { text: "Chacau", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quelle figure de style consiste à dire le contraire de ce que l'on pense (ironie) ?",
+    answers: [
+      { text: "L'allégorie", correct: false },
+      { text: "La métaphore", correct: false },
+      { text: "L'anaphore", correct: false },
+      { text: "L'antiphrase", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Le mot « Gens » est particulier car :",
+    answers: [
+      {
+        text: "Il peut être masculin ou féminin selon sa place",
+        correct: true,
+      }, // Position 1
+      { text: "Il est toujours singulier", correct: false },
+      { text: "C'est un verbe déguisé", correct: false },
+      { text: "Il ne s'utilise qu'au Québec", correct: false },
+    ],
+  },
+  {
+    question: "Quel mot est un pléonasme courant mais incorrect ?",
+    answers: [
+      { text: "Sortir dehors", correct: true }, // Position 1
+      { text: "Manger vite", correct: false },
+      { text: "Courir loin", correct: false },
+      { text: "Dormir bien", correct: false },
+    ],
+  },
+  {
+    question:
+      "Dans la phrase « Les pommes que j'ai mangées », pourquoi « mangées » prend-il « es » ?",
+    answers: [
+      { text: "Le sujet est pluriel", correct: false },
+      { text: "C'est une exception", correct: false },
+      { text: "Le COD est placé avant le verbe", correct: true }, // Position 3
+      { text: "Le verbe est à l'imparfait", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la racine étymologique du mot « Hippopotame » ?",
+    answers: [
+      { text: "Gros poisson", correct: false },
+      { text: "Cheval du fleuve", correct: true }, // Position 2
+      { text: "Cochon de terre", correct: false },
+      { text: "Géant des marais", correct: false },
+    ],
+  },
+  {
+    question: "Lequel de ces mots doit toujours s'écrire avec une majuscule ?",
+    answers: [
+      { text: "Un anglais (la personne)", correct: true }, // Position 1
+      { text: "L'anglais (la langue)", correct: false },
+      { text: "Un adjectif", correct: false },
+      { text: "Une religion", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le synonyme soutenu de « Cacher » ?",
+    answers: [
+      { text: "Montrer", correct: false },
+      { text: "Exhiber", correct: false },
+      { text: "Dévoiler", correct: false },
+      { text: "Dissimuler", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "« Il faut que je... » est suivi de quel mode ?",
+    answers: [
+      { text: "Indicatif", correct: false },
+      { text: "Conditionnel", correct: false },
+      { text: "Subjonctif", correct: true }, // Position 3
+      { text: "Impératif", correct: false },
+    ],
+  },
+  {
+    question: "Combien de « L » et de « M » y a-t-il dans « Dilemme » ?",
+    answers: [
+      { text: "Deux L, un M", correct: false },
+      { text: "Un L, deux M", correct: true }, // Position 2
+      { text: "Deux L, deux M", correct: false },
+      { text: "Un L, un M", correct: false },
+    ],
+  },
+  {
+    question: "Lequel de ces mots est une préposition ?",
+    answers: [
+      { text: "Table", correct: false },
+      { text: "Grand", correct: false },
+      { text: "Manger", correct: false },
+      { text: "Chez", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Que désigne un « barbarisme » ?",
+    answers: [
+      { text: "Une faute de vocabulaire ou mot déformé", correct: true }, // Position 1
+      { text: "Un mot très ancien", correct: false },
+      { text: "Une insulte", correct: false },
+      { text: "Un mot étranger", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la bonne orthographe ?",
+    answers: [
+      { text: "Cauchemard", correct: false },
+      { text: "Cauchmar", correct: false },
+      { text: "Cauchemar", correct: true }, // Position 3
+      { text: "Cochemar", correct: false },
+    ],
+  },
+  {
+    question: "Le mot « Mille » (nombre) :",
+    answers: [
+      { text: "Prend un S s'il y en a plusieurs", correct: false },
+      { text: "Est toujours invariable", correct: true }, // Position 2
+      { text: "S'accorde seulement au début de phrase", correct: false },
+      { text: "Prend un X au pluriel", correct: false },
+    ],
+  },
+  {
+    question: "Comment appelle t-on la femelle du gorille ?",
+    answers: [
+      { text: "La jumente", correct: false },
+      { text: "La gorille", correct: false },
+      { text: "La corse", correct: false },
+      { text: "la guenon", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'une « périphrase » ?",
+    answers: [
+      {
+        text: "Remplacer un mot par une expression qui le décrit",
+        correct: true,
+      }, // Position 1
+      { text: "Une phrase très longue", correct: false },
+      { text: "Une répétition inutile", correct: false },
+      { text: "Un signe de ponctuation", correct: false },
+    ],
+  },
+  {
+    question: "Comment appelle t- on cet « ï » dans le mot « Naïve » ?",
+    answers: [
+      { text: "L'accent aigu", correct: false },
+      { text: "Le tréma", correct: true }, // Position 2
+      { text: "L'accent grave", correct: false },
+      { text: "L'accent circonflexe", correct: false },
+    ],
+  },
+  {
+    question: "Quel mot est de la même famille que « Dent » ?",
+    answers: [
+      { text: "Danser", correct: false },
+      { text: "Dense", correct: false },
+      { text: "Odontologie", correct: true }, // Position 3
+      { text: "Danger", correct: false },
+    ],
+  },
+  {
+    question: "« Je suis allé » : quel est l'auxiliaire ?",
+    answers: [
+      { text: "Avoir", correct: false },
+      { text: "Aller", correct: false },
+      { text: "Faire", correct: false },
+      { text: "Être", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Que signifie le préfixe « Hydro » ?",
+    answers: [
+      { text: "Terre", correct: false },
+      { text: "Eau", correct: true }, // Position 2
+      { text: "Air", correct: false },
+      { text: "Feu", correct: false },
+    ],
+  },
+  {
+    question: "Dans « Une voix de stentor », que signifie « stentor » ?",
+    answers: [
+      { text: "Une voix très faible", correct: false },
+      { text: "Une voix très aiguë", correct: false },
+      { text: "Une voix forte et retentissante", correct: true }, // Position 3
+      { text: "Une voix enrouée", correct: false },
+    ],
+  },
+  {
+    question: "Quel mot est un homophone de « Vert » ?",
+    answers: [
+      { text: "Vair (fourrure)", correct: true }, // Position 1
+      { text: "Varech", correct: false },
+      { text: "Vérité", correct: false },
+      { text: "Verbe", correct: false },
+    ],
+  },
+  {
+    question: "Le verbe « Résoudre » au passé composé donne :",
+    answers: [
+      { text: "J'ai résolu", correct: true }, // Position 1
+      { text: "J'ai résoudré", correct: false },
+      { text: "J'ai résolvé", correct: false },
+      { text: "J'ai résous", correct: false },
+    ],
+  },
+  {
+    question: "Quelle lettre est muette dans le mot « Doigt » ?",
+    answers: [
+      { text: "Le i", correct: false },
+      { text: "Le o", correct: false },
+      { text: "Le g", correct: true }, // Position 3
+      { text: "Le d", correct: false },
+    ],
+  },
+
+  // --- INFORMATIQUE & TECH (25 questions) ---
+  {
+    question: "Quel raccourci permet de rechercher du texte dans une page ?",
+    answers: [
+      { text: "Ctrl + S", correct: false },
+      { text: "Ctrl + P", correct: false },
+      { text: "Alt + F4", correct: false },
+      { text: "Ctrl + F", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « Ransomware » ?",
+    answers: [
+      { text: "Un logiciel antivirus gratuit", correct: false },
+      { text: "Un logiciel malveillant demandant une rançon", correct: true }, // Position 2
+      { text: "Un composant de l'ordinateur", correct: false },
+      { text: "Un type de clavier mécanique", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel câble transmet à la fois l'image et le son en haute qualité ?",
+    answers: [
+      { text: "VGA", correct: false },
+      { text: "DVI", correct: false },
+      { text: "HDMI", correct: true }, // Position 3
+      { text: "Jack", correct: false },
+    ],
+  },
+  {
+    question: "Quelle erreur s'affiche quand une page web est introuvable ?",
+    answers: [
+      { text: "Erreur 404", correct: true }, // Position 1
+      { text: "Erreur 500", correct: false },
+      { text: "Erreur 200", correct: false },
+      { text: "Erreur 301", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le cerveau de l'ordinateur ?",
+    answers: [
+      { text: "Le disque dur", correct: false },
+      { text: "Le ventilateur", correct: false },
+      { text: "Le processeur (CPU)", correct: true }, // Position 3
+      { text: "L'écran", correct: false },
+    ],
+  },
+  {
+    question: "Que signifie le sigle « GAFAM » ?",
+    answers: [
+      { text: "Google, Amazon, Facebook, Apple, Microsoft", correct: true }, // Position 1
+      { text: "Groupe des Analystes Financiers Américains", correct: false },
+      {
+        text: "Grandes Associations Françaises des Arts Modernes",
+        correct: false,
+      },
+      { text: "Google, Apple, Ford, Amazon, McDonald's", correct: false },
+    ],
+  },
+  {
+    question: "Quel animal est la mascotte du langage de programmation PHP ?",
+    answers: [
+      { text: "Un serpent", correct: false },
+      { text: "Une baleine", correct: false },
+      { text: "Un éléphant", correct: true }, // Position 3
+      { text: "Un chat", correct: false },
+    ],
+  },
+  {
+    question: "Comment appelle-t-on le logiciel qui gère l'ordinateur ?",
+    answers: [
+      { text: "Le BIOS", correct: false },
+      { text: "Le Système d'Exploitation (OS)", correct: true }, // Position 2
+      { text: "Le Traitement de texte", correct: false },
+      { text: "Le compilateur", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « Cheval de Troie » en informatique ?",
+    answers: [
+      { text: "Un jeu de stratégie", correct: false },
+      { text: "Un antivirus puissant", correct: false },
+      { text: "Une marque d'ordinateur", correct: false },
+      { text: "Un virus caché dans un programme légitime", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Quelle est l'unité de fréquence d'un processeur ?",
+    answers: [
+      { text: "Le Gigahertz (GHz)", correct: true }, // Position 1
+      { text: "Le Gigaoctet (Go)", correct: false },
+      { text: "Le Pixel", correct: false },
+      { text: "Le Watt", correct: false },
+    ],
+  },
+  {
+    question:
+      "Sur un clavier AZERTY, quelle touche permet d'écrire en majuscule ?",
+    answers: [
+      { text: "Tab", correct: false },
+      { text: "Entrée", correct: false },
+      { text: "Shift (Maj)", correct: true }, // Position 3
+      { text: "Espace", correct: false },
+    ],
+  },
+  {
+    question: "Que signifie « URL » ?",
+    answers: [
+      { text: "Universal Resource Locator (Adresse web)", correct: true }, // Position 1
+      { text: "Ultra Rapid Link", correct: false },
+      { text: "United Research Lab", correct: false },
+      { text: "User Remote Login", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'ancêtre d'Internet créé par l'armée américaine ?",
+    answers: [
+      { text: "Minitel", correct: false },
+      { text: "Ethernet", correct: false },
+      { text: "Arpanet", correct: true }, // Position 3
+      { text: "Skynet", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quelle technologie sans fil permet de payer avec son téléphone (sans contact) ?",
+    answers: [
+      { text: "Bluetooth", correct: false },
+      { text: "NFC", correct: true }, // Position 2
+      { text: "Wi-Fi", correct: false },
+      { text: "4G", correct: false },
+    ],
+  },
+  {
+    question:
+      "Comment s'appelle l'intelligence artificielle conversationnelle d'OpenAI ?",
+    answers: [
+      { text: "Siri", correct: false },
+      { text: "Alexa", correct: false },
+      { text: "Cortana", correct: false },
+      { text: "ChatGPT", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Que mesure le « Ping » dans un jeu vidéo ?",
+    answers: [
+      { text: "La qualité graphique", correct: false },
+      { text: "Le nombre de joueurs", correct: false },
+      { text: "La latence (temps de réponse)", correct: true }, // Position 3
+      { text: "Le score", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel format est utilisé pour compresser des fichiers (archives) ?",
+    answers: [
+      { text: ".txt", correct: false },
+      { text: ".zip", correct: true }, // Position 2
+      { text: ".png", correct: false },
+      { text: ".mp4", correct: false },
+    ],
+  },
+  {
+    question: "Qui a racheté le réseau social professionnel LinkedIn ?",
+    answers: [
+      { text: "Google", correct: false },
+      { text: "Amazon", correct: false },
+      { text: "Apple", correct: false },
+      { text: "Microsoft", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Quelle touche permet de rafraîchir une page web ?",
+    answers: [
+      { text: "F5", correct: true }, // Position 1
+      { text: "F1", correct: false },
+      { text: "F12", correct: false },
+      { text: "Echap", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « Pixel » ?",
+    answers: [
+      { text: "Un câble", correct: false },
+      { text: "Un virus", correct: false },
+      { text: "Le plus petit point d'une image numérique", correct: true }, // Position 3
+      { text: "Une marque de téléphone", correct: false },
+    ],
+  },
+  {
+    question: "Quelle commande permet de coller du texte ?",
+    answers: [
+      { text: "Ctrl + X", correct: false },
+      { text: "Ctrl + V", correct: true }, // Position 2
+      { text: "Ctrl + C", correct: false },
+      { text: "Ctrl + S", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel langage est principalement utilisé pour créer le design d'un site web ?",
+    answers: [
+      { text: "PHP", correct: false },
+      { text: "SQL", correct: false },
+      { text: "Python", correct: false },
+      { text: "CSS", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "À quoi sert une « clé de chiffrement » ?",
+    answers: [
+      { text: "À ouvrir le boîtier de l'ordinateur", correct: false },
+      {
+        text: "À sécuriser des données pour les rendre illisibles sans la clé",
+        correct: true,
+      }, // Position 2
+      { text: "À nettoyer le clavier", correct: false },
+      { text: "À augmenter la vitesse du Wi-Fi", correct: false },
+    ],
+  },
+  {
+    question: "Quelle entreprise fabrique les processeurs « Ryzen » ?",
+    answers: [
+      { text: "Intel", correct: false },
+      { text: "Nvidia", correct: false },
+      { text: "AMD", correct: true }, // Position 3
+      { text: "Samsung", correct: false },
+    ],
+  },
+  {
+    question: "Que signifie « IoT » ?",
+    answers: [
+      { text: "Internet of Things (Internet des objets)", correct: true }, // Position 1
+      { text: "Input of Technology", correct: false },
+      { text: "International Office of Tech", correct: false },
+      { text: "Image on TV", correct: false },
+    ],
+  },
+
+  // --- ARGENT & RAPPORT À L'ARGENT (25 questions) ---
+  {
+    question:
+      "Que signifie l'expression « Ne pas mettre tous ses œufs dans le même panier » ?",
+    answers: [
+      { text: "Il faut acheter beaucoup de paniers", correct: false },
+      {
+        text: "Il ne faut pas dépenser tout son argent le même jour",
+        correct: false,
+      },
+      { text: "Il faut diversifier ses investissements", correct: true }, // Position 3
+      { text: "Il faut manger sainement", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce que les « intérêts composés » ?",
+    answers: [
+      { text: "Des taxes complexes", correct: false },
+      {
+        text: "Des intérêts calculés sur le capital initial ET les intérêts déjà gagnés",
+        correct: true,
+      }, // Position 2
+      { text: "Un prêt à taux variable", correct: false },
+      { text: "Une arnaque bancaire", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la règle des « 50/30/20 » pour gérer son budget ?",
+    answers: [
+      { text: "50% Besoins, 30% Envies, 20% Épargne", correct: true }, // Position 1
+      { text: "50% Impôts, 30% Loyer, 20% Nourriture", correct: false },
+      { text: "50% Épargne, 30% Dons, 20% Dépenses", correct: false },
+      { text: "50% Vacances, 30% Voiture, 20% Maison", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « fonds d'urgence » ?",
+    answers: [
+      { text: "Une caisse pour les vacances", correct: false },
+      { text: "De l'argent pour la retraite", correct: false },
+      { text: "Une assurance vie", correct: false },
+      {
+        text: "Une épargne de précaution pour les imprévus (panne, chômage...)",
+        correct: true,
+      }, // Position 4
+    ],
+  },
+  {
+    question: "Que signifie « être à découvert » ?",
+    answers: [
+      { text: "Ne pas avoir d'assurance", correct: false },
+      { text: "Avoir un solde bancaire inférieur à zéro", correct: true }, // Position 2
+      { text: "Avoir oublié son code de carte bleue", correct: false },
+      { text: "Avoir perdu son portefeuille", correct: false },
+    ],
+  },
+  {
+    question:
+      "Dans l'investissement, quel est le rapport entre risque et rendement ?",
+    answers: [
+      {
+        text: "Plus le risque est élevé, plus le rendement potentiel est élevé",
+        correct: true,
+      }, // Position 1
+      { text: "Il n'y a aucun rapport", correct: false },
+      { text: "Plus c'est sûr, plus ça rapporte", correct: false },
+      { text: "Le risque fait toujours perdre de l'argent", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel terme désigne la perte de valeur d'une voiture dès qu'elle sort du concessionnaire ?",
+    answers: [
+      { text: "L'inflation", correct: false },
+      { text: "La décote (ou dépréciation)", correct: true }, // Position 2
+      { text: "La spéculation", correct: false },
+      { text: "La liquidation", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « crédit immobilier » ?",
+    answers: [
+      { text: "Un prêt pour acheter une voiture", correct: false },
+      { text: "Un prêt pour acheter des meubles", correct: false },
+      {
+        text: "Un prêt pour acheter un logement (maison/appartement)",
+        correct: true,
+      }, // Position 3
+      { text: "Un prêt pour payer ses impôts", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la différence entre salaire brut et salaire net ?",
+    answers: [
+      { text: "Il n'y en a pas", correct: false },
+      {
+        text: "Le brut est ce que vous touchez, le net est pour l'État",
+        correct: false,
+      },
+      {
+        text: "Le net est le brut moins les cotisations sociales (ce qui arrive sur le compte)",
+        correct: true,
+      }, // Position 3
+      { text: "Le brut est payé en espèces", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'une « mensualité » ?",
+    answers: [
+      {
+        text: "Une somme payée tous les mois (remboursement prêt, abonnement)",
+        correct: true,
+      }, // Position 1
+      { text: "Une fête mensuelle", correct: false },
+      { text: "Un salaire annuel", correct: false },
+      { text: "Une taxe unique", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel métal est traditionnellement considéré comme une « valeur refuge » en temps de crise ?",
+    answers: [
+      { text: "Le cuivre", correct: false },
+      { text: "Le plomb", correct: false },
+      { text: "Le fer", correct: false },
+      { text: "L'or", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Que signifie « vivre au-dessus de ses moyens » ?",
+    answers: [
+      { text: "Vivre au dernier étage", correct: false },
+      { text: "Dépenser plus d'argent que l'on en gagne", correct: true }, // Position 2
+      { text: "Gagner beaucoup d'argent", correct: false },
+      { text: "Investir tout son salaire", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « RIB » ?",
+    answers: [
+      { text: "Relevé d'Identité Bancaire", correct: true }, // Position 1
+      { text: "Remboursement Immédiat Bancaire", correct: false },
+      { text: "Reçu Interne de Banque", correct: false },
+      { text: "Registre International Bancaire", correct: false },
+    ],
+  },
+  {
+    question: "Pourquoi l'inflation réduit-elle votre pouvoir d'achat ?",
+    answers: [
+      { text: "Parce que les salaires baissent", correct: false },
+      {
+        text: "Parce que les prix augmentent, donc on achète moins avec la même somme",
+        correct: true,
+      }, // Position 2
+      { text: "Parce que les banques ferment", correct: false },
+      { text: "Parce qu'il y a moins de produits", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce que le « Troc » ?",
+    answers: [
+      { text: "Une monnaie électronique", correct: false },
+      { text: "Un impôt ancien", correct: false },
+      {
+        text: "L'échange direct d'un bien contre un autre, sans argent",
+        correct: true,
+      }, // Position 3
+      { text: "Une technique de vente", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le principe de la « gratification différée » ?",
+    answers: [
+      { text: "Acheter tout, tout de suite", correct: false },
+      {
+        text: "Attendre avant d'acheter pour obtenir mieux ou épargner plus",
+        correct: true,
+      }, // Position 2
+      { text: "Refuser tout cadeau", correct: false },
+      { text: "Ne jamais se faire plaisir", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'une « dépense fixe » ?",
+    answers: [
+      { text: "Une dépense imprévue (réparation)", correct: false },
+      { text: "Une dépense pour le plaisir (restaurant)", correct: false },
+      {
+        text: "Une dépense qui ne bouge pas tous les mois (loyer, internet)",
+        correct: true,
+      }, // Position 3
+      { text: "Une dépense en liquide", correct: false },
+    ],
+  },
+  {
+    question: "Qui est Warren Buffett ?",
+    answers: [
+      { text: "Un célèbre chanteur", correct: false },
+      { text: "Un inventeur", correct: false },
+      { text: "Un président américain", correct: false },
+      { text: "Un des plus célèbres investisseurs au monde", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Quel terme désigne l'argent que l'on doit à quelqu'un ?",
+    answers: [
+      { text: "Une créance", correct: false },
+      { text: "Une dette", correct: true }, // Position 2
+      { text: "Un capital", correct: false },
+      { text: "Une dividende", correct: false },
+    ],
+  },
+  {
+    question: "En bourse, qu'est-ce qu'un « Krach » ?",
+    answers: [
+      { text: "Une hausse soudaine", correct: false },
+      { text: "Un nouveau produit", correct: false },
+      { text: "Une chute brutale des cours", correct: true }, // Position 3
+      { text: "Une fusion d'entreprises", correct: false },
+    ],
+  },
+  {
+    question: "Que signifie « Spéculer » ?",
+    answers: [
+      {
+        text: "Acheter un bien pour le revendre plus cher en pariant sur la hausse",
+        correct: true,
+      }, // Position 1
+      { text: "Économiser prudemment", correct: false },
+      { text: "Travailler dur", correct: false },
+      { text: "Donner de l'argent", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce que le « revenu passif » ?",
+    answers: [
+      {
+        text: "Un revenu gagné sans travailler activement (loyers, dividendes)",
+        correct: true,
+      }, // Position 1
+      { text: "Le revenu du chômage", correct: false },
+      { text: "Un salaire très bas", correct: false },
+      { text: "L'argent de poche", correct: false },
+    ],
+  },
+  {
+    question: "Que se passe-t-il si vous ne payez pas vos impôts ?",
+    answers: [
+      { text: "Rien, c'est facultatif", correct: false },
+      { text: "On reçoit un cadeau", correct: false },
+      {
+        text: "On risque des pénalités (majorations) et des poursuites",
+        correct: true,
+      }, // Position 3
+      { text: "La banque ferme votre compte", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quelle est la différence entre une carte de débit et de crédit ?",
+    answers: [
+      { text: "La couleur", correct: false },
+      {
+        text: "Le débit retire l'argent tout de suite, le crédit plus tard (ou en plusieurs fois)",
+        correct: true,
+      }, // Position 2
+      { text: "Le crédit est gratuit", correct: false },
+      { text: "Le débit permet d'emprunter des millions", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « Paradis fiscal » ?",
+    answers: [
+      { text: "Un pays où il fait beau", correct: false },
+      {
+        text: "Un pays avec des impôts très faibles ou inexistants",
+        correct: true,
+      }, // Position 2
+      { text: "Une banque en faillite", correct: false },
+      { text: "Un type d'investissement", correct: false },
+    ],
+  },
+
+  {
+    question: "Qu'est-ce que le « décalage horaire » aussi appelé Jetlag ?",
+    answers: [
+      { text: "Une maladie tropicale", correct: false },
+      { text: "Un retard de l'avion", correct: false },
+      {
+        text: "Une fatigue due à la traversée rapide de fuseaux horaires",
+        correct: true,
+      }, // Position 3
+      { text: "Un type de billet d'avion", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel site permet de dormir chez l'habitant (location courte durée) ?",
+    answers: [
+      { text: "Airbnb", correct: true }, // Position 1
+      { text: "Uber", correct: false },
+      { text: "Amazon", correct: false },
+      { text: "Tinder", correct: false },
+    ],
+  },
+  {
+    question: "Quel document permet de conduire une voiture à l'étranger ?",
+    answers: [
+      { text: "Le passeport", correct: false },
+      { text: "La carte vitale", correct: false },
+      { text: "Le permis de conduire international", correct: true }, // Position 3
+      { text: "Le carnet de santé", correct: false },
+    ],
+  },
+  {
+    question: "Que signifie « All Inclusive » dans un hôtel ?",
+    answers: [
+      { text: "Tout est payant", correct: false },
+      {
+        text: "Repas, boissons et parfois activités sont inclus dans le prix",
+        correct: true,
+      }, // Position 2
+      { text: "L'hôtel est réservé aux adultes", correct: false },
+      { text: "L'hôtel accepte les animaux", correct: false },
+    ],
+  },
+  {
+    question: "Dans quel pays se trouve l'île de Bali ?",
+    answers: [
+      { text: "Thaïlande", correct: false },
+      { text: "Philippines", correct: false },
+      { text: "Malaisie", correct: false },
+      { text: "Indonésie", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Quelle est la monnaie utilisée au Royaume-Uni ?",
+    answers: [
+      { text: "L'Euro", correct: false },
+      { text: "Le Dollar", correct: false },
+      { text: "La Livre Sterling", correct: true }, // Position 3
+      { text: "Le Franc", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'une « Auberge de jeunesse » ?",
+    answers: [
+      { text: "Un hébergement économique souvent en dortoir", correct: true }, // Position 1
+      { text: "Un hôtel 5 étoiles", correct: false },
+      { text: "Une école", correct: false },
+      { text: "Un camping sauvage", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quel est le nom du célèbre train qui traverse la Russie (Moscou-Vladivostok) ?",
+    answers: [
+      { text: "L'Orient Express", correct: false },
+      { text: "Le Transsibérien", correct: true }, // Position 2
+      { text: "Le TGV", correct: false },
+      { text: "Le Poudlard Express", correct: false },
+    ],
+  },
+  {
+    question: "À la douane, que signifie « Rien à déclarer » ?",
+    answers: [
+      { text: "Que l'on ne veut pas parler", correct: false },
+      {
+        text: "Que l'on transporte des marchandises illégales",
+        correct: false,
+      },
+      { text: "Que l'on n'a pas de passeport", correct: false },
+      {
+        text: "Que l'on ne transporte pas de marchandises taxables ou interdites",
+        correct: true,
+      }, // Position 4
+    ],
+  },
+  {
+    question:
+      "Quel site naturel américain est un immense canyon creusé par le Colorado ?",
+    answers: [
+      { text: "Yellowstone", correct: false },
+      { text: "Le Grand Canyon", correct: true }, // Position 2
+      { text: "Yosemite", correct: false },
+      { text: "Niagara Falls", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la capitale touristique de la Turquie  ?",
+    answers: [
+      { text: "Antalya", correct: false },
+      { text: "Istanbul", correct: true }, // Position 2
+      { text: "Izmir", correct: false },
+      { text: "Bodrum", correct: false },
+    ],
+  },
+  {
+    question: "Quel est l'indicatif téléphonique international de la France ?",
+    answers: [
+      { text: "+1", correct: false },
+      { text: "+44", correct: false },
+      { text: "+33", correct: true }, // Position 3
+      { text: "+49", correct: false },
+    ],
+  },
+  {
+    question: "Dans quel pays visite-t-on les temples d'Angkor ?",
+    answers: [
+      { text: "Vietnam", correct: false },
+      { text: "Laos", correct: false },
+      { text: "Cambodge", correct: true }, // Position 3
+      { text: "Chine", correct: false },
+    ],
+  },
+  {
+    question: "Qu'est-ce qu'un « E-billet » ?",
+    answers: [
+      { text: "Un billet électronique", correct: true }, // Position 1
+      { text: "Un billet perdu", correct: false },
+      { text: "Un billet très cher", correct: false },
+      { text: "Un billet confisqué", correct: false },
+    ],
+  },
+  {
+    question: "Quelle ville est célèbre pour ses canaux et ses gondoles ?",
+    answers: [
+      { text: "Amsterdam", correct: false },
+      { text: "Venise", correct: true }, // Position 2
+      { text: "Bruges", correct: false },
+      { text: "Stockholm", correct: false },
+    ],
+  },
+  {
+    question: "Quel pays est surnommé le « Pays du matin calme » ?",
+    answers: [
+      { text: "Le Japon", correct: false },
+      { text: "La Chine", correct: false },
+      { text: "Le Vietnam", correct: false },
+      { text: "La Corée du Sud", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "En avion, qu'est-ce qu'un « bagage cabine » ?",
+    answers: [
+      { text: "Le sac que l'on garde avec soi dans l'avion", correct: true }, // Position 1
+      { text: "La valise qui va en soute", correct: false },
+      { text: "Le repas servi à bord", correct: false },
+      { text: "Le gilet de sauvetage", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la plus haute tour du monde (située à Dubaï) ?",
+    answers: [
+      { text: "Empire State Building", correct: false },
+      { text: "Tour Eiffel", correct: false },
+      { text: "Burj Khalifa", correct: true }, // Position 3
+      { text: "Shanghai Tower", correct: false },
+    ],
+  },
+  {
+    question: "Quelle est la cryptomonnaie la plus célèbre créée en 2009 ?",
+    answers: [
+      { text: "Ethereum", correct: false },
+      { text: "Bitcoin", correct: true },
+      { text: "Dogecoin", correct: false },
+      { text: "Litecoin", correct: false },
+    ],
+  },
+  {
+    question:
+      "Quelle application est très utilisée pour se repérer (GPS) en voyage ?",
+    answers: [
+      { text: "Photoshop", correct: false },
+      { text: "Google Maps", correct: true }, // Position 2
+      { text: "Netflix", correct: false },
+      { text: "Spotify", correct: false },
+    ],
+  },
+  {
+    question: "Dans quelle ville se trouve la Statue de la Liberté ?",
+    answers: [
+      { text: "Washington", correct: false },
+      { text: "San Francisco", correct: false },
+      { text: "New York", correct: true }, // Position 3
+      { text: "Philadelphie", correct: false },
+    ],
+  },
+  {
+    question: "Quel est le nom du méchant dans l'animé Démons Slayers ?",
+    answers: [
+      { text: "Muzan", correct: true }, // Position 1
+      { text: "Cel", correct: false },
+      { text: "Dark Vador", correct: false },
+      { text: "Maito", correct: false },
+    ],
+  },
+  {
+    question: "Quelle merveille du monde se trouve en Inde ?",
+    answers: [
+      { text: "La Grande Muraille", correct: false },
+      { text: "Le Colisée", correct: false },
+      { text: "Le Christ Rédempteur", correct: false },
+      { text: "Le Taj Mahal", correct: true }, // Position 4
+    ],
+  },
+  {
+    question: "Que signifie « Duty Free » dans un aéroport ?",
+    answers: [
+      { text: "Entrée libre", correct: false },
+      { text: "Boutique sans taxes", correct: true }, // Position 2
+      { text: "Interdit de fumer", correct: false },
+      { text: "Zone de repos", correct: false },
+    ],
+  },
+  {
+    question: "Quel fleuve traverse l'Égypte ?",
+    answers: [
+      { text: "L'Amazone", correct: false },
+      { text: "Le Mississippi", correct: false },
+      { text: "Le Nil", correct: true }, // Position 3
+      { text: "Le Danube", correct: false },
+    ],
+  },
 ];
