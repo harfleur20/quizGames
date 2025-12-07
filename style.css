@@ -389,9 +389,9 @@ h1 {
 }
 
 /* Augmentation rapide de la taille du texte des statistiques */
-#result-screen .stat-label {
+/* #result-screen .stat-label {
     font-size: 1.15rem !important;
-}
+} */
 
 #result-screen .stat-value {
     font-size: 1.25rem !important;
@@ -1067,4 +1067,514 @@ h1 {
 .highscore-item.third-place {
     background: linear-gradient(135deg, #efeeed 0%, #efefef 100%);
     border-left: 6px solid #f4d7b9;
+}
+
+/* ============ RESPONSIVE COMPLET PAGE RÉSULTAT ============ */
+@media (max-width: 1024px) {
+    .result-content {
+        padding: 15px;
+    }
+    
+    .score-display {
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .final-score {
+        font-size: 4rem;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .score-label {
+        font-size: 1.2rem;
+    }
+    
+    .score-max {
+        font-size: 2rem;
+    }
+    
+    .result-message {
+        font-size: 1.5rem;
+        padding: 15px;
+    }
+    
+    .result-card {
+        padding: 25px;
+    }
+    
+    .result-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+    
+    /* Statistiques */
+    .stat-line {
+        padding: 10px 12px;
+        margin: 6px 0;
+    }
+    
+    .stat-icon {
+        width: 28px;
+        font-size: 16px;
+    }
+    
+    .stat-label {
+        font-size: 1.05rem;
+        margin-left: 8px;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+        min-width: 70px;
+    }
+    
+    /* Highscores dans les résultats */
+    .partie-haut img {
+        width: 45px;
+    }
+    
+    .highscores-section h2 {
+        font-size: 2rem;
+    }
+    
+    .highscores-section h3 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #result-screen .container {
+        padding: 0;
+        border-radius: 0;
+    }
+    
+    .result-content {
+        padding: 10px;
+    }
+    
+    .score-display {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+        border-radius: 15px;
+    }
+    
+    .final-score {
+        font-size: 3.5rem;
+        flex-direction: column;
+    }
+    
+    .score-value {
+        font-size: 3rem;
+    }
+    
+    .score-max {
+        font-size: 1.8rem;
+    }
+    
+    .result-message {
+        font-size: 1.2rem;
+        padding: 12px;
+        margin-top: 15px;
+    }
+    
+    /* Cartes de statistiques */
+    .result-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .result-card h3 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    
+    /* Réorganisation des statistiques */
+    .stat-line {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 15px;
+        margin: 8px 0;
+        gap: 8px;
+    }
+    
+    .stat-icon {
+        width: 30px;
+        font-size: 18px;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        margin-left: 0;
+        font-size: 1.1rem;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .stat-value {
+        width: 100%;
+        text-align: left;
+        font-size: 1.2rem;
+        min-width: auto;
+        padding-left: 40px; /* Pour aligner avec les icônes */
+    }
+    
+    /* Highscores section */
+    .partie-haut {
+        padding: 15px 0;
+    }
+    
+    .partie-haut img {
+        width: 40px;
+        margin-bottom: 15px;
+    }
+    
+    .highscores-section h2 {
+        font-size: 1.8rem;
+    }
+    
+    .highscores-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+    
+    /* Items de highscore */
+    .highscore-item {
+        flex-wrap: wrap;
+        padding: 12px 15px;
+        min-height: 60px;
+    }
+    
+    .highscore-rank {
+        width: 40px;
+        min-width: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .highscore-name {
+        flex: 2;
+        font-size: 1rem;
+        min-width: 150px;
+    }
+    
+    .highscore-score {
+        flex: 1;
+        min-width: 80px;
+        text-align: center;
+        order: 3;
+        width: 100%;
+        margin-top: 5px;
+        padding-top: 5px;
+        border-top: 1px solid #eee;
+    }
+    
+    .highscore-date {
+        flex: 1;
+        text-align: right;
+        min-width: 90px;
+        font-size: 0.85rem;
+        order: 2;
+    }
+    
+    /* Boutons */
+    .action-buttons {
+        margin-top: 25px;
+    }
+    
+    .restart-btn {
+        padding: 16px 40px;
+        font-size: 1.3rem;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .show-more-btn {
+        max-width: 250px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .result-content h1 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .score-display {
+        padding: 15px 10px;
+        border-radius: 12px;
+    }
+    
+    .final-score {
+        font-size: 2.8rem;
+    }
+    
+    .score-value {
+        font-size: 2.5rem;
+    }
+    
+    .score-max {
+        font-size: 1.5rem;
+    }
+    
+    .score-label {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    
+    .result-message {
+        font-size: 1.1rem;
+        padding: 10px;
+        margin-top: 12px;
+    }
+    
+    /* Cartes de statistiques - version mobile compacte */
+    .result-card {
+        padding: 15px;
+    }
+    
+    .result-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .stat-line {
+        padding: 10px;
+        margin: 5px 0;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .stat-icon {
+        width: 25px;
+        font-size: 16px;
+        margin-bottom: 0;
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        margin-bottom: 0;
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+        text-align: right;
+        padding-left: 0;
+        width: auto;
+        min-width: 80px;
+    }
+    
+    /* Pour la ligne highlight, garder la colonne sur très petit écran */
+    .stat-line.highlight {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+    }
+    
+    .stat-line.highlight .stat-value {
+        width: 100%;
+        text-align: left;
+        margin-top: 5px;
+        padding-left: 35px;
+    }
+    
+    /* Highscores en mode liste verticale */
+    .highscore-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+        gap: 5px;
+    }
+    
+    .highscore-rank {
+        order: 1;
+        width: 100%;
+        text-align: left;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .highscore-name {
+        order: 2;
+        width: 100%;
+        min-width: auto;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .highscore-score {
+        order: 3;
+        width: 100%;
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+        text-align: left;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .highscore-date {
+        order: 4;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 3px;
+    }
+    
+    /* Cacher les bordures latérales sur mobile */
+    .highscore-item.first-place,
+    .highscore-item.second-place,
+    .highscore-item.third-place {
+        border-left: none;
+        border-bottom: 3px solid;
+    }
+    
+    .highscore-item.first-place {
+        border-bottom-color: #3a3a3a;
+    }
+    
+    .highscore-item.second-place {
+        border-bottom-color: #c0c0c0;
+    }
+    
+    .highscore-item.third-place {
+        border-bottom-color: #f4d7b9;
+    }
+    
+    /* Boutons */
+    .restart-btn {
+        padding: 14px 30px;
+        font-size: 1.2rem;
+        max-width: 100%;
+    }
+    
+    .show-more-btn {
+        max-width: 100%;
+        font-size: 0.95rem;
+    }
+    
+    /* Message du record */
+    .record-message {
+        font-size: 0.95rem;
+        padding: 10px;
+        margin-top: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .final-score {
+        font-size: 2.5rem;
+    }
+    
+    .score-value {
+        font-size: 2.2rem;
+    }
+    
+    .score-max {
+        font-size: 1.3rem;
+    }
+    
+    .result-message {
+        font-size: 1rem;
+    }
+    
+    .stat-label {
+        font-size: 0.95rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .highscore-item {
+        padding: 8px 10px;
+    }
+    
+    .highscore-name {
+        font-size: 1rem;
+    }
+    
+    .highscore-score {
+        font-size: 1.1rem;
+    }
+    
+    .restart-btn {
+        padding: 12px 20px;
+        font-size: 1.1rem;
+    }
+}
+
+/* ============ ORIENTATION PAYSAGE SUR MOBILE ============ */
+@media (max-height: 600px) and (orientation: landscape) {
+    #result-screen .container {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .result-content {
+        padding: 10px;
+    }
+    
+    .score-display {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .final-score {
+        font-size: 2.5rem;
+    }
+    
+    .stat-line {
+        padding: 8px 10px;
+        margin: 4px 0;
+    }
+    
+    .highscores-list {
+        max-height: 150px;
+    }
+    
+    .action-buttons {
+        margin-top: 15px;
+    }
+}
+
+/* ============ CORRECTIONS SPÉCIFIQUES POUR LE TEXTE ============ */
+@media (max-width: 768px) {
+    /* Augmenter spécifiquement la taille du texte gris des statistiques */
+    .player-result .result-card .stat-line .stat-label {
+        font-size: 1.05rem !important;
+        color: #444 !important;
+    }
+    
+    .player-result .result-card .stat-line .stat-value {
+        font-size: 1.15rem !important;
+        color: #222 !important;
+    }
+    
+    /* Pour la ligne highlight */
+    .player-result .result-card .stat-line.highlight .stat-label {
+        font-size: 1.1rem !important;
+    }
+    
+    .player-result .result-card .stat-line.highlight .stat-value {
+        font-size: 1.25rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-result .result-card .stat-line .stat-label {
+        font-size: 1rem !important;
+    }
+    
+    .player-result .result-card .stat-line .stat-value {
+        font-size: 1.1rem !important;
+    }
 }

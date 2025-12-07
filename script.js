@@ -113,11 +113,10 @@ async function checkExistingSession() {
         
         if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
             console.log("⚠️ Supabase non chargé - mode invité");
+            currentUser = null; // S'assurer que currentUser est null
+            updateUserDisplay(); // Mettre à jour l'affichage
             showScreen('start');
-            setTimeout(() => {
-                loadScoresFromSupabase();
-                updateHighscoresDisplay();
-            }, 1000);
+            setTimeout(() => loadScoresFromSupabase(), 1000);
             return;
         }
         
@@ -138,6 +137,8 @@ async function checkExistingSession() {
             
         } else {
             console.log("👤 Mode invité");
+            currentUser = null; // IMPORTANT: Définir explicitement à null
+            updateUserDisplay(); // Mettre à jour l'affichage
             showScreen('start');
             loadScoresFromSupabase();
             resetPlayerStats();
@@ -145,6 +146,8 @@ async function checkExistingSession() {
         
     } catch (error) {
         console.error("❌ Erreur vérification session:", error);
+        currentUser = null; // En cas d'erreur, forcer invité
+        updateUserDisplay();
         showScreen('start');
         loadScoresFromSupabase();
         resetPlayerStats();
@@ -861,55 +864,94 @@ async function handleRegisterModal() {
 
 async function handleLogout() {
     try {
-        const result = await window.supabaseFunctions.signOutSupabase();
-        
-        if (result.success) {
-            currentUser = null;
-            updateUserDisplay();
-            loadScoresFromSupabase();
-            resetPlayerStats();
-            hideStatsPanel();
-            showMessage("✅ Déconnexion réussie", "success");
+        if (window.supabaseFunctions && window.supabaseFunctions.signOutSupabase) {
+            const result = await window.supabaseFunctions.signOutSupabase();
             
-        } else {
-            showMessage(`❌ ${result.error}`, "error");
+            if (result.success) {
+                console.log("✅ Déconnexion réussie");
+            } else {
+                console.log("⚠️ Pas de session active ou erreur");
+            }
         }
         
+        // Toujours réinitialiser l'état local
+        currentUser = null;
+        
+        // Mettre à jour l'affichage
+        updateUserDisplay();
+        
+        // Recharger les scores (pour montrer les scores publics)
+        loadScoresFromSupabase();
+        
+        // Réinitialiser les stats
+        resetPlayerStats();
+        
+        // Cacher le panel stats s'il est ouvert
+        hideStatsPanel();
+        
+        showMessage("✅ Déconnexion réussie", "success");
+        
+        // Forcer un rechargement si nécessaire
+        setTimeout(() => {
+            if (document.getElementById('current-user-pseudo')?.textContent !== "Invité") {
+                console.log("Forcer la mise à jour...");
+                currentUser = null;
+                updateUserDisplay();
+            }
+        }, 500);
+        
     } catch (error) {
+        console.error("❌ Erreur de déconnexion:", error);
         showMessage("❌ Erreur de déconnexion", "error");
+        
+        // En cas d'erreur, forcer quand même la déconnexion locale
+        currentUser = null;
+        updateUserDisplay();
     }
 }
 
 function updateUserDisplay() {
     try {
         if (currentUser) {
+            // Utilisateur connecté
             if (currentUserPseudo) currentUserPseudo.textContent = currentUser.pseudo;
             if (currentUserEmail) currentUserEmail.textContent = currentUser.email;
             if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
             if (playerResultName) playerResultName.textContent = currentUser.pseudo;
             
+            // Afficher l'icône stats
             if (statsIcon) {
                 statsIcon.style.display = 'flex';
                 statsIcon.title = `Statistiques de ${currentUser.pseudo}`;
             }
             
+            // Afficher bouton déconnexion, cacher connexion
             if (logoutBtn) {
-                logoutBtn.style.display = 'block';
+                logoutBtn.style.display = 'flex'; // Important: flex pour garder le style
             }
-            if (loginBtnHeader) loginBtnHeader.style.display = 'none';
+            if (loginBtnHeader) {
+                loginBtnHeader.style.display = 'none';
+            }
             
         } else {
+            // Utilisateur NON connecté (invité)
             if (currentUserPseudo) currentUserPseudo.textContent = "Invité";
             if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
             if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
             if (playerResultName) playerResultName.textContent = "Invité";
             
+            // Cacher l'icône stats
             if (statsIcon) {
                 statsIcon.style.display = 'none';
             }
             
-            if (logoutBtn) logoutBtn.style.display = 'none';
-            if (loginBtnHeader) loginBtnHeader.style.display = 'block';
+            // Cacher bouton déconnexion, afficher connexion
+            if (logoutBtn) {
+                logoutBtn.style.display = 'none';
+            }
+            if (loginBtnHeader) {
+                loginBtnHeader.style.display = 'flex'; // Important: flex pour garder le style
+            }
         }
         
         updateConnectionMessage();

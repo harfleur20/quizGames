@@ -393,3 +393,353 @@
     border-radius: 3px;
     transition: width 0.5s ease;
 }
+
+/* ============ RESPONSIVE DU PANEL STATS ============ */
+@media (max-width: 1024px) {
+    .stats-panel {
+        width: 280px;
+        left: 10px;
+        top: 70px;
+    }
+    
+    .stats-summary {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    
+    .stat-item {
+        padding: 8px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .stats-panel.active {
+        display: block;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+    
+    .stats-panel-content {
+        padding: 15px;
+    }
+    
+    .stats-summary {
+        grid-template-columns: repeat(3, 1fr);
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+    
+    .recent-games-list {
+        max-height: 150px;
+    }
+    
+    /* Cacher l'icône stats sur mobile si trop encombrant */
+    .user-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    
+    .stats-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        margin-left: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-panel {
+        width: 95%;
+        max-height: 85vh;
+    }
+    
+    .stats-panel-header {
+        padding: 12px 15px;
+    }
+    
+    .stats-panel-header h4 {
+        font-size: 14px;
+    }
+    
+    .stats-summary {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+    }
+    
+    .stat-item {
+        padding: 6px 4px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+    }
+    
+    .recent-games h5 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    
+    .recent-game-item {
+        padding: 8px;
+        font-size: 13px;
+    }
+    
+    .see-all-stats-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    /* Ajustement de la section rang */
+    .user-ranking-section {
+        padding: 12px;
+    }
+    
+    .ranking-badge {
+        font-size: 20px;
+        padding: 6px 15px;
+        min-width: 80px;
+    }
+    
+    .ranking-details {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Ajustement de l'icône stats sur mobile */
+    .stats-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        margin-left: 8px;
+    }
+    
+    /* S'assurer que le panel n'est pas caché par le bouton */
+    .stats-panel {
+        z-index: 1000;
+    }
+}
+
+/* ============ RESPONSIVE SIMPLE DU MINI-PANEL STATS ============ */
+@media (max-width: 768px) {
+    .stats-panel {
+        position: fixed;
+        top: auto !important; /* On ignore le top défini par JS */
+        bottom: 20px !important; /* Positionné en bas */
+        left: 50% !important; /* Centré horizontalement */
+        transform: translateX(-50%) !important; /* Centrage parfait */
+        width: 90% !important; /* 90% de la largeur de l'écran */
+        max-width: 400px !important; /* Maximum 400px */
+        max-height: 70vh !important; /* Maximum 70% de la hauteur */
+        overflow-y: auto; /* Scroll si contenu trop long */
+        z-index: 1000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Ombre plus prononcée */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px); /* Effet flou derrière */
+    }
+    
+    /* Animation d'apparition */
+    .stats-panel.active {
+        animation: slideUpMobile 0.3s ease;
+    }
+    
+    @keyframes slideUpMobile {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+    
+    /* Ajustement du contenu */
+    .stats-panel-content {
+        padding: 15px;
+    }
+    
+    /* Résumé stats en 3 colonnes */
+    .stats-summary {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .stat-item {
+        padding: 10px 5px;
+        text-align: center;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+        margin-top: 5px;
+    }
+    
+    /* Dernières parties */
+    .recent-games {
+        margin-bottom: 15px;
+    }
+    
+    .recent-games h5 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .recent-games-list {
+        max-height: 150px;
+    }
+    
+    .recent-game-item {
+        padding: 8px 10px;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .recent-game-date {
+        font-size: 11px;
+    }
+    
+    .recent-game-score {
+        font-size: 14px;
+    }
+    
+    /* Bouton d'action */
+    .see-all-stats-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    /* Header du panel */
+    .stats-panel-header {
+        padding: 12px 15px;
+        position: sticky;
+        top: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 1;
+    }
+    
+    .stats-panel-header h4 {
+        font-size: 15px;
+    }
+    
+    /* Bouton fermer */
+    .close-stats-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+    
+    /* Section rang */
+    .user-ranking-section {
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .ranking-badge {
+        font-size: 20px;
+        padding: 8px 20px;
+        min-width: 90px;
+    }
+    
+    .ranking-label {
+        font-size: 11px;
+    }
+    
+    .ranking-details {
+        font-size: 13px;
+    }
+}
+
+/* Pour les très petits écrans */
+@media (max-width: 480px) {
+    .stats-panel {
+        width: 95% !important;
+        bottom: 15px !important;
+        max-height: 65vh !important;
+    }
+    
+    .stats-summary {
+        gap: 5px;
+    }
+    
+    .stat-item {
+        padding: 8px 3px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+    }
+    
+    .recent-game-item {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .see-all-stats-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* Pour l'orientation paysage sur mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .stats-panel {
+        max-height: 80vh !important; /* Plus de hauteur en paysage */
+        bottom: 10px !important;
+    }
+    
+    .stats-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .recent-games-list {
+        max-height: 120px;
+    }
+}
