@@ -1,33 +1,36 @@
 import { quizQuestions } from "./quizQuestion.js";
 
 // ==================== ÉLÉMENTS DU DOM ====================
-// Ajout des nouveaux éléments d'authentification
-const authScreen = document.getElementById("auth-screen");
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
 const resultScreen = document.getElementById("result-screen");
 
-// Auth elements
-const loginTab = document.getElementById("login-tab");
-const registerTab = document.getElementById("register-tab");
-const loginForm = document.getElementById("login-form");
-const registerForm = document.getElementById("register-form");
-const loginEmail = document.getElementById("login-email");
-const loginPassword = document.getElementById("login-password");
-const loginBtn = document.getElementById("login-btn");
-const registerPseudo = document.getElementById("register-pseudo");
-const registerEmail = document.getElementById("register-email");
-const registerPassword = document.getElementById("register-password");
-const registerConfirm = document.getElementById("register-confirm");
-const registerBtn = document.getElementById("register-btn");
-const logoutBtn = document.getElementById("logout-btn");
+// Modal auth elements (nouveau)
+const authModal = document.getElementById("auth-modal");
+const closeAuthModalBtn = document.getElementById("close-auth-modal");
+const loginBtnHeader = document.getElementById("login-btn-header");
+
+// Éléments du modal (avec suffixe -modal)
+const loginTabModal = document.getElementById("login-tab-modal");
+const registerTabModal = document.getElementById("register-tab-modal");
+const loginFormModal = document.getElementById("login-form-modal");
+const registerFormModal = document.getElementById("register-form-modal");
+const loginEmailModal = document.getElementById("login-email-modal");
+const loginPasswordModal = document.getElementById("login-password-modal");
+const loginBtnModal = document.getElementById("login-btn-modal");
+const registerPseudoModal = document.getElementById("register-pseudo-modal");
+const registerEmailModal = document.getElementById("register-email-modal");
+const registerPasswordModal = document.getElementById("register-password-modal");
+const registerConfirmModal = document.getElementById("register-confirm-modal");
+const registerBtnModal = document.getElementById("register-btn-modal");
 
 // User info elements
 const currentUserPseudo = document.getElementById("current-user-pseudo");
 const currentUserEmail = document.getElementById("current-user-email");
 const playerDisplayName = document.getElementById("player-display-name");
+const logoutBtn = document.getElementById("logout-btn");
 
-// Reste des éléments existants...
+// Quiz elements
 const startButton = document.getElementById("start-btn");
 const questionText = document.getElementById("question-text");
 const answersContainer = document.getElementById("answers-container");
@@ -80,15 +83,10 @@ let currentUser = null;
 
 // ==================== INITIALISATION ====================
 window.addEventListener('DOMContentLoaded', async () => {
-    console.log("🎮 QUIZ CHAMPIONS - AUTH EDITION");
+    console.log("🎮 QUIZ CHAMPIONS - MODAL EDITION");
     
-    // Vérifier si l'utilisateur est déjà connecté
     await checkExistingSession();
-    
-    // Setup des événements d'authentification
     setupAuthEvents();
-    
-    // Setup des autres événements
     setupQuizEvents();
     
     console.log("✅ Initialisation terminée");
@@ -98,13 +96,15 @@ async function checkExistingSession() {
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getSessionSupabase) {
             console.log("⚠️ Supabase non chargé");
+            showScreen('start');
+            // Charger les scores même sans session
+            loadScoresFromSupabase();
             return;
         }
         
         const result = await window.supabaseFunctions.getSessionSupabase();
         
         if (result.success && result.user) {
-            // Utilisateur déjà connecté
             currentUser = {
                 id: result.user.id,
                 email: result.user.email,
@@ -113,52 +113,91 @@ async function checkExistingSession() {
             
             updateUserDisplay();
             showScreen('start');
+            // Charger les scores pour l'utilisateur connecté
             loadScoresFromSupabase();
             
         } else {
-            // Aucune session, montrer l'écran d'authentification
-            showScreen('auth');
+            showScreen('start'); // Toujours montrer start screen
+            // Charger les scores même sans utilisateur
+            loadScoresFromSupabase();
         }
         
     } catch (error) {
         console.error("❌ Erreur vérification session:", error);
-        showScreen('auth');
+        showScreen('start');
+        // Charger les scores même en cas d'erreur
+        loadScoresFromSupabase();
     }
 }
 
 function setupAuthEvents() {
-    // Tabs connexion/inscription
-    if (loginTab && registerTab) {
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('active');
-            registerTab.classList.remove('active');
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
+    // Bouton connexion dans l'en-tête
+    if (loginBtnHeader) {
+        loginBtnHeader.addEventListener('click', showAuthModal);
+    }
+    
+    // Fermer le modal
+    if (closeAuthModalBtn) {
+        closeAuthModalBtn.addEventListener('click', hideAuthModal);
+    }
+    
+    // Fermer le modal en cliquant à l'extérieur
+    if (authModal) {
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                hideAuthModal();
+            }
+        });
+    }
+    
+    // Tabs du modal
+    if (loginTabModal && registerTabModal) {
+        loginTabModal.addEventListener('click', () => {
+            loginTabModal.classList.add('active');
+            registerTabModal.classList.remove('active');
+            loginFormModal.classList.add('active');
+            registerFormModal.classList.remove('active');
         });
         
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('active');
-            loginTab.classList.remove('active');
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
+        registerTabModal.addEventListener('click', () => {
+            registerTabModal.classList.add('active');
+            loginTabModal.classList.remove('active');
+            registerFormModal.classList.add('active');
+            loginFormModal.classList.remove('active');
         });
     }
     
-    // Connexion
-    if (loginBtn) {
-        loginBtn.addEventListener('click', handleLogin);
-    }
-    
-    // Entrée dans les champs de connexion
-    if (loginPassword) {
-        loginPassword.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleLogin();
+    // Bouton connexion dans le modal
+    if (loginBtnModal) {
+        loginBtnModal.addEventListener('click', async () => {
+            const success = await handleLoginModal();
+            if (success) {
+                hideAuthModal();
+                // Ne pas démarrer automatiquement, laisser l'utilisateur cliquer
+            }
         });
     }
     
-    // Inscription
-    if (registerBtn) {
-        registerBtn.addEventListener('click', handleRegister);
+    // Bouton inscription dans le modal
+    if (registerBtnModal) {
+        registerBtnModal.addEventListener('click', async () => {
+            const success = await handleRegisterModal();
+            if (success) {
+                hideAuthModal();
+            }
+        });
+    }
+    
+    // Entrée dans les champs du modal
+    if (loginPasswordModal) {
+        loginPasswordModal.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const success = await handleLoginModal();
+                if (success) {
+                    hideAuthModal();
+                }
+            }
+        });
     }
     
     // Déconnexion
@@ -199,116 +238,155 @@ function setupQuizEvents() {
     }
 }
 
-// ==================== GESTION AUTHENTIFICATION ====================
-async function handleLogin() {
-    if (!loginEmail || !loginPassword) return;
-    
-    const email = loginEmail.value.trim();
-    const password = loginPassword.value;
-    
-    if (!email || !password) {
-        showMessage("⚠️ Veuillez remplir tous les champs", "warning");
-        return;
-    }
-    
-    if (!isValidEmail(email)) {
-        showMessage("⚠️ Email invalide", "warning");
-        return;
-    }
-    
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion...';
-    
-    try {
-        const result = await window.supabaseFunctions.signInSupabase(email, password);
+// ==================== FONCTIONS MODAL ====================
+function showAuthModal() {
+    if (authModal) {
+        authModal.classList.add('active');
+        // Réinitialiser les formulaires
+        if (loginEmailModal) loginEmailModal.value = '';
+        if (loginPasswordModal) loginPasswordModal.value = '';
+        if (registerPseudoModal) registerPseudoModal.value = '';
+        if (registerEmailModal) registerEmailModal.value = '';
+        if (registerPasswordModal) registerPasswordModal.value = '';
+        if (registerConfirmModal) registerConfirmModal.value = '';
         
-        if (result.success) {
-            currentUser = {
-                id: result.user.id,
-                email: result.user.email,
-                pseudo: result.user.user_metadata?.pseudo || email.split('@')[0]
-            };
-            
-            updateUserDisplay();
-            showScreen('start');
-            loadScoresFromSupabase();
-            
-            showMessage("✅ Connexion réussie !", "success");
-            
-        } else {
-            showMessage(`❌ ${result.error}`, "error");
+        // Montrer l'onglet connexion par défaut
+        if (loginTabModal && registerTabModal && loginFormModal && registerFormModal) {
+            loginTabModal.classList.add('active');
+            registerTabModal.classList.remove('active');
+            loginFormModal.classList.add('active');
+            registerFormModal.classList.remove('active');
         }
-        
-    } catch (error) {
-        showMessage("❌ Erreur de connexion", "error");
-        console.error(error);
-    } finally {
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
     }
 }
 
-async function handleRegister() {
-    // Récupérer les valeurs
-    const pseudo = document.getElementById('register-pseudo').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value;
-    const confirm = document.getElementById('register-confirm').value;
-    
-    // Validation simple
-    if (!pseudo || !email || !password || !confirm) {
-        showMessage("⚠️ Remplissez tous les champs", "warning");
-        return;
+function hideAuthModal() {
+    if (authModal) {
+        authModal.classList.remove('active');
     }
-    
-    if (password !== confirm) {
-        showMessage("⚠️ Mots de passe différents", "warning");
-        return;
-    }
-    
-    if (password.length < 6) {
-        showMessage("⚠️ Mot de passe trop court (6 caractères min)", "warning");
-        return;
-    }
-    
-    // Désactiver le bouton
-    const btn = document.getElementById('register-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Inscription...';
-    
-    try {
-        // Appeler Supabase
-        const result = await window.supabaseFunctions.signUpSupabase(email, password, pseudo);
-        
-        if (result.success) {
-            // Stocker l'utilisateur
-            currentUser = {
-                id: result.user.id,
-                email: result.user.email,
-                pseudo: result.user.user_metadata?.pseudo || pseudo
-            };
-            
-            // Mettre à jour l'affichage
-            updateUserDisplay();
-            
-            // Passer à l'écran principal
-            showScreen('start');
-            loadScoresFromSupabase();
-            
-            showMessage("✅ Inscription réussie !", "success");
-            
-        } else {
-            showMessage(`❌ ${result.error}`, "error");
+}
+
+// ==================== GESTION AUTHENTIFICATION ====================
+async function handleLoginModal() {
+    return new Promise(async (resolve) => {
+        if (!loginEmailModal || !loginPasswordModal) {
+            showMessage("⚠️ Erreur de formulaire", "error");
+            resolve(false);
+            return;
         }
         
-    } catch (error) {
-        showMessage("❌ Erreur technique", "error");
-        console.error(error);
-    } finally {
-        // Réactiver le bouton
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> S\'INSCRIRE';
-    }
+        const email = loginEmailModal.value.trim();
+        const password = loginPasswordModal.value;
+        
+        if (!email || !password) {
+            showMessage("⚠️ Veuillez remplir tous les champs", "warning");
+            resolve(false);
+            return;
+        }
+        
+        if (!isValidEmail(email)) {
+            showMessage("⚠️ Email invalide", "warning");
+            resolve(false);
+            return;
+        }
+        
+        loginBtnModal.disabled = true;
+        loginBtnModal.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion...';
+        
+        try {
+            const result = await window.supabaseFunctions.signInSupabase(email, password);
+            
+            if (result.success) {
+                currentUser = {
+                    id: result.user.id,
+                    email: result.user.email,
+                    pseudo: result.user.user_metadata?.pseudo || email.split('@')[0]
+                };
+                
+                updateUserDisplay();
+                loadScoresFromSupabase(); // Recharger les scores après connexion
+                showMessage("✅ Connexion réussie !", "success");
+                resolve(true);
+                
+            } else {
+                showMessage(`❌ ${result.error}`, "error");
+                resolve(false);
+            }
+            
+        } catch (error) {
+            showMessage("❌ Erreur de connexion", "error");
+            console.error(error);
+            resolve(false);
+        } finally {
+            loginBtnModal.disabled = false;
+            loginBtnModal.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
+        }
+    });
+}
+
+async function handleRegisterModal() {
+    return new Promise(async (resolve) => {
+        if (!registerPseudoModal || !registerEmailModal || !registerPasswordModal || !registerConfirmModal) {
+            showMessage("⚠️ Erreur de formulaire", "error");
+            resolve(false);
+            return;
+        }
+        
+        const pseudo = registerPseudoModal.value.trim();
+        const email = registerEmailModal.value.trim();
+        const password = registerPasswordModal.value;
+        const confirm = registerConfirmModal.value;
+        
+        if (!pseudo || !email || !password || !confirm) {
+            showMessage("⚠️ Remplissez tous les champs", "warning");
+            resolve(false);
+            return;
+        }
+        
+        if (password !== confirm) {
+            showMessage("⚠️ Mots de passe différents", "warning");
+            resolve(false);
+            return;
+        }
+        
+        if (password.length < 6) {
+            showMessage("⚠️ Mot de passe trop court (6 caractères min)", "warning");
+            resolve(false);
+            return;
+        }
+        
+        registerBtnModal.disabled = true;
+        registerBtnModal.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Inscription...';
+        
+        try {
+            const result = await window.supabaseFunctions.signUpSupabase(email, password, pseudo);
+            
+            if (result.success) {
+                currentUser = {
+                    id: result.user.id,
+                    email: result.user.email,
+                    pseudo: result.user.user_metadata?.pseudo || pseudo
+                };
+                
+                updateUserDisplay();
+                loadScoresFromSupabase(); // Recharger les scores après inscription
+                showMessage("✅ Inscription réussie !", "success");
+                resolve(true);
+                
+            } else {
+                showMessage(`❌ ${result.error}`, "error");
+                resolve(false);
+            }
+            
+        } catch (error) {
+            showMessage("❌ Erreur technique", "error");
+            console.error(error);
+            resolve(false);
+        } finally {
+            registerBtnModal.disabled = false;
+            registerBtnModal.innerHTML = '<i class="fa-solid fa-user-plus"></i> S\'INSCRIRE';
+        }
+    });
 }
 
 async function handleLogout() {
@@ -317,16 +395,9 @@ async function handleLogout() {
         
         if (result.success) {
             currentUser = null;
-            showScreen('auth');
+            updateUserDisplay();
+            loadScoresFromSupabase(); // Recharger les scores après déconnexion
             showMessage("✅ Déconnexion réussie", "success");
-            
-            // Réinitialiser les formulaires
-            if (loginEmail) loginEmail.value = '';
-            if (loginPassword) loginPassword.value = '';
-            if (registerPseudo) registerPseudo.value = '';
-            if (registerEmail) registerEmail.value = '';
-            if (registerPassword) registerPassword.value = '';
-            if (registerConfirm) registerConfirm.value = '';
             
         } else {
             showMessage(`❌ ${result.error}`, "error");
@@ -344,7 +415,29 @@ function updateUserDisplay() {
         if (playerDisplayName) playerDisplayName.textContent = currentUser.pseudo;
         if (currentPlayerSpan) currentPlayerSpan.textContent = currentUser.pseudo;
         if (playerResultName) playerResultName.textContent = currentUser.pseudo;
+        
+        // Afficher bouton déconnexion, cacher connexion
+        if (logoutBtn) {
+            logoutBtn.style.display = 'block';
+            logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Déconnexion';
+        }
+        if (loginBtnHeader) loginBtnHeader.style.display = 'none';
+        
+    } else {
+        // Mode invité
+        if (currentUserPseudo) currentUserPseudo.textContent = "Invité";
+        if (currentUserEmail) currentUserEmail.textContent = "Connectez-vous pour jouer";
+        if (playerDisplayName) playerDisplayName.textContent = "Invité";
+        if (currentPlayerSpan) currentPlayerSpan.textContent = "Invité";
+        if (playerResultName) playerResultName.textContent = "Invité";
+        
+        // Afficher bouton connexion, cacher déconnexion
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (loginBtnHeader) loginBtnHeader.style.display = 'block';
     }
+    
+    // Mettre à jour le message de statut de connexion
+    updateConnectionMessage();
 }
 
 function isValidEmail(email) {
@@ -352,13 +445,15 @@ function isValidEmail(email) {
     return re.test(email);
 }
 
-// ==================== FONCTIONS SUPABASE (MODIFIÉES) ====================
+// ==================== FONCTIONS SUPABASE ====================
 async function loadScoresFromSupabase() {
     console.log("📥 Chargement des scores depuis Supabase...");
     
     try {
         if (!window.supabaseFunctions || !window.supabaseFunctions.getHighScoresFromSupabase) {
             showMessage("⚠️ Supabase non configuré", "error");
+            // Afficher un message par défaut
+            displayDefaultScores();
             return;
         }
         
@@ -377,15 +472,29 @@ async function loadScoresFromSupabase() {
             updateHighscoresResultDisplay();
             
         } else {
-            showMessage("⚠️ Aucun score trouvé", "warning");
-            allHighscores = [];
+            console.log("⚠️ Aucun score trouvé dans la base de données");
+            // Afficher des scores par défaut ou un message
+            displayDefaultScores();
         }
         
     } catch (error) {
         console.error("❌ Erreur chargement scores:", error);
-        showMessage("❌ Impossible de charger les scores", "error");
-        allHighscores = [];
+        // En cas d'erreur, afficher des scores par défaut
+        displayDefaultScores();
     }
+}
+
+function displayDefaultScores() {
+    // Afficher des scores par défaut ou un message
+    allHighscores = [
+        { name: "Champion 1", score: 95, date: "Aujourd'hui", timestamp: Date.now() },
+        { name: "Joueur 2", score: 87, date: "Hier", timestamp: Date.now() - 86400000 },
+        { name: "Quiz Master", score: 92, date: "05/12/2023", timestamp: Date.now() - 172800000 },
+        { name: "Brainiac", score: 78, date: "03/12/2023", timestamp: Date.now() - 259200000 }
+    ];
+    
+    updateHighscoresDisplay();
+    updateHighscoresResultDisplay();
 }
 
 async function saveScoreToSupabase(score) {
@@ -396,43 +505,56 @@ async function saveScoreToSupabase(score) {
             throw new Error("Fonctions Supabase non disponibles");
         }
         
-        const result = await window.supabaseFunctions.saveScoreToSupabase(score);
+        if (!currentUser || !currentUser.id) {
+            throw new Error("Utilisateur non connecté");
+        }
+        
+        console.log("🔍 Utilisateur actuel:", currentUser);
+        
+        const result = await window.supabaseFunctions.saveScoreToSupabase(
+            score,
+            currentUser.id,
+            currentUser.pseudo,
+            currentUser.email || ''
+        );
         
         if (result.success) {
-            console.log("✅ Score sauvegardé avec succès");
-            showMessage("✅ Score enregistré !", "success");
-            
-            // Recharger les scores après un délai
+            console.log("✅ Score sauvegarde result:", result);
+            // Recharger les scores après sauvegarde
             setTimeout(() => loadScoresFromSupabase(), 2000);
-            return true;
+            return result;
             
         } else {
+            console.error("❌ Erreur Supabase:", result.error);
             throw new Error(result.error || "Erreur inconnue");
         }
         
     } catch (error) {
         console.error("❌ Erreur sauvegarde:", error);
-        showMessage(`❌ Échec sauvegarde: ${error.message}`, "error");
-        return false;
+        return { success: false, error: error.message };
     }
 }
 
-// ==================== FONCTIONS DU QUIZ (MODIFIÉES) ====================
+// ==================== FONCTIONS DU QUIZ ====================
 function startQuiz() {
     console.log("🚀 Démarrage du quiz...");
     
     if (!currentUser) {
-        showMessage("⚠️ Vous devez être connecté pour jouer", "warning");
+        showAuthModal();
+        showMessage("🔒 Connectez-vous pour jouer", "warning");
         return;
     }
     
-    // Réinitialiser l'état
+    // Si connecté, démarrer le quiz
+    startQuizGame();
+}
+
+function startQuizGame() {
     lives = 2;
     currentQuestionIndex = 0;
     score = 0;
     gameStopped = false;
     
-    // Mettre à jour l'affichage
     livesDisplay = document.getElementById("lives-display");
     livesCount = document.getElementById("lives-count");
     
@@ -440,18 +562,14 @@ function startQuiz() {
     if (livesDisplay) updateLivesDisplay();
     if (scoreSpan) scoreSpan.textContent = score;
     
-    // Générer les questions
     quizSession = getRandomQuiz(quizQuestions, TOTAL_QUESTIONS);
     console.log(`📝 ${quizSession.length} questions générées`);
     
     if (totalQuestionsSpan) totalQuestionsSpan.textContent = quizSession.length;
     
-    // Changer d'écran
     showScreen('quiz');
     showQuestion();
 }
-
-// ... (les autres fonctions du quiz restent identiques, sauf les références à playerName) ...
 
 function getRandomQuiz(quizQuestions, numQuestions = TOTAL_QUESTIONS) {
     const shuffled = [...quizQuestions];
@@ -564,31 +682,6 @@ function selectAnswer(event) {
     }
 }
 
-
-// Dans votre composant de démarrage du quiz
-async function checkPlayerProfile() {
-  const user = auth.currentUser;
-  if (!user) {
-    console.error("Utilisateur non connecté");
-    return;
-  }
-  
-  const playerDoc = await db.collection('joueurs').doc(user.uid).get();
-  console.log("Profil joueur existe?", playerDoc.exists);
-  
-  if (!playerDoc.exists) {
-    console.error("Profil joueur manquant - créer maintenant");
-    // Créer le profil ici
-  }
-}
-
-
-
-
-
-
-
-
 function wrongAnswer() {
     if (lives > 1) {
         lives--;
@@ -652,8 +745,25 @@ function showFinalResults() {
         resultMessage.textContent = message;
     }
     
-    // SAUVEGARDE SUPABASE
-    saveScoreToSupabase(finalScore);
+    // SAUVEGARDE SUPABASE (seulement si connecté)
+    if (currentUser) {
+        saveScoreToSupabase(finalScore).then(saveResult => {
+            if (saveResult.success) {
+                if (saveResult.action === 'updated') {
+                    showMessage("🎉 Nouveau record personnel ! Score mis à jour !", "success");
+                } else if (saveResult.action === 'inserted') {
+                    showMessage("✅ Score enregistré !", "success");
+                } else if (saveResult.action === 'skipped') {
+                    showMessage("🏆 Votre meilleur score reste inchangé", "info");
+                }
+            } else {
+                showMessage(`❌ Échec sauvegarde: ${saveResult.error}`, "error");
+            }
+        });
+    } else {
+        showMessage("🔒 Connectez-vous pour enregistrer votre score", "warning");
+    }
+    
     updateHighscoresResultDisplay();
 }
 
@@ -674,8 +784,25 @@ function showResults() {
             : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
     }
     
-    // SAUVEGARDE SUPABASE
-    saveScoreToSupabase(finalScore);
+    // SAUVEGARDE SUPABASE (seulement si connecté)
+    if (currentUser) {
+        saveScoreToSupabase(finalScore).then(saveResult => {
+            if (saveResult.success) {
+                if (saveResult.action === 'updated') {
+                    showMessage("🎉 NOUVEAU RECORD ! 100/100 !", "success");
+                } else if (saveResult.action === 'inserted') {
+                    showMessage("✅ Score parfait enregistré !", "success");
+                } else if (saveResult.action === 'skipped') {
+                    showMessage("🏆 Déjà champion ! Score conservé", "info");
+                }
+            } else {
+                showMessage(`❌ Échec sauvegarde: ${saveResult.error}`, "error");
+            }
+        });
+    } else {
+        showMessage("🔒 Connectez-vous pour enregistrer votre score parfait", "warning");
+    }
+    
     updateHighscoresResultDisplay();
 }
 
@@ -711,17 +838,11 @@ function formatDate(dateString) {
 }
 
 function showScreen(screenName) {
-    // Cacher tous les écrans
-    if (authScreen) authScreen.classList.remove("active");
     if (startScreen) startScreen.classList.remove("active");
     if (quizScreen) quizScreen.classList.remove("active");
     if (resultScreen) resultScreen.classList.remove("active");
     
-    // Montrer l'écran demandé
     switch(screenName) {
-        case 'auth':
-            if (authScreen) authScreen.classList.add("active");
-            break;
         case 'start':
             if (startScreen) startScreen.classList.add("active");
             break;
@@ -889,4 +1010,18 @@ function restartQuiz() {
     loadScoresFromSupabase();
 }
 
-console.log("🎯 Script avec authentification chargé !");
+// ==================== FONCTION POUR METTRE À JOUR LE MESSAGE DE CONNEXION ====================
+function updateConnectionMessage() {
+    const connectionMessage = document.getElementById("connection-status-message");
+    if (!connectionMessage) return;
+    
+    if (currentUser) {
+        connectionMessage.textContent = `✅ Vous êtes connecté avec votre compte : ${currentUser.pseudo}`;
+        connectionMessage.className = "connection-status connected";
+    } else {
+        connectionMessage.textContent = "* Connectez-vous pour sauvegarder votre score";
+        connectionMessage.className = "connection-status not-connected";
+    }
+}
+
+console.log("🎯 Script avec modal d'authentification chargé !");

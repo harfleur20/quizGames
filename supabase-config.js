@@ -170,34 +170,128 @@ if (typeof window.supabase === 'undefined') {
     }
     
     // ============ SAUVEGARDER SCORE ============
-    async function saveScoreToSupabase(score) {
-        try {
-            // Récupérer l'utilisateur
-            const session = await getSessionSupabase();
-            if (!session.user) {
-                return { success: false, error: "Non connecté" };
-            }
+    
+    async function saveScoreToSupabase(score, userId, userPseudo, userEmail = '') {
+    console.log("💾 UPSERT sécurisé pour user:", userId);
+    
+    try {
+        // 1. D'abord, récupérer l'ancien score
+        const { data: oldData, error: fetchError } = await supabase
+            .from('scores')
+            .select('score, id')
+            .eq('user_id', userId)
+            .maybeSingle(); // .single() si vous avez la contrainte UNIQUE
+        
+        const oldScore = oldData?.score || 0;
+        let action = 'inserted';
+        
+        // 2. UPSERT avec la nouvelle approche
+        const scoreData = {
+            user_id: userId,
+            score: Math.max(parseInt(score), oldScore), // Garde toujours le meilleur
+            pseudo: userPseudo,
+            name: userPseudo,
+            email: userEmail || '',
+            created_at: new Date().toISOString()
+        };
+        
+        console.log("📤 Données UPSERT:", scoreData);
+        
+        let resultData;
+        
+        // 3. Si score existant ET nouveau est meilleur → UPDATE
+        if (oldData && score > oldScore) {
+            console.log(`🔄 UPDATE: ${oldScore} -> ${score}`);
             
-            const user = session.user;
-            const pseudo = user.user_metadata?.pseudo || user.email?.split('@')[0];
-            
-            // Sauvegarder le score
             const { data, error } = await supabase
                 .from('scores')
-                .insert({
-                    pseudo: pseudo,
-                    email: user.email,
+                .update({
                     score: score,
+                    pseudo: userPseudo,
+                    name: userPseudo,
+                    email: userEmail || '',
                     created_at: new Date().toISOString()
-                });
+                })
+                .eq('user_id', userId)  // Critère principal
+                .eq('id', oldData.id)   // Double sécurité
+                .select();
             
             if (error) throw error;
-            return { success: true, data: data };
             
-        } catch (error) {
-            return { success: false, error: error.message };
+            resultData = data;
+            action = 'updated';
+            
+        } else if (!oldData) {
+            // 4. Pas de score existant → INSERT
+            console.log("🆕 INSERT: premier score");
+            
+            const { data, error } = await supabase
+                .from('scores')
+                .insert(scoreData)
+                .select();
+            
+            if (error) throw error;
+            
+            resultData = data;
+            action = 'inserted';
+            
+        } else {
+            // 5. Ancien score meilleur ou égal → ne rien faire
+            console.log(`⏭️ SKIP: ancien score ${oldScore} >= ${score}`);
+            action = 'skipped';
+            resultData = oldData;
         }
+        
+        console.log(`✅ ${action.toUpperCase()} réussi:`, resultData);
+        
+        return {
+            success: true,
+            data: resultData,
+            action: action,
+            previousScore: oldScore,
+            newScore: score
+        };
+        
+    } catch (error) {
+        console.error('💥 Erreur sauvegarde:', error);
+        
+        // Tentative de secours : INSERT simple
+        if (error.code === '42501') {
+            console.log("🔄 Tentative INSERT simple...");
+            try {
+                const { data, error: insertError } = await supabase
+                    .from('scores')
+                    .insert({
+                        user_id: userId,
+                        score: score,
+                        pseudo: userPseudo,
+                        name: userPseudo,
+                        email: userEmail || '',
+                        created_at: new Date().toISOString()
+                    })
+                    .select();
+                
+                if (insertError) throw insertError;
+                
+                return {
+                    success: true,
+                    data: data,
+                    action: 'inserted_fallback',
+                    previousScore: 0,
+                    newScore: score
+                };
+            } catch (fallbackError) {
+                console.error('💥 Échec fallback:', fallbackError);
+            }
+        }
+        
+        return {
+            success: false,
+            error: error.message,
+            action: 'error'
+        };
     }
+}
     
     // ============ RÉCUPÉRER LES SCORES ============
     async function getHighScoresFromSupabase(limit = 10) {

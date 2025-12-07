@@ -12,70 +12,221 @@
       referrerpolicy="no-referrer"
     />
     <title>QUIZZ GAMES - 100 QUESTIONS</title>
+    <style>
+        /* Styles spécifiques pour le modal */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .auth-modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .auth-modal.active .auth-modal-content {
+            transform: translateY(0);
+        }
+        
+        .auth-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auth-modal-header h2 {
+            color: #333;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .close-modal-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .close-modal-btn:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        /* Styles pour les formulaires dans le modal */
+        .auth-tabs {
+            display: flex;
+            margin: 0 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 4px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .auth-form {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-hint {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .auth-info {
+            margin: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .auth-info p {
+            margin: 10px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        /* Style pour le message de connexion */
+        .connection-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .connection-status.not-connected {
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+        
+        .connection-status.connected {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+    </style>
   </head>
   <body>
     <div class="container">
-      <!-- Écran d'authentification -->
-      <div class="screen active" id="auth-screen">
-        <div class="auth-content">
-          <h1><i class="fa-solid fa-user-lock"></i> MEGA QUIZZ 100</h1>
-          <p class="subtitle">Inscrivez-vous pour participer au défi ultime</p>
-          
-          <div class="auth-tabs">
-            <button class="auth-tab active" id="login-tab">CONNEXION</button>
-            <button class="auth-tab" id="register-tab">INSCRIPTION</button>
-          </div>
-          
-          <!-- Formulaire de connexion -->
-          <div id="login-form" class="auth-form active">
-            <div class="form-group">
-              <input type="email" id="login-email" placeholder="Votre email" class="auth-input">
-              <i class="fa-solid fa-envelope input-icon"></i>
-            </div>
-            <div class="form-group">
-              <input type="password" id="login-password" placeholder="Votre mot de passe" class="auth-input">
-              <i class="fa-solid fa-lock input-icon"></i>
-            </div>
-            <button id="login-btn" class="auth-btn">
-              <i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER
-            </button>
-            <p class="auth-hint">Première fois ? Cliquez sur "INSCRIPTION"</p>
-          </div>
-          
-          <!-- Formulaire d'inscription -->
-          <div id="register-form" class="auth-form">
-            <div class="form-group">
-              <input type="text" id="register-pseudo" placeholder="Votre pseudo (max 10 lettres)" maxlength="10" class="auth-input">
-              <i class="fa-solid fa-user input-icon"></i>
-            </div>
-            <div class="form-group">
-              <input type="email" id="register-email" placeholder="Votre email" class="auth-input">
-              <i class="fa-solid fa-envelope input-icon"></i>
-            </div>
-            <div class="form-group">
-              <input type="password" id="register-password" placeholder="Mot de passe (min 6 caractères)" class="auth-input">
-              <i class="fa-solid fa-lock input-icon"></i>
-            </div>
-            <div class="form-group">
-              <input type="password" id="register-confirm" placeholder="Confirmer le mot de passe" class="auth-input">
-              <i class="fa-solid fa-lock input-icon"></i>
-            </div>
-            <button id="register-btn" class="auth-btn">
-              <i class="fa-solid fa-user-plus"></i> S'INSCRIRE
-            </button>
-            <p class="auth-hint">Déjà inscrit ? Cliquez sur "CONNEXION"</p>
-          </div>
-          
-          <div class="auth-info">
-            <p><i class="fa-solid fa-shield-halved"></i> Votre compte est sécurisé</p>
-            <p><i class="fa-solid fa-trophy"></i> Challenger en Live avec d'autres joueurs</p>
-            <p><i class="fa-solid fa-medal"></i> Accédez au classement des champions</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Écran de départ (APRÈS AUTHENTIFICATION) -->
-      <div class="screen" id="start-screen">
+      <!-- Écran de départ (ACTIF PAR DÉFAUT) -->
+      <div class="screen active" id="start-screen">
         <div class="start-content">
           <!-- En-tête avec info utilisateur -->
           <div class="user-header">
@@ -84,12 +235,15 @@
                 <i class="fa-solid fa-circle-user"></i>
               </span>
               <div class="user-details">
-                <h3 id="current-user-pseudo">Joueur</h3>
-                <p id="current-user-email" class="user-email">email@exemple.com</p>
+                <h3 id="current-user-pseudo">Invité</h3>
+                <p id="current-user-email" class="user-email">Connectez-vous pour jouer</p>
               </div>
             </div>
-            <button id="logout-btn" class="logout-btn">
+            <button id="logout-btn" class="logout-btn" style="display: none;">
               <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+            </button>
+            <button id="login-btn-header" class="login-btn-header">
+              <i class="fa-solid fa-right-to-bracket"></i> Connexion
             </button>
           </div>
 
@@ -102,10 +256,11 @@
             <button id="start-btn" class="start-btn">
               <i class="fa-solid fa-fire"></i> DÉMARRER LE QUIZ
             </button>
-            <p class="name-hint">* Vous jouez avec votre compte : <span id="player-display-name">Pseudo</span></p>
+            <p id="connection-status-message" class="connection-status not-connected">
+              * Connectez-vous pour sauvegarder votre score
+            </p>
           </div>
 
-          <!-- ... (le reste reste identique, règles et classement) ... -->
           <div class="rules-section">
             <button id="toggle-rules" class="rules-toggle">
               <i class="fa-solid fa-eye"></i>Voir les règles du jeu
@@ -114,31 +269,22 @@
               <h3>RÈGLES DU JEU :</h3>
               <ul>
                 <li>
-                  <strong
-                    ><i class="fa-solid fa-circle-question"></i> 100 QUESTIONS
-                  </strong>
+                  <strong><i class="fa-solid fa-circle-question"></i> 100 QUESTIONS</strong>
                   : Défi ultime de connaissances sur des sujets variés
                 </li>
                 <li>
-                  <strong
-                    ><i class="fa-solid fa-stopwatch"></i> 10 SECONDES
-                  </strong>
+                  <strong><i class="fa-solid fa-stopwatch"></i> 10 SECONDES</strong>
                   : pour répondre à chaque question
                 </li>
                 <li>
-                  <strong>❌ 2 ERREURS</strong> : correspond à la fin de deux
-                  (02) vies
+                  <strong>❌ 2 ERREURS</strong> : correspond à la fin de deux (02) vies
                 </li>
                 <li>
-                  <strong
-                    ><i class="fa-solid fa-trophy"></i> SCORE SUR 100</strong
-                  >
+                  <strong><i class="fa-solid fa-trophy"></i> SCORE SUR 100</strong>
                   : + 1 point par bonne réponse
                 </li>
                 <li>
-                  <strong
-                    ><i class="fa-solid fa-user-shield"></i> COMPTE REQUIS</strong
-                  >
+                  <strong><i class="fa-solid fa-user-shield"></i> COMPTE REQUIS</strong>
                   : Un seul compte par machine
                 </li>
                 <li>
@@ -153,7 +299,7 @@
           </div>
 
           <div class="highscores-section">
-            <h2><i class="fa-solid fa-crown"></i> TOP 10</h2>
+            <h2><i class="fa-solid fa-crown"></i> TOP SCORES</h2>
             <p class="section-subtitle">Les 10 derniers meilleurs scores</p>
             <div id="highscores-list-start" class="highscores-list">
               <!-- High scores chargés dynamiquement -->
@@ -170,7 +316,6 @@
 
       <!-- Écran du quiz (identique) -->
       <div class="screen" id="quiz-screen">
-        
         <div class="quiz-header">
           <div class="player-info">
             <span class="player-tag"
@@ -178,9 +323,9 @@
               <span id="current-player">Joueur</span></span
             >
             <div class="lives-box" id="lives-display">
-        <span class="life-icon"><i class="fa-solid fa-heart-pulse" style="color: #ffffff;"></i></span>
-        <span id="lives-count" style="color: #ffffff;">2</span> <span style="color: #ffffff;">vies</span>
-    </div>
+              <span class="life-icon"><i class="fa-solid fa-heart-pulse" style="color: #ffffff;"></i></span>
+              <span id="lives-count" style="color: #ffffff;">2</span> <span style="color: #ffffff;">vies</span>
+            </div>
             <div class="timer-box">
               <i class="fa-solid fa-hourglass-end"></i>
               <span id="timer">10</span>s
@@ -214,7 +359,6 @@
 
       <!-- Écran des résultats (identique) -->
       <div class="screen" id="result-screen">
-       
         <div class="result-content">
           <h1><i class="fa-solid fa-temperature-half"></i> RÉSULTATS FINAUX</h1>
 
@@ -232,22 +376,15 @@
             <div class="result-card">
               <h3><i class="fa-solid fa-chart-pie"></i> TES STATISTIQUES</h3>
               <p>
-                <strong
-                  ><i class="fa-solid fa-circle-user"></i> Joueur :</strong
-                >
+                <strong><i class="fa-solid fa-circle-user"></i> Joueur :</strong>
                 <span id="player-result-name">Joueur</span>
               </p>
               <p>
-                <strong
-                  ><i class="fa-solid fa-circle-check"></i> Questions réussies
-                  :</strong
-                >
+                <strong><i class="fa-solid fa-circle-check"></i> Questions réussies :</strong>
                 <span id="questions-done">0</span>/100
               </p>
               <p>
-                <strong
-                  ><i class="fa-solid fa-percent"></i> Pourcentage :</strong
-                >
+                <strong><i class="fa-solid fa-percent"></i> Pourcentage :</strong>
                 <span id="percentage">0%</span>
               </p>
             </div>
@@ -270,6 +407,69 @@
           <div class="action-buttons">
             <button id="restart-btn" class="restart-btn"><i class="fa-solid fa-rotate-right"></i> REJOUER</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL D'AUTHENTIFICATION (placé hors du container principal) -->
+    <div id="auth-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <div class="auth-modal-header">
+          <h2><i class="fa-solid fa-user-lock"></i> Accès au jeu</h2>
+          <button id="close-auth-modal" class="close-modal-btn">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="login-tab-modal">CONNEXION</button>
+          <button class="auth-tab" id="register-tab-modal">INSCRIPTION</button>
+        </div>
+        
+        <!-- Formulaire de connexion -->
+        <div id="login-form-modal" class="auth-form active">
+          <div class="form-group">
+            <input type="email" id="login-email-modal" placeholder="Votre email" class="auth-input">
+            <i class="fa-solid fa-envelope input-icon"></i>
+          </div>
+          <div class="form-group">
+            <input type="password" id="login-password-modal" placeholder="Votre mot de passe" class="auth-input">
+            <i class="fa-solid fa-lock input-icon"></i>
+          </div>
+          <button id="login-btn-modal" class="auth-btn">
+            <i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER
+          </button>
+          <p class="auth-hint">Première fois ? Cliquez sur "INSCRIPTION"</p>
+        </div>
+        
+        <!-- Formulaire d'inscription -->
+        <div id="register-form-modal" class="auth-form">
+          <div class="form-group">
+            <input type="text" id="register-pseudo-modal" placeholder="Votre pseudo (max 10 lettres)" maxlength="10" class="auth-input">
+            <i class="fa-solid fa-user input-icon"></i>
+          </div>
+          <div class="form-group">
+            <input type="email" id="register-email-modal" placeholder="Votre email" class="auth-input">
+            <i class="fa-solid fa-envelope input-icon"></i>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-password-modal" placeholder="Mot de passe (min 6 caractères)" class="auth-input">
+            <i class="fa-solid fa-lock input-icon"></i>
+          </div>
+          <div class="form-group">
+            <input type="password" id="register-confirm-modal" placeholder="Confirmer le mot de passe" class="auth-input">
+            <i class="fa-solid fa-lock input-icon"></i>
+          </div>
+          <button id="register-btn-modal" class="auth-btn">
+            <i class="fa-solid fa-user-plus"></i> S'INSCRIRE
+          </button>
+          <p class="auth-hint">Déjà inscrit ? Cliquez sur "CONNEXION"</p>
+        </div>
+        
+        <div class="auth-info">
+          <p><i class="fa-solid fa-shield-halved"></i> Votre compte est sécurisé</p>
+          <p><i class="fa-solid fa-trophy"></i> Sauvegardez vos scores</p>
+          <p><i class="fa-solid fa-medal"></i> Accédez au classement</p>
         </div>
       </div>
     </div>
