@@ -347,6 +347,11 @@ function hideStatsPanel() {
 async function loadRecentStats() {
   try {
     if (!window.supabaseFunctions || !currentUser) {
+      // Pas d'utilisateur connecté ou fonctions non disponibles
+      updateRankingDisplay({ 
+        error: true,
+        message: "Connectez-vous pour voir votre classement" 
+      });
       return;
     }
 
@@ -360,6 +365,11 @@ async function loadRecentStats() {
 
     if (statsResult.success && statsResult.data) {
       updateStatsPanel(statsResult.data);
+      
+      // Mettre à jour le meilleur score de currentUser pour les calculs
+      if (!currentUser.bestScore || currentUser.bestScore < statsResult.data.bestScore) {
+        currentUser.bestScore = statsResult.data.bestScore || 0;
+      }
     }
 
     // 2. Charger l'historique récent
@@ -372,27 +382,111 @@ async function loadRecentStats() {
       updateRecentGamesList(historyResult.data);
     }
 
-    // 3. Calculer le rang parmi les 50 premiers
-    if (allHighscores.length > 0) {
-      const ranking = getUserRankingPosition(currentUser.id, allHighscores);
-      updateRankingDisplay(ranking);
-    } else {
-      // Si pas de scores chargés, on charge les 50 premiers
-      const scoresResult =
-        await window.supabaseFunctions.getHighScoresFromSupabase(50);
+    // 3. Calculer le rang avec la nouvelle logique
+    let scoresToUse = allHighscores;
+    
+    // Vérifier si on a assez de scores (minimum 10 pour des estimations correctes)
+    if (!scoresToUse || scoresToUse.length < 10) {
+      // Charger les 50 premiers scores pour des calculs précis
+      const scoresResult = await window.supabaseFunctions.getHighScoresFromSupabase(50);
       if (scoresResult.success && scoresResult.data) {
-        const ranking = getUserRankingPosition(
-          currentUser.id,
-          scoresResult.data
-        );
-        updateRankingDisplay(ranking);
+        scoresToUse = scoresResult.data.map(item => ({
+          id: item.id,
+          userId: item.user_id,
+          name: item.pseudo || "Anonyme",
+          score: item.score,
+          date: item.created_at ? formatDate(item.created_at) : "Aujourd'hui",
+          timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+        }));
+        
+        // Mettre à jour allHighscores pour les autres parties de l'app
+        allHighscores = scoresToUse;
+      } else {
+        // Pas assez de données pour calculer un classement
+        updateRankingDisplay({ 
+          needsMoreData: true,
+          message: "Pas assez de données de classement disponibles" 
+        });
+        return;
       }
     }
+    
+    // 4. Calculer le rang avec les nouvelles informations
+    if (scoresToUse && scoresToUse.length > 0) {
+      const ranking = getUserRankingPosition(currentUser.id, scoresToUse);
+      
+      // Ajouter des informations supplémentaires pour l'affichage
+      if (statsResult.success && statsResult.data) {
+        ranking.userBestScore = statsResult.data.bestScore || 0;
+        ranking.averageScore = statsResult.data.averageScore || 0;
+        ranking.totalGames = statsResult.data.totalGames || 0;
+        ranking.lastGameScore = statsResult.data.lastGameScore || 0;
+        ranking.isImproving = statsResult.data.isImproving || false;
+      }
+      
+      // Ajouter des informations de tendance si disponibles
+      if (historyResult.success && historyResult.data && historyResult.data.length >= 2) {
+        const lastScores = historyResult.data.map(game => game.score);
+        ranking.trend = calculateScoreTrend(lastScores);
+        ranking.lastScore = lastScores[0] || 0;
+      }
+      
+      updateRankingDisplay(ranking);
+    } else {
+      // Aucun score disponible
+      updateRankingDisplay({ 
+        needsMoreData: true,
+        message: "Aucun score enregistré. Jouez une partie !" 
+      });
+    }
+    
   } catch (error) {
     console.error("❌ Erreur chargement stats récentes:", error);
-    showMessage("⚠️ Impossible de charger les statistiques", "warning");
-    updateRankingDisplay({ error: true });
+    
+    // Message d'erreur plus informatif
+    let errorMessage = "Impossible de charger les statistiques";
+    if (error.message.includes("network") || error.message.includes("fetch")) {
+      errorMessage = "Problème de connexion. Vérifiez votre internet";
+    } else if (error.message.includes("auth")) {
+      errorMessage = "Session expirée. Reconnectez-vous";
+    }
+    
+    showMessage(`⚠️ ${errorMessage}`, "warning");
+    updateRankingDisplay({ 
+      error: true,
+      message: errorMessage 
+    });
   }
+}
+
+// Fonction utilitaire pour calculer la tendance des scores
+function calculateScoreTrend(scores) {
+  if (!scores || scores.length < 2) return "stable";
+  
+  const recentScores = scores.slice(0, Math.min(3, scores.length));
+  const oldScores = scores.slice(-Math.min(3, scores.length));
+  
+  const recentAvg = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
+  const oldAvg = oldScores.reduce((a, b) => a + b, 0) / oldScores.length;
+  
+  if (recentAvg > oldAvg + 5) return "improving";
+  if (recentAvg < oldAvg - 5) return "declining";
+  return "stable";
+}
+
+// Fonction utilitaire pour formater les scores du classement
+function formatRankingScores(supabaseData) {
+  if (!supabaseData || !Array.isArray(supabaseData)) return [];
+  
+  return supabaseData.map(item => ({
+    id: item.id,
+    userId: item.user_id,
+    name: item.pseudo || item.name || "Anonyme",
+    score: item.score,
+    date: item.created_at ? formatDate(item.created_at) : "Récemment",
+    timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+    email: item.email || "",
+  }));
 }
 
 function updateStatsPanel(stats) {
@@ -1781,193 +1875,358 @@ function updateConnectionMessage() {
 }
 
 // ==================== FONCTION CALCUL RANG ====================
+
+// ==================== FONCTION CALCUL RANG AMÉLIORÉE ====================
 function getUserRankingPosition(userId, highscores) {
-  if (!userId || !highscores || highscores.length === 0) {
+    if (!userId || !highscores || highscores.length === 0) {
+        return {
+            position: null,
+            estimatedPosition: null,
+            total: 50,
+            score: 0,
+            top50Score: 0,
+            top10Score: 0,
+            top5Score: 0,
+            distanceToTop50: 0,
+            distanceToTop10: 0,
+            category: "outside",
+            isInTop: false,
+            needsMoreData: true
+        };
+    }
+
+    // S'assurer qu'on a au moins 50 scores (remplir si nécessaire)
+    const scoresToCheck = [...highscores];
+    const totalScores = scoresToCheck.length;
+    
+    // Trier par score décroissant
+    const sortedScores = [...scoresToCheck].sort((a, b) => b.score - a.score);
+    
+    // Trouver la position exacte dans le top 50
+    const exactPosition = sortedScores.findIndex((score) => score.userId === userId);
+    
+    // Récupérer le score de l'utilisateur
+    let userScore = 0;
+    if (exactPosition !== -1) {
+        userScore = sortedScores[exactPosition].score;
+    } else {
+        // Si l'utilisateur n'est pas dans le top 50, récupérer son meilleur score
+        if (window.currentUser?.bestScore) {
+            userScore = window.currentUser.bestScore;
+        }
+    }
+    
+    // Scores des paliers
+    const top5Score = sortedScores.length > 4 ? sortedScores[4].score : 100;
+    const top10Score = sortedScores.length > 9 ? sortedScores[9].score : 100;
+    const top50Score = sortedScores.length > 49 ? sortedScores[49].score : 0;
+    
+    // Calculer les distances
+    const distanceToTop50 = top50Score > 0 ? top50Score - userScore : 0;
+    const distanceToTop10 = top10Score - userScore;
+    const distanceToTop5 = top5Score - userScore;
+    
+    // Déterminer la catégorie
+    let category = "outside";
+    let position = exactPosition !== -1 ? exactPosition + 1 : null;
+    let estimatedPosition = position;
+    
+    if (exactPosition !== -1) {
+        if (exactPosition < 5) category = "top5";
+        else if (exactPosition < 10) category = "top10";
+        else if (exactPosition < 50) category = "top50";
+        else category = "outside";
+    } else {
+        // Estimation pour les hors top 50
+        category = "outside";
+        
+        // Estimation basée sur le score
+        if (top50Score > 0 && userScore > 0) {
+            // Logique d'estimation : chaque point = ~2 places
+            const scoreDifference = top50Score - userScore;
+            if (scoreDifference > 0) {
+                estimatedPosition = 50 + Math.ceil(scoreDifference / 2);
+            } else {
+                estimatedPosition = 51; // Juste en dehors du top 50
+            }
+        } else {
+            estimatedPosition = 51; // Position par défaut
+        }
+        
+        // Limiter à 200 maximum pour le réalisme
+        estimatedPosition = Math.min(estimatedPosition, 200);
+    }
+    
+    // Trouver le prochain objectif
+    let nextMilestone = "";
+    let pointsToNextMilestone = 0;
+    
+    if (category === "outside") {
+        nextMilestone = "Top 50";
+        pointsToNextMilestone = Math.max(1, distanceToTop50 + 1);
+    } else if (category === "top50") {
+        if (position <= 20) {
+            nextMilestone = "Top 10";
+            pointsToNextMilestone = Math.max(1, distanceToTop10 + 1);
+        } else {
+            nextMilestone = "Top 20";
+            // Estimer le score du 20ème
+            const top20Score = sortedScores.length > 19 ? sortedScores[19].score : 80;
+            pointsToNextMilestone = Math.max(1, top20Score - userScore + 1);
+        }
+    } else if (category === "top10") {
+        nextMilestone = "Top 5";
+        pointsToNextMilestone = Math.max(1, distanceToTop5 + 1);
+    } else if (category === "top5") {
+        if (position === 1) {
+            nextMilestone = "Maintenir la 1ère place";
+            pointsToNextMilestone = 0;
+        } else {
+            nextMilestone = `Top ${position - 1}`;
+            const targetScore = sortedScores[position - 2].score;
+            pointsToNextMilestone = Math.max(1, targetScore - userScore + 1);
+        }
+    }
+    
     return {
-      position: null,
-      total: highscores?.length || 0,
-      isInTop: false,
-      score: 0,
+        position: position,
+        estimatedPosition: estimatedPosition,
+        total: 50,
+        score: userScore,
+        top50Score: top50Score,
+        top10Score: top10Score,
+        top5Score: top5Score,
+        distanceToTop50: distanceToTop50,
+        distanceToTop10: distanceToTop10,
+        distanceToTop5: distanceToTop5,
+        category: category,
+        isInTop: exactPosition !== -1,
+        isFirst: exactPosition === 0,
+        isTopThree: exactPosition < 3,
+        isTopTen: exactPosition < 10,
+        nextMilestone: nextMilestone,
+        pointsToNextMilestone: pointsToNextMilestone,
+        needsMoreData: sortedScores.length < 10
     };
-  }
-
-  // Trier par score décroissant (au cas où)
-  const sortedScores = [...highscores].sort((a, b) => b.score - a.score);
-
-  // Trouver la position de l'utilisateur
-  const position = sortedScores.findIndex((score) => score.userId === userId);
-
-  if (position === -1) {
-    return {
-      position: null,
-      total: sortedScores.length,
-      isInTop: false,
-      score: 0,
-      topScore: sortedScores.length > 0 ? sortedScores[0].score : 0,
-    };
-  }
-
-  const userScore = sortedScores[position].score;
-  const topScore = sortedScores.length > 0 ? sortedScores[0].score : userScore;
-  const distanceToFirst = position > 0 ? topScore - userScore : 0;
-
-  // Calculer le pourcentage de progression vers le top
-  const progressPercent =
-    topScore > 0 ? Math.round((userScore / topScore) * 100) : 100;
-
-  return {
-    position: position + 1, // 1-based pour l'affichage
-    total: sortedScores.length,
-    score: userScore,
-    topScore: topScore,
-    distanceToFirst: distanceToFirst,
-    progressPercent: progressPercent,
-    isInTop: true,
-    isFirst: position === 0,
-    isTopThree: position < 3,
-    isTopTen: position < 10,
-  };
 }
 
 function updateRankingDisplay(rankingData) {
-  try {
-    const rankingElement = document.getElementById("user-ranking");
-    if (!rankingElement) {
-      return;
-    }
+    try {
+        const rankingElement = document.getElementById("user-ranking");
+        if (!rankingElement) {
+            return;
+        }
 
-    // Cas de chargement
-    if (rankingData.loading) {
-      rankingElement.innerHTML = `
+        // Cas de chargement
+        if (rankingData.loading) {
+            rankingElement.innerHTML = `
                 <div class="ranking-loading">
                     <i class="fa-solid fa-spinner fa-spin"></i>
-                    <span>Calcul de votre rang...</span>
+                    <span>Calcul de votre classement...</span>
                 </div>
             `;
-      return;
-    }
+            return;
+        }
 
-    // Cas d'erreur
-    if (rankingData.error) {
-      rankingElement.innerHTML = `
+        // Cas d'erreur
+        if (rankingData.error) {
+            rankingElement.innerHTML = `
                 <div class="ranking-info">
-                    <span class="ranking-label">🏆 VOTRE RANG</span>
-                    <span class="ranking-details">
+                    <span class="ranking-label">🏆 CLASSEMENT</span>
+                    <span class="ranking-details error">
                         <i class="fa-solid fa-exclamation-triangle"></i>
                         Données indisponibles
                     </span>
+                    <span class="ranking-hint">
+                        Rechargez la page ou vérifiez votre connexion
+                    </span>
                 </div>
             `;
-      return;
-    }
+            return;
+        }
 
-    // Cas utilisateur non connecté ou sans scores
-    if (!rankingData.isInTop || rankingData.position === null) {
-      rankingElement.innerHTML = `
+        // Cas : Pas assez de données
+        if (rankingData.needsMoreData) {
+            rankingElement.innerHTML = `
                 <div class="ranking-info">
-                    <span class="ranking-label">🏆 VOTRE RANG</span>
+                    <span class="ranking-label">🏆 CLASSEMENT</span>
                     <span class="ranking-badge rank-outside">
-                        Hors top ${rankingData.total || 50}
+                        <i class="fa-solid fa-chart-line"></i> En attente
                     </span>
                     <span class="ranking-details">
-                        ${
-                          rankingData.total
-                            ? `Top ${rankingData.total} actuel`
-                            : "Top 50"
-                        }
+                        <i class="fa-solid fa-info-circle"></i>
+                        Plus de données nécessaires
                     </span>
                     <span class="ranking-hint">
-                        Jouez pour entrer dans le classement !
+                        Jouez une partie pour établir votre classement
                     </span>
                 </div>
             `;
-      return;
-    }
+            return;
+        }
 
-    // Déterminer la classe CSS pour le badge
-    let rankClass = "rank-11-plus";
-    if (rankingData.position === 1) rankClass = "rank-1";
-    else if (rankingData.position === 2) rankClass = "rank-2";
-    else if (rankingData.position === 3) rankClass = "rank-3";
-    else if (rankingData.position <= 10) rankClass = "rank-4-10";
-
-    // Texte du rang
-    let rankText = `${rankingData.position}ème`;
-    if (rankingData.position === 1) rankText = "🥇 1er";
-    else if (rankingData.position === 2) rankText = "🥈 2ème";
-    else if (rankingData.position === 3) rankText = "🥉 3ème";
-    else if (rankingData.position <= 10)
-      rankText = `🏆 ${rankingData.position}ème`;
-
-    // Détails supplémentaires
-    let detailsHtml = `
-            <span class="ranking-details">
-                Score: <strong>${rankingData.score}/100</strong>
-            </span>
-        `;
-
-    // Distance par rapport au premier (sauf si c'est le premier)
-    if (!rankingData.isFirst && rankingData.distanceToFirst > 0) {
-      detailsHtml += `
-                <span class="ranking-distance">
-                    -${rankingData.distanceToFirst} pts du 1er
-                </span>
-            `;
-    }
-
-    // Conseils selon la position
-    let hintText = "";
-    if (rankingData.position === 1) {
-      hintText = "👑 Champion en titre !";
-    } else if (rankingData.isTopThree) {
-      hintText = "Presque au sommet !";
-    } else if (rankingData.isTopTen) {
-      hintText = "Dans le top 10, bravo !";
-    } else if (rankingData.position <= 25) {
-      hintText = "Top 25, continuez !";
-    } else {
-      hintText = `Plus que ${rankingData.position - 10} places pour le top 10`;
-    }
-
-    // Barre de progression (optionnelle)
-    let progressBar = "";
-    if (rankingData.topScore > 0 && !rankingData.isFirst) {
-      progressBar = `
-                <div class="ranking-progress">
-                    <div class="ranking-progress-bar" style="width: ${rankingData.progressPercent}%"></div>
+        // CAS 1 : DANS LE TOP 5
+        if (rankingData.category === "top5") {
+            let rankText = `${rankingData.position}ème`;
+            let rankIcon = "🏆";
+            
+            if (rankingData.position === 1) {
+                rankText = "🥇 1er";
+                rankIcon = "👑";
+            } else if (rankingData.position === 2) {
+                rankText = "🥈 2ème";
+                rankIcon = "⭐";
+            } else if (rankingData.position === 3) {
+                rankText = "🥉 3ème";
+                rankIcon = "⭐";
+            }
+            
+            rankingElement.innerHTML = `
+                <div class="ranking-info elite">
+                    <span class="ranking-label">${rankIcon} CLASSEMENT ÉLITE</span>
+                    <span class="ranking-badge rank-1">
+                        ${rankText}
+                    </span>
+                    <span class="ranking-details">
+                        <i class="fa-solid fa-trophy"></i> Score: <strong>${rankingData.score}/100</strong>
+                    </span>
+                    ${rankingData.position === 1 ? 
+                        `<span class="ranking-hint success">
+                            <i class="fa-solid fa-crown"></i> CHAMPION EN TITRE !
+                        </span>` : 
+                        `<span class="ranking-hint">
+                            <i class="fa-solid fa-arrow-up"></i> ${rankingData.nextMilestone}: +${rankingData.pointsToNextMilestone} pts
+                        </span>`
+                    }
+                    <div class="ranking-progress">
+                        <div class="ranking-progress-bar" style="width: 100%"></div>
+                    </div>
                 </div>
-                <span class="ranking-hint">
-                    ${rankingData.progressPercent}% du score maximum
-                </span>
             `;
+        }
+        
+        // CAS 2 : DANS LE TOP 10 (positions 6-10)
+        else if (rankingData.category === "top10") {
+            rankingElement.innerHTML = `
+                <div class="ranking-info top10">
+                    <span class="ranking-label">🎯 TOP 10 MONDIAL</span>
+                    <span class="ranking-badge rank-4-10">
+                        ${rankingData.position}ème
+                    </span>
+                    <span class="ranking-details">
+                        <i class="fa-solid fa-star"></i> Score: <strong>${rankingData.score}/100</strong>
+                    </span>
+                    <span class="ranking-distance">
+                        <i class="fa-solid fa-flag"></i> -${rankingData.distanceToTop5} pts du top 5
+                    </span>
+                    <span class="ranking-hint">
+                        <i class="fa-solid fa-bullseye"></i> ${rankingData.nextMilestone}: +${rankingData.pointsToNextMilestone} pts
+                    </span>
+                    <div class="ranking-progress">
+                        <div class="ranking-progress-bar" style="width: ${90 + (10 - rankingData.position)}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // CAS 3 : DANS LE TOP 50 (positions 11-50)
+        else if (rankingData.category === "top50") {
+            let subCategory = "";
+            let subIcon = "🔢";
+            
+            if (rankingData.position <= 20) {
+                subCategory = "TOP 20";
+                subIcon = "⚡";
+            } else if (rankingData.position <= 35) {
+                subCategory = "TOP 35";
+                subIcon = "🎯";
+            } else {
+                subCategory = "TOP 50";
+                subIcon = "📊";
+            }
+            
+            rankingElement.innerHTML = `
+                <div class="ranking-info top50">
+                    <span class="ranking-label">${subIcon} ${subCategory}</span>
+                    <span class="ranking-badge rank-11-plus">
+                        ${rankingData.position}ème
+                    </span>
+                    <span class="ranking-details">
+                        <i class="fa-solid fa-chart-line"></i> Score: <strong>${rankingData.score}/100</strong>
+                    </span>
+                    <span class="ranking-distance">
+                        <i class="fa-solid fa-mountain"></i> -${rankingData.distanceToTop10} pts du top 10
+                    </span>
+                    <span class="ranking-hint">
+                        <i class="fa-solid fa-target"></i> ${rankingData.nextMilestone}: +${rankingData.pointsToNextMilestone} pts
+                    </span>
+                    <div class="ranking-progress">
+                        <div class="ranking-progress-bar" style="width: ${Math.max(30, 100 - rankingData.position)}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // CAS 4 : HORS TOP 50
+        else {
+            const estimatedPos = rankingData.estimatedPosition || "100+";
+            const isFar = estimatedPos >= 100;
+            
+            rankingElement.innerHTML = `
+                <div class="ranking-info outside">
+                    <span class="ranking-label">🌍 CLASSEMENT GLOBAL</span>
+                    <span class="ranking-badge rank-outside">
+                        <i class="fa-solid fa-globe"></i> ~${estimatedPos}ème
+                    </span>
+                    <span class="ranking-details">
+                        <i class="fa-solid fa-user"></i> Votre meilleur: <strong>${rankingData.score}/100</strong>
+                    </span>
+                    ${rankingData.top50Score > 0 ? `
+                        <span class="ranking-distance ${rankingData.distanceToTop50 <= 10 ? 'close' : 'far'}">
+                            <i class="fa-solid fa-road"></i> 
+                            ${rankingData.distanceToTop50 > 0 ? 
+                                `Il vous faut +${rankingData.pointsToNextMilestone} pts pour le top 50` :
+                                `À ${Math.abs(rankingData.distanceToTop50)} pts du top 50`
+                            }
+                        </span>
+                    ` : ''}
+                    <span class="ranking-hint motivational">
+                        <i class="fa-solid fa-fire"></i> 
+                        ${getMotivationalMessage(rankingData.score, estimatedPos)}
+                    </span>
+                    <div class="ranking-progress">
+                        <div class="ranking-progress-bar" style="width: ${Math.min(30, (rankingData.score / 100) * 30)}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Animation pour les mises à jour
+        setTimeout(() => {
+            const badge = rankingElement.querySelector(".ranking-badge");
+            if (badge) {
+                badge.classList.add("update-animation");
+                setTimeout(() => badge.classList.remove("update-animation"), 1000);
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error("❌ Erreur updateRankingDisplay:", error);
     }
+}
 
-    // HTML final
-    rankingElement.innerHTML = `
-            <div class="ranking-info">
-                <span class="ranking-label">🏆 VOTRE RANG</span>
-                <span class="ranking-badge ${rankClass}">
-                    ${rankText}
-                </span>
-                ${detailsHtml}
-                <span class="ranking-hint">
-                    ${hintText}
-                </span>
-                ${progressBar}
-            </div>
-        `;
-
-    // Animation pour les nouveaux classements
-    setTimeout(() => {
-      const badge = rankingElement.querySelector(".ranking-badge");
-      if (badge) {
-        badge.classList.add("update-animation");
-        setTimeout(() => badge.classList.remove("update-animation"), 1000);
-      }
-    }, 100);
-  } catch (error) {
-    console.error("❌ Erreur updateRankingDisplay:", error);
-  }
+// Fonction pour les messages motivationnels
+function getMotivationalMessage(score, position) {
+    const messages = [
+        { min: 80, max: 100, msg: "Score exceptionnel ! Le top 50 est à portée !" },
+        { min: 60, max: 79, msg: "Bonne performance ! Continuez à progresser !" },
+        { min: 40, max: 59, msg: "Bien parti ! Chaque point compte pour avancer !" },
+        { min: 20, max: 39, msg: "Début prometteur ! L'entraînement paie toujours !" },
+        { min: 0, max: 19, msg: "Premiers pas ! Le chemin vers le top commence ici !" }
+    ];
+    
+    const found = messages.find(m => score >= m.min && score <= m.max);
+    return found ? found.msg : "Chaque partie vous rapproche du sommet !";
 }
 
  
