@@ -129,170 +129,176 @@ if (typeof window.supabase === "undefined") {
   }
 
   // ============ SAUVEGARDER SCORE AVEC HISTORIQUE ============
+ 
   async function saveScoreWithHistory(
-    score,
-    userId,
-    userPseudo,
-    userEmail = ""
-  ) {
-    try {
-      // 1. UPSERT dans la table 'scores' (meilleur score seulement)
+  score,
+  userId,
+  userPseudo,
+  userEmail = ""
+) {
+  try {
+    // 1. UPSERT dans la table 'scores' (meilleur score seulement)
 
-      // D'abord, récupérer l'ancien score
-      const { data: oldScoreData, error: fetchError } = await supabase
-        .from("scores")
-        .select("score, created_at, updated_at")
-        .eq("user_id", userId)
-        .maybeSingle();
+    // D'abord, récupérer l'ancien score
+    const { data: oldScoreData, error: fetchError } = await supabase
+      .from("scores")
+      .select("score, created_at, updated_at")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-      const oldScore = oldScoreData?.score || 0;
-      const isNewRecord = score > oldScore;
-      const oldCreatedAt = oldScoreData?.created_at || new Date().toISOString();
-      const now = new Date().toISOString();
+    const oldScore = oldScoreData?.score || 0;
+    const isNewRecord = score > oldScore;
+    const now = new Date().toISOString();
 
-      // Données pour l'upsert
-      const scoreData = {
+    // Données pour l'upsert - CORRECTION IMPORTANTE ICI
+    const scoreData = {
+      user_id: userId,
+      score: isNewRecord ? score : oldScore,
+      pseudo: userPseudo,
+      name: userPseudo,
+      email: userEmail || "",
+      updated_at: now, // Toujours mettre à jour pour la dernière modification
+    };
+
+    // GESTION CRITIQUE DE LA DATE DE CRÉATION
+    if (!oldScoreData) {
+      // Première fois : créer avec la date actuelle
+      scoreData.created_at = now;
+    } else if (isNewRecord) {
+      // Nouveau record : créer une NOUVELLE date de création
+      scoreData.created_at = now; // ← Date du nouveau record
+    } else {
+      // Pas de nouveau record : conserver l'ancienne date de création
+      scoreData.created_at = oldScoreData.created_at; // ← Conserver l'original
+    }
+
+    const { data: bestScoreData, error: bestScoreError } = await supabase
+      .from("scores")
+      .upsert(scoreData, {
+        onConflict: "user_id",
+        ignoreDuplicates: false,
+      })
+      .select()
+      .single();
+
+    if (bestScoreError) {
+      console.error("❌ Erreur upsert scores:", bestScoreError);
+      throw bestScoreError;
+    }
+
+    // 2. INSERT dans la table 'game_history' (toutes les parties)
+    const { data: historyData, error: historyError } = await supabase
+      .from("game_history")
+      .insert({
         user_id: userId,
-        score: isNewRecord ? score : oldScore,
         pseudo: userPseudo,
-        name: userPseudo,
-        email: userEmail || "",
-        updated_at: now,
-        created_at: oldCreatedAt,
+        score: score,
+        played_at: now,
+      })
+      .select()
+      .single();
+
+    if (historyError) {
+      console.error("❌ Erreur insertion historique:", historyError);
+      // On continue quand même
+    }
+
+    // 3. Analyse détaillée
+    let messageType = "";
+    let details = {};
+
+    if (!oldScoreData) {
+      // Première partie
+      messageType = "first_time";
+      details = { isPerfect: score === 100 };
+    } else if (isNewRecord) {
+      // Nouveau record
+      const improvement = score - oldScore;
+      const percentage =
+        oldScore > 0 ? Math.round((improvement / oldScore) * 100) : 100;
+
+      let improvementLevel = "small";
+      if (improvement >= 30) improvementLevel = "huge";
+      else if (improvement >= 20) improvementLevel = "major";
+      else if (improvement >= 10) improvementLevel = "good";
+      else if (improvement >= 5) improvementLevel = "small";
+
+      messageType = "record_beaten";
+      details = {
+        improvement: improvement,
+        percentage: percentage,
+        level: improvementLevel,
+        wasPerfect: oldScore === 100,
+        isPerfect: score === 100,
       };
-
-      // Si c'est un nouveau record, on met à jour la date de création aussi
-      if (isNewRecord && !oldScoreData) {
-        scoreData.created_at = now;
-      }
-
-      const { data: bestScoreData, error: bestScoreError } = await supabase
-        .from("scores")
-        .upsert(scoreData, {
-          onConflict: "user_id",
-          ignoreDuplicates: false,
-        })
-        .select()
-        .single();
-
-      if (bestScoreError) {
-        console.error("❌ Erreur upsert scores:", bestScoreError);
-        throw bestScoreError;
-      }
-
-      // 2. INSERT dans la table 'game_history' (toutes les parties)
-
-      const { data: historyData, error: historyError } = await supabase
-        .from("game_history")
-        .insert({
-          user_id: userId,
-          pseudo: userPseudo,
-          score: score,
-          played_at: now,
-        })
-        .select()
-        .single();
-
-      if (historyError) {
-        console.error("❌ Erreur insertion historique:", historyError);
-        // On continue quand même
-      } else {
-      }
-
-      // 3. Analyse détaillée
-      let messageType = "";
-      let details = {};
-
-      if (!oldScoreData) {
-        // Première partie
-        messageType = "first_time";
-        details = { isPerfect: score === 100 };
-      } else if (isNewRecord) {
-        // Nouveau record
-        const improvement = score - oldScore;
-        const percentage =
-          oldScore > 0 ? Math.round((improvement / oldScore) * 100) : 100;
-
-        let improvementLevel = "small";
-        if (improvement >= 30) improvementLevel = "huge";
-        else if (improvement >= 20) improvementLevel = "major";
-        else if (improvement >= 10) improvementLevel = "good";
-        else if (improvement >= 5) improvementLevel = "small";
-
-        messageType = "record_beaten";
-        details = {
-          improvement: improvement,
-          percentage: percentage,
-          level: improvementLevel,
-          wasPerfect: oldScore === 100,
-          isPerfect: score === 100,
-        };
-      } else if (score === oldScore) {
-        // Score égal
-        messageType = "equal_score";
-      } else {
-        // Score inférieur
-        messageType = "lower_score";
-        details = {
-          difference: oldScore - score,
-          needed: Math.max(1, oldScore - score + 1),
-        };
-      }
-
-      return {
-        success: true,
-        data: {
-          bestScore: bestScoreData,
-          historyEntry: historyData,
-        },
-        action: isNewRecord ? "updated" : "skipped",
-        messageType: messageType,
-        details: details,
-        previousScore: oldScore,
-        newScore: score,
-        hasImproved: isNewRecord,
-        isFirstTime: !oldScoreData,
-        timestamp: now,
-      };
-    } catch (error) {
-      console.error("💥 Erreur sauvegarde avec historique:", error);
-
-      // Fallback simple
-      try {
-        const { data, error: simpleError } = await supabase
-          .from("scores")
-          .upsert({
-            user_id: userId,
-            score: score,
-            pseudo: userPseudo,
-            name: userPseudo,
-            email: userEmail || "",
-            created_at: new Date().toISOString(),
-          })
-          .select();
-
-        if (!simpleError) {
-          return {
-            success: true,
-            data: data,
-            action: "inserted_fallback",
-            messageType: "first_time",
-            previousScore: 0,
-            newScore: score,
-            isFirstTime: true,
-          };
-        }
-      } catch (fallbackError) {
-        console.error("💥 Fallback échoué:", fallbackError);
-      }
-
-      return {
-        success: false,
-        error: error.message,
-        action: "error",
+    } else if (score === oldScore) {
+      // Score égal
+      messageType = "equal_score";
+    } else {
+      // Score inférieur
+      messageType = "lower_score";
+      details = {
+        difference: oldScore - score,
+        needed: Math.max(1, oldScore - score + 1),
       };
     }
+
+    return {
+      success: true,
+      data: {
+        bestScore: bestScoreData,
+        historyEntry: historyData,
+      },
+      action: isNewRecord ? "updated" : "skipped",
+      messageType: messageType,
+      details: details,
+      previousScore: oldScore,
+      newScore: score,
+      hasImproved: isNewRecord,
+      isFirstTime: !oldScoreData,
+      timestamp: now,
+      // Ajouter la date du record pour l'affichage
+      recordDate: scoreData.created_at,
+    };
+  } catch (error) {
+    console.error("💥 Erreur sauvegarde avec historique:", error);
+
+    // Fallback simple
+    try {
+      const { data, error: simpleError } = await supabase
+        .from("scores")
+        .upsert({
+          user_id: userId,
+          score: score,
+          pseudo: userPseudo,
+          name: userPseudo,
+          email: userEmail || "",
+          created_at: new Date().toISOString(),
+        })
+        .select();
+
+      if (!simpleError) {
+        return {
+          success: true,
+          data: data,
+          action: "inserted_fallback",
+          messageType: "first_time",
+          previousScore: 0,
+          newScore: score,
+          isFirstTime: true,
+        };
+      }
+    } catch (fallbackError) {
+      console.error("💥 Fallback échoué:", fallbackError);
+    }
+
+    return {
+      success: false,
+      error: error.message,
+      action: "error",
+    };
   }
+}
 
   // ============ RÉCUPÉRER LES SCORES ============
   async function getHighScoresFromSupabase(limit = 10) {
@@ -348,7 +354,7 @@ if (typeof window.supabase === "undefined") {
   // ============ STATISTIQUES AVEC HISTORIQUE ============
   async function getPlayerStatsWithHistory(userId) {
     try {
-      // 1. Récupérer le meilleur score - CORRIGÉ avec updated_at
+      // 1. Récupérer le meilleur score - IMPORTANT: créé le bon commentaire
       const { data: bestScoreData, error: bestScoreError } = await supabase
         .from("scores")
         .select("score, updated_at, created_at")
@@ -370,10 +376,9 @@ if (typeof window.supabase === "undefined") {
       const history = historyData || [];
 
       // 3. Calculer les statistiques
-      // Utiliser updated_at si disponible, sinon created_at
+      // CORRECTION CRITIQUE: Utiliser created_at pour la date d'obtention du record
       const bestScore = bestScoreData?.score || 0;
-      const bestDate =
-        bestScoreData?.updated_at || bestScoreData?.created_at || null;
+      const bestDate = bestScoreData?.created_at || null; // ← CORRECTION ICI
       const totalGames = history.length;
 
       // Score moyen
@@ -419,7 +424,7 @@ if (typeof window.supabase === "undefined") {
         success: true,
         data: {
           bestScore: bestScore,
-          bestDate: bestDate,
+          bestDate: bestDate, // ← Maintenant c'est la date d'obtention du record
           totalGames: totalGames,
           averageScore: averageScore,
           lastGame: lastGame,

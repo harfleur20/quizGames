@@ -101,6 +101,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     await checkExistingSession();
     setupAuthEvents();
     setupQuizEvents();
+    
+    // Initialiser les notifications de jeu
+    if (window.gameNotifications && window.gameNotifications.initGameNotifications) {
+      window.gameNotifications.initGameNotifications();
+    }
   } catch (error) {
     console.error("❌ Erreur lors de l'initialisation:", error);
     showScreen("start");
@@ -236,6 +241,13 @@ function setupQuizEvents() {
     });
   }
 
+      // Bouton retour à l'accueil
+    const backToStartBtn = document.getElementById('back-to-start-btn');
+    if (backToStartBtn) {
+        backToStartBtn.addEventListener('click', goToStartScreen);
+    }
+
+
   if (showMoreScoresBtn) {
     showMoreScoresBtn.addEventListener("click", () => {
       isExpandedStart = !isExpandedStart;
@@ -258,6 +270,15 @@ function setupQuizEvents() {
   setTimeout(() => {
     setupRealTimeUpdates();
   }, 2000);
+}
+
+
+// fonction retour à l'écran d'accueil
+function goToStartScreen() {
+    showScreen('start');
+    isExpandedStart = false;
+    loadScoresFromSupabase();
+    showMessage("Retour à l'accueil", "info");
 }
 
 // ==================== FONCTIONS DU PANEL STATS ====================
@@ -385,7 +406,7 @@ function updateStatsPanel(stats) {
       } else if (stats.bestScore >= 70) {
         statsBestScore.style.color = "#2196F3";
       } else if (stats.bestScore >= 50) {
-        statsBestScore.style.color = "#ff9800";
+        statsBestScore.style.color = "#2b0743ff";
       } else {
         statsBestScore.style.color = "#f44336";
       }
@@ -403,7 +424,7 @@ function updateStatsPanel(stats) {
       } else if (stats.averageScore >= 60) {
         statsAverageScore.style.color = "#2196F3";
       } else if (stats.averageScore >= 40) {
-        statsAverageScore.style.color = "#ff9800";
+        statsAverageScore.style.color = "#23083cff";
       } else {
         statsAverageScore.style.color = "#f44336";
       }
@@ -453,7 +474,7 @@ function updateRecentGamesList(games) {
       } else if (game.score >= 70) {
         scoreElement.style.color = "#2196F3";
       } else if (game.score >= 50) {
-        scoreElement.style.color = "#ff9800";
+        scoreElement.style.color = "#30073bff";
       }
 
       recentGamesList.appendChild(gameItem);
@@ -464,29 +485,35 @@ function updateRecentGamesList(games) {
 }
 
 function formatGameDate(dateString) {
-  try {
-    if (!dateString) return "Récemment";
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return "Aujourd'hui";
-    } else if (diffDays === 1) {
-      return "Hier";
-    } else if (diffDays < 7) {
-      return `Il y a ${diffDays} jours`;
-    } else {
-      return date.toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-      });
+    try {
+        if (!dateString) return "Récemment";
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        // Réinitialiser les heures pour comparer uniquement les dates
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const gameDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        const diffTime = today - gameDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            return "Aujourd'hui";
+        } else if (diffDays === 1) {
+            return "Hier";
+        } else if (diffDays < 7) {
+            return `Il y a ${diffDays} jours`;
+        } else {
+            return date.toLocaleDateString("fr-FR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            });
+        }
+    } catch (error) {
+        return "Récemment";
     }
-  } catch (error) {
-    return "Récemment";
-  }
 }
 
 // ==================== FONCTIONS STATISTIQUES ====================
@@ -533,8 +560,13 @@ function updatePlayerStatsDisplay(stats) {
 
     const bestScoreDate = document.getElementById("best-score-date");
     if (bestScoreDate) {
+      // CORRECTION CRITIQUE ICI :
       if (stats.bestDate) {
+        // Utiliser formatDate pour l'affichage (sans "Aujourd'hui/Hier")
         bestScoreDate.textContent = formatDate(stats.bestDate);
+        
+        // OU si vous voulez "Hier/Aujourd'hui" :
+        // bestScoreDate.textContent = formatGameDate(stats.bestDate);
       } else {
         bestScoreDate.textContent = "Jamais";
       }
@@ -572,7 +604,7 @@ function updatePlayerStatsDisplay(stats) {
       } else if (stats.progression > 0) {
         recordMessage.innerHTML = `
                     <strong>📈 En progression !</strong><br>
-                    Vous avez amélioré votre score de +${stats.progression} points depuis votre première partie.
+                    Vous avez amélioré votre score de +${stats.progression} points depuis votre dernière partie.
                 `;
         recordMessage.style.display = "block";
       } else {
@@ -1112,6 +1144,22 @@ function startQuizGame() {
   score = 0;
   gameStopped = false;
 
+  // Réinitialiser les compteurs de notifications
+  if (window.gameNotifications && window.gameNotifications.resetTargetNotifications) {
+    window.gameNotifications.resetTargetNotifications();
+  }
+  
+  // Message de début
+  setTimeout(() => {
+    if (window.gameNotifications?.showInGameNotification) {
+      window.gameNotifications.showInGameNotification(
+        "💪 Le défi commence ! Bonne chance !",
+        "success",
+        2000
+      );
+    }
+  }, 500);
+
   livesDisplay = document.getElementById("lives-display");
   livesCount = document.getElementById("lives-count");
 
@@ -1190,7 +1238,7 @@ function updateTimer() {
     timerDisplay.textContent = timeLeft;
 
     if (timeLeft <= 3) {
-      timerDisplay.style.color = "#ff4444";
+      timerDisplay.style.color = "#ffffffff";
       timerDisplay.style.fontWeight = "bold";
     } else if (timeLeft <= 5) {
       timerDisplay.style.color = "#ffffffff";

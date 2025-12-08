@@ -397,6 +397,65 @@ h1 {
     font-size: 1.25rem !important;
 }
 
+/* Boutons d'action */
+.action-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.restart-btn, .back-btn {
+    border: none;
+    border-radius: 32px;
+    color: white;
+    padding: 16px 32px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s;
+    min-width: 200px;
+    justify-content: center;
+}
+
+.restart-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+}
+
+.restart-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(76, 175, 80, 0.4);
+}
+
+.back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(33, 150, 243, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .restart-btn, .back-btn {
+        width: 100%;
+        max-width: 300px;
+        min-width: unset;
+        padding: 14px 24px;
+    }
+}
+
 /* Cibler spécifiquement la section des statistiques */
 .player-result .result-card .stat-line .stat-label {
     font-size: 1.1rem;
