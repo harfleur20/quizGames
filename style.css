@@ -475,7 +475,169 @@ h1 {
   min-width: 90px;
 }
 
+/* badge ranking */
 
+/* Styles pour le nouveau classement */
+.ranking-info {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.ranking-info.elite {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.15) 100%);
+    border: 2px solid #ffd700;
+}
+
+.ranking-info.top10 {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 136, 229, 0.15) 100%);
+    border: 2px solid #2196F3;
+}
+
+.ranking-info.top50 {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(67, 160, 71, 0.15) 100%);
+    border: 2px solid #4CAF50;
+}
+
+.ranking-info.outside {
+    background: linear-gradient(135deg, rgba(158, 158, 158, 0.15) 0%, rgba(117, 117, 117, 0.15) 100%);
+    border: 2px solid #9E9E9E;
+}
+
+.ranking-label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.ranking-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 10px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.rank-1 {
+    background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);
+    color: #333;
+}
+
+.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%);
+    color: white;
+}
+
+.rank-3 {
+    background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+    color: white;
+}
+
+.rank-4-10 {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+}
+
+.rank-11-plus {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+}
+
+.rank-outside {
+    background: linear-gradient(135deg, #757575 0%, #616161 100%);
+    color: white;
+}
+
+.ranking-details {
+    display: block;
+    font-size: 14px;
+    margin: 8px 0;
+    color: #555;
+}
+
+.ranking-details.error {
+    color: #f44336;
+}
+
+.ranking-distance {
+    display: block;
+    font-size: 13px;
+    margin: 5px 0;
+    color: #666;
+}
+
+.ranking-distance.close {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.ranking-distance.far {
+    color: #ff9800;
+}
+
+.ranking-hint {
+    display: block;
+    font-size: 13px;
+    margin-top: 10px;
+    color: #777;
+    font-style: italic;
+}
+
+.ranking-hint.success {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.ranking-hint.motivational {
+    color: #ff9800;
+    font-weight: bold;
+}
+
+.ranking-progress {
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+.ranking-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.ranking-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.ranking-loading i {
+    margin-right: 10px;
+}
+
+/* Animation pour les mises à jour */
+.update-animation {
+    animation: pulseUpdate 1s ease;
+}
+
+@keyframes pulseUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+
+/* fin badge ranking */
 
 .no-scores {
   text-align: center;
