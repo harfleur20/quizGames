@@ -1,11 +1,11 @@
 // js/debug.js
 
 async function debugGameStart() {
-    console.log("🔍 DEBUG: Démarrage du diagnostic...");
+    // DEBUG: Démarrage du diagnostic (logs supprimés)
     
     // 1. Vérifier l'utilisateur
     const user = await getCurrentUser();
-    console.log("✅ Utilisateur:", user ? user.email : "NON CONNECTÉ");
+    // Résultat utilisateur non loggé
     
     if (!user) {
         console.error("❌ Erreur: Utilisateur non connecté");
@@ -19,30 +19,29 @@ async function debugGameStart() {
         .eq('user_id', user.id)
         .single();
     
-    console.log("✅ Profil joueur:", player ? "EXISTE" : "MANQUANT");
-    console.log("Détails joueur:", player);
+    // Profil joueur non loggé
     
     if (error) {
         console.error("❌ Erreur Supabase:", error);
         
         // Essayer de créer le profil
-        console.log("🔄 Tentative de création du profil...");
+        // Tentative de création du profil
         const result = await createPlayerProfile(user);
-        console.log("Résultat création:", result);
+        // Résultat création non loggé
     }
     
     // 3. Vérifier si l'élément HTML existe
     const gameContainer = document.getElementById('quiz-container');
-    console.log("✅ Container trouvé:", gameContainer ? "OUI" : "NON");
+    // Container trouvé (non loggé)
     
     if (!gameContainer) {
         console.error("❌ ERREUR CRITIQUE: #quiz-container n'existe pas dans le HTML!");
-        console.log("Ajoutez dans votre HTML: <div id='quiz-container'></div>");
+        // Indiquer d'ajouter #quiz-container dans le HTML
         return;
     }
     
     // 4. Tester l'affichage simple
-    console.log("🔄 Test affichage...");
+    // Test affichage (log supprimé)
     gameContainer.innerHTML = `
         <h1>🎮 QUIZ EN DIRECT</h1>
         <p>Bienvenue ${player?.display_name || user.email}!</p>
@@ -55,18 +54,17 @@ async function debugGameStart() {
         </div>
     `;
     
-    console.log("✅ Diagnostic terminé!");
+    // Diagnostic terminé (log supprimé)
 }
 
 // Exécuter quand la page est prête
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("📄 Page chargée");
+    // Page chargée (log supprimé)
     
     // Vérifier si on est sur la page quiz
     if (window.location.pathname.includes('quiz') || 
         document.getElementById('quiz-container')) {
-        
-        console.log("🎯 Page quiz détectée, lancement debug...");
+        // Page quiz détectée (log supprimé)
         setTimeout(debugGameStart, 1000);
     }
 });

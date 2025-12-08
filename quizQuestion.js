@@ -730,18 +730,19 @@ export const quizQuestions = [
     question: "Combien de côtés a un hexagone ?",
     answers: [
       { text: "5", correct: false },
-      { text: "6", correct: true },
+      ,
       { text: "7", correct: false },
       { text: "8", correct: false },
+      { text: "6", correct: true },
     ],
   },
   {
-    question: "Quelle est la monnaie du Royaume-Uni ?",
+    question: "Quelle est la bonne phrase ?",
     answers: [
-      { text: "Euro", correct: false },
-      { text: "Dollar", correct: false },
-      { text: "Livre sterling", correct: true },
-      { text: "Franc", correct: false },
+      { text: "C'est à moi", correct: true },
+      { text: "C'est à moi", correct: false },
+      { text: "C'est à moi", correct: false },
+      { text: "C'est a moi", correct: false },
     ],
   },
   {
@@ -1180,13 +1181,12 @@ export const quizQuestions = [
   },
 
   {
-    question:
-      "Quelle est la particularité des mots « Amour », « Délice » et « Orgue » ?",
+    question: "En quelle année a été créé TikTok ?",
     answers: [
-      { text: "Ils sont toujours féminins", correct: false },
-      { text: "Ils sont invariables", correct: false },
-      { text: "Ils changent de genre au pluriel", correct: true }, // Position 3
-      { text: "Ils ne prennent jamais de 's'", correct: false },
+      { text: "2016", correct: true },
+      { text: "2014", correct: false },
+      { text: "2018", correct: false },
+      { text: "2020", correct: false },
     ],
   },
   {
@@ -1200,7 +1200,7 @@ export const quizQuestions = [
   },
   {
     question:
-      "Quelle figure de style consiste à dire le contraire de ce que l'on pense (ironie) ?",
+      "Quelle figure de style consiste à dire le contraire de ce que l'on pense ?",
     answers: [
       { text: "L'allégorie", correct: false },
       { text: "La métaphore", correct: false },
@@ -1240,12 +1240,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Quelle est la racine étymologique du mot « Hippopotame » ?",
+    question: "Quel est le pays le plus peuplé d'Afrique ?",
     answers: [
-      { text: "Gros poisson", correct: false },
-      { text: "Cheval du fleuve", correct: true }, // Position 2
-      { text: "Cochon de terre", correct: false },
-      { text: "Géant des marais", correct: false },
+      { text: "L'Égypte", correct: false },
+      { text: "L'Afrique du Sud", correct: false },
+      { text: "Le Nigeria", correct: true },
+      { text: "L'Éthiopie", correct: false },
     ],
   },
   {
@@ -1389,7 +1389,7 @@ export const quizQuestions = [
   {
     question: "Quel mot est un homophone de « Vert » ?",
     answers: [
-      { text: "Vair (fourrure)", correct: true }, // Position 1
+      { text: "Vair", correct: true }, // Position 1
       { text: "Varech", correct: false },
       { text: "Vérité", correct: false },
       { text: "Verbe", correct: false },
@@ -1522,14 +1522,14 @@ export const quizQuestions = [
   {
     question: "Que signifie « URL » ?",
     answers: [
-      { text: "Universal Resource Locator (Adresse web)", correct: true }, // Position 1
+      { text: "Universal Resource Locator", correct: true }, // Position 1
       { text: "Ultra Rapid Link", correct: false },
       { text: "United Research Lab", correct: false },
       { text: "User Remote Login", correct: false },
     ],
   },
   {
-    question: "Quel est l'ancêtre d'Internet créé par l'armée américaine ?",
+    question: "Quel est l'ancêtre d'Internet ?",
     answers: [
       { text: "Minitel", correct: false },
       { text: "Ethernet", correct: false },
@@ -1548,13 +1548,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question:
-      "Comment s'appelle l'intelligence artificielle conversationnelle d'OpenAI ?",
+    question: "Comment s'appelle l'IA conversationnelle de Apple ?",
     answers: [
-      { text: "Siri", correct: false },
+      { text: "Siri", correct: true },
       { text: "Alexa", correct: false },
       { text: "Cortana", correct: false },
-      { text: "ChatGPT", correct: true }, // Position 4
+      { text: "ChatGPT", correct: false }, // Position 4
     ],
   },
   {
@@ -1562,7 +1561,7 @@ export const quizQuestions = [
     answers: [
       { text: "La qualité graphique", correct: false },
       { text: "Le nombre de joueurs", correct: false },
-      { text: "La latence (temps de réponse)", correct: true }, // Position 3
+      { text: "La latence", correct: true }, // Position 3
       { text: "Le score", correct: false },
     ],
   },
@@ -1623,15 +1622,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "À quoi sert une « clé de chiffrement » ?",
+    question: "Quel rappeur est le frère de Dadju ?",
     answers: [
-      { text: "À ouvrir le boîtier de l'ordinateur", correct: false },
-      {
-        text: "À sécuriser des données pour les rendre illisibles sans la clé",
-        correct: true,
-      }, // Position 2
-      { text: "À nettoyer le clavier", correct: false },
-      { text: "À augmenter la vitesse du Wi-Fi", correct: false },
+      { text: "Maitre Gims", correct: true },
+      { text: "Soprano", correct: false },
+      { text: "Black M", correct: false },
+      { text: "Gradur", correct: false },
     ],
   },
   {
@@ -1646,7 +1642,7 @@ export const quizQuestions = [
   {
     question: "Que signifie « IoT » ?",
     answers: [
-      { text: "Internet of Things (Internet des objets)", correct: true }, // Position 1
+      { text: "Internet of Things ", correct: true }, // Position 1
       { text: "Input of Technology", correct: false },
       { text: "International Office of Tech", correct: false },
       { text: "Image on TV", correct: false },
@@ -1655,49 +1651,39 @@ export const quizQuestions = [
 
   // --- ARGENT & RAPPORT À L'ARGENT (25 questions) ---
   {
-    question:
-      "Que signifie l'expression « Ne pas mettre tous ses œufs dans le même panier » ?",
+    question: "Quel groupe de rap français avait pour membre 'Maitre Gims' ?",
     answers: [
-      { text: "Il faut acheter beaucoup de paniers", correct: false },
-      {
-        text: "Il ne faut pas dépenser tout son argent le même jour",
-        correct: false,
-      },
-      { text: "Il faut diversifier ses investissements", correct: true }, // Position 3
-      { text: "Il faut manger sainement", correct: false },
+      { text: "PNL", correct: false },
+      { text: "Sexion d'Assaut", correct: true },
+      { text: "Nekfeu", correct: false },
+      { text: "Lomepal", correct: false },
     ],
   },
   {
-    question: "Qu'est-ce que les « intérêts composés » ?",
+    question: "Qui a inventé l'imprimerie ?",
     answers: [
-      { text: "Des taxes complexes", correct: false },
-      {
-        text: "Des intérêts calculés sur le capital initial ET les intérêts déjà gagnés",
-        correct: true,
-      }, // Position 2
-      { text: "Un prêt à taux variable", correct: false },
-      { text: "Une arnaque bancaire", correct: false },
+      { text: "Johannes Gutenberg", correct: true },
+      { text: "Galilée", correct: false },
+      { text: "Isaac Newton", correct: false },
+      { text: "Thomas Edison", correct: false },
     ],
   },
   {
-    question: "Quelle est la règle des « 50/30/20 » pour gérer son budget ?",
+    question: "Quelle est la plus haute montagne du monde ?",
     answers: [
-      { text: "50% Besoins, 30% Envies, 20% Épargne", correct: true }, // Position 1
-      { text: "50% Impôts, 30% Loyer, 20% Nourriture", correct: false },
-      { text: "50% Épargne, 30% Dons, 20% Dépenses", correct: false },
-      { text: "50% Vacances, 30% Voiture, 20% Maison", correct: false },
+      { text: "K2", correct: false },
+      { text: "Mont Everest", correct: true },
+      { text: "Mont Blanc", correct: false },
+      { text: "Kilimandjaro", correct: false },
     ],
   },
   {
-    question: "Qu'est-ce qu'un « fonds d'urgence » ?",
+    question: "Qui a composé la Symphonie n°5 ?",
     answers: [
-      { text: "Une caisse pour les vacances", correct: false },
-      { text: "De l'argent pour la retraite", correct: false },
-      { text: "Une assurance vie", correct: false },
-      {
-        text: "Une épargne de précaution pour les imprévus (panne, chômage...)",
-        correct: true,
-      }, // Position 4
+      { text: "Beethoven", correct: true },
+      { text: "Mozart", correct: false },
+      { text: "Sebastian Bach", correct: false },
+      { text: "Frédéric Chopin", correct: false },
     ],
   },
   {
@@ -1710,60 +1696,48 @@ export const quizQuestions = [
     ],
   },
   {
-    question:
-      "Dans l'investissement, quel est le rapport entre risque et rendement ?",
+    question: "Lequel est un synonyme de 'intelligent' ?",
     answers: [
-      {
-        text: "Plus le risque est élevé, plus le rendement potentiel est élevé",
-        correct: true,
-      }, // Position 1
-      { text: "Il n'y a aucun rapport", correct: false },
-      { text: "Plus c'est sûr, plus ça rapporte", correct: false },
-      { text: "Le risque fait toujours perdre de l'argent", correct: false },
+      { text: "Bête", correct: false },
+      { text: "Brillant", correct: true },
+      { text: "Lent", correct: false },
+      { text: "Simple", correct: false },
     ],
   },
   {
-    question:
-      "Quel terme désigne la perte de valeur d'une voiture dès qu'elle sort du concessionnaire ?",
+    question: "quelle couleur obtient on en mélangeant du rouge et du bleu ?",
     answers: [
-      { text: "L'inflation", correct: false },
-      { text: "La décote (ou dépréciation)", correct: true }, // Position 2
-      { text: "La spéculation", correct: false },
-      { text: "La liquidation", correct: false },
+      { text: "Le rose", correct: false },
+      { text: "le vert", correct: false }, // Position 2
+      { text: "Le marron", correct: false },
+      { text: "Le violet", correct: true },
     ],
   },
+
   {
-    question: "Qu'est-ce qu'un « crédit immobilier » ?",
+    question: "Quel super-héros lance son bouclier ?",
     answers: [
-      { text: "Un prêt pour acheter une voiture", correct: false },
-      { text: "Un prêt pour acheter des meubles", correct: false },
-      {
-        text: "Un prêt pour acheter un logement (maison/appartement)",
-        correct: true,
-      }, // Position 3
-      { text: "Un prêt pour payer ses impôts", correct: false },
+      { text: "Iron-man", correct: false },
+      { text: "Batman", correct: false },
+      { text: "Mentalist", correct: false },
+      { text: "Captain América", correct: true },
     ],
   },
+
   {
-    question: "Quelle est la différence entre salaire brut et salaire net ?",
+    question: "Quelle est la bonne orthographe ?",
     answers: [
-      { text: "Il n'y en a pas", correct: false },
-      {
-        text: "Le brut est ce que vous touchez, le net est pour l'État",
-        correct: false,
-      },
-      {
-        text: "Le net est le brut moins les cotisations sociales (ce qui arrive sur le compte)",
-        correct: true,
-      }, // Position 3
-      { text: "Le brut est payé en espèces", correct: false },
+      { text: "Apparemment", correct: true },
+      { text: "Aparentement", correct: false },
+      { text: "Apparement", correct: false },
+      { text: "Aparenttement", correct: false },
     ],
   },
   {
     question: "Qu'est-ce qu'une « mensualité » ?",
     answers: [
       {
-        text: "Une somme payée tous les mois (remboursement prêt, abonnement)",
+        text: "Une somme payée tous les mois ",
         correct: true,
       }, // Position 1
       { text: "Une fête mensuelle", correct: false },
@@ -1772,8 +1746,7 @@ export const quizQuestions = [
     ],
   },
   {
-    question:
-      "Quel métal est traditionnellement considéré comme une « valeur refuge » en temps de crise ?",
+    question: "Quel métal est une valeur refuge en crise ?",
     answers: [
       { text: "Le cuivre", correct: false },
       { text: "Le plomb", correct: false },
@@ -1800,15 +1773,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Pourquoi l'inflation réduit-elle votre pouvoir d'achat ?",
+    question: "Quelle est la fonction de 'très' dans 'très joli' ?",
     answers: [
-      { text: "Parce que les salaires baissent", correct: false },
-      {
-        text: "Parce que les prix augmentent, donc on achète moins avec la même somme",
-        correct: true,
-      }, // Position 2
-      { text: "Parce que les banques ferment", correct: false },
-      { text: "Parce qu'il y a moins de produits", correct: false },
+      { text: "Adverbe", correct: true },
+      { text: "Adjectif", correct: false },
+      { text: "Nom", correct: false },
+      { text: "Préposition", correct: false },
     ],
   },
   {
@@ -1817,31 +1787,32 @@ export const quizQuestions = [
       { text: "Une monnaie électronique", correct: false },
       { text: "Un impôt ancien", correct: false },
       {
-        text: "L'échange direct d'un bien contre un autre, sans argent",
+        text: "Échange direct bien contre autre",
         correct: true,
       }, // Position 3
       { text: "Une technique de vente", correct: false },
     ],
   },
   {
-    question: "Quel est le principe de la « gratification différée » ?",
+    question:
+      "Quel joueur de football a remporté à lui seul « 8 ballons d'or » ?",
     answers: [
-      { text: "Acheter tout, tout de suite", correct: false },
+      { text: "Benzema", correct: false },
       {
-        text: "Attendre avant d'acheter pour obtenir mieux ou épargner plus",
-        correct: true,
+        text: "Christiano Ronaldo",
+        correct: false,
       }, // Position 2
-      { text: "Refuser tout cadeau", correct: false },
-      { text: "Ne jamais se faire plaisir", correct: false },
+      { text: "Neymar", correct: false },
+      { text: "Lionel Messi", correct: true },
     ],
   },
   {
     question: "Qu'est-ce qu'une « dépense fixe » ?",
     answers: [
-      { text: "Une dépense imprévue (réparation)", correct: false },
-      { text: "Une dépense pour le plaisir (restaurant)", correct: false },
+      { text: "Une dépense imprévue", correct: false },
+      { text: "Une dépense pour le plaisir", correct: false },
       {
-        text: "Une dépense qui ne bouge pas tous les mois (loyer, internet)",
+        text: "Une dépense qui ne bouge pas",
         correct: true,
       }, // Position 3
       { text: "Une dépense en liquide", correct: false },
@@ -1878,7 +1849,7 @@ export const quizQuestions = [
     question: "Que signifie « Spéculer » ?",
     answers: [
       {
-        text: "Acheter un bien pour le revendre plus cher en pariant sur la hausse",
+        text: "Achat-revente spéculatif",
         correct: true,
       }, // Position 1
       { text: "Économiser prudemment", correct: false },
@@ -1887,40 +1858,30 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Qu'est-ce que le « revenu passif » ?",
+    question: "Comment s'appelaient les guerrières du royaume du Dahomey ?",
     answers: [
-      {
-        text: "Un revenu gagné sans travailler activement (loyers, dividendes)",
-        correct: true,
-      }, // Position 1
-      { text: "Le revenu du chômage", correct: false },
-      { text: "Un salaire très bas", correct: false },
-      { text: "L'argent de poche", correct: false },
+      { text: "Les Amazones du Dahomey", correct: true },
+      { text: "Les Lionnes du Bénin", correct: false },
+      { text: "Les Guerrières Fon", correct: false },
+      { text: "Les Minon", correct: false },
     ],
   },
   {
-    question: "Que se passe-t-il si vous ne payez pas vos impôts ?",
+    question: "Lequel est un antonyme de 'grand' ?",
     answers: [
-      { text: "Rien, c'est facultatif", correct: false },
-      { text: "On reçoit un cadeau", correct: false },
-      {
-        text: "On risque des pénalités (majorations) et des poursuites",
-        correct: true,
-      }, // Position 3
-      { text: "La banque ferme votre compte", correct: false },
+      { text: "Énorme", correct: false },
+      { text: "Moyen", correct: false },
+      { text: "Gros", correct: false },
+      { text: "Petit", correct: true },
     ],
   },
   {
-    question:
-      "Quelle est la différence entre une carte de débit et de crédit ?",
+    question: "Qui a dit 'Je pense, donc je suis' ?",
     answers: [
-      { text: "La couleur", correct: false },
-      {
-        text: "Le débit retire l'argent tout de suite, le crédit plus tard (ou en plusieurs fois)",
-        correct: true,
-      }, // Position 2
-      { text: "Le crédit est gratuit", correct: false },
-      { text: "Le débit permet d'emprunter des millions", correct: false },
+      { text: "René Descartes", correct: true },
+      { text: "Socrate", correct: false },
+      { text: "Platon", correct: false },
+      { text: "Aristote", correct: false },
     ],
   },
   {
@@ -1928,55 +1889,48 @@ export const quizQuestions = [
     answers: [
       { text: "Un pays où il fait beau", correct: false },
       {
-        text: "Un pays avec des impôts très faibles ou inexistants",
+        text: "Un pays aux faibles taxes",
         correct: true,
-      }, // Position 2
+      },
       { text: "Une banque en faillite", correct: false },
       { text: "Un type d'investissement", correct: false },
     ],
   },
 
   {
-    question: "Qu'est-ce que le « décalage horaire » aussi appelé Jetlag ?",
+    question: "Combien de couleurs dans l'arc-en-ciel ?",
     answers: [
-      { text: "Une maladie tropicale", correct: false },
-      { text: "Un retard de l'avion", correct: false },
-      {
-        text: "Une fatigue due à la traversée rapide de fuseaux horaires",
-        correct: true,
-      }, // Position 3
-      { text: "Un type de billet d'avion", correct: false },
+      { text: "5", correct: false },
+      { text: "6", correct: false },
+      { text: "7", correct: true },
+      { text: "8", correct: false },
     ],
   },
   {
-    question:
-      "Quel site permet de dormir chez l'habitant (location courte durée) ?",
+    question: "Quelle est la bonne conjugaison : 'Nous _____ ce film' ?",
     answers: [
-      { text: "Airbnb", correct: true }, // Position 1
-      { text: "Uber", correct: false },
-      { text: "Amazon", correct: false },
-      { text: "Tinder", correct: false },
+      { text: "avons vu", correct: true },
+      { text: "sommes vus", correct: false },
+      { text: "avons vus", correct: false },
+      { text: "sommes vu", correct: false },
     ],
   },
   {
-    question: "Quel document permet de conduire une voiture à l'étranger ?",
+    question: "Lequel est un synonyme de 'triste' ?",
     answers: [
-      { text: "Le passeport", correct: false },
-      { text: "La carte vitale", correct: false },
-      { text: "Le permis de conduire international", correct: true }, // Position 3
-      { text: "Le carnet de santé", correct: false },
+      { text: "Heureux", correct: false },
+      { text: "Mélancolique", correct: true },
+      { text: "Gai", correct: false },
+      { text: "Content", correct: false },
     ],
   },
   {
-    question: "Que signifie « All Inclusive » dans un hôtel ?",
+    question: "Quelle est la fonction de 'sans' dans 'sans pain' ?",
     answers: [
-      { text: "Tout est payant", correct: false },
-      {
-        text: "Repas, boissons et parfois activités sont inclus dans le prix",
-        correct: true,
-      }, // Position 2
-      { text: "L'hôtel est réservé aux adultes", correct: false },
-      { text: "L'hôtel accepte les animaux", correct: false },
+      { text: "Préposition", correct: true },
+      { text: "Adverbe", correct: false },
+      { text: "Conjonction", correct: false },
+      { text: "Nom", correct: false },
     ],
   },
   {
@@ -2000,7 +1954,7 @@ export const quizQuestions = [
   {
     question: "Qu'est-ce qu'une « Auberge de jeunesse » ?",
     answers: [
-      { text: "Un hébergement économique souvent en dortoir", correct: true }, // Position 1
+      { text: "Un hébergement économique", correct: true }, // Position 1
       { text: "Un hôtel 5 étoiles", correct: false },
       { text: "Une école", correct: false },
       { text: "Un camping sauvage", correct: false },
@@ -2017,18 +1971,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "À la douane, que signifie « Rien à déclarer » ?",
+    question: "Lequel n'est pas un pronom personnel ?",
     answers: [
-      { text: "Que l'on ne veut pas parler", correct: false },
-      {
-        text: "Que l'on transporte des marchandises illégales",
-        correct: false,
-      },
-      { text: "Que l'on n'a pas de passeport", correct: false },
-      {
-        text: "Que l'on ne transporte pas de marchandises taxables ou interdites",
-        correct: true,
-      }, // Position 4
+      { text: "Moi", correct: false },
+      { text: "Toi", correct: false },
+      { text: "Lui", correct: false },
+      { text: "Quel", correct: true },
     ],
   },
   {
@@ -2042,12 +1990,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Quelle est la capitale touristique de la Turquie  ?",
+    question: "Quelle est la conjugaison correcte : 'Ils _____ au marché' ?",
     answers: [
-      { text: "Antalya", correct: false },
-      { text: "Istanbul", correct: true }, // Position 2
-      { text: "Izmir", correct: false },
-      { text: "Bodrum", correct: false },
+      { text: "sont allés", correct: true },
+      { text: "ont allé", correct: false },
+      { text: "sont allé", correct: false },
+      { text: "ont allés", correct: false },
     ],
   },
   {
@@ -2060,12 +2008,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Dans quel pays visite-t-on les temples d'Angkor ?",
+    question: "Lequel de ces mots est un adverbe ?",
     answers: [
-      { text: "Vietnam", correct: false },
-      { text: "Laos", correct: false },
-      { text: "Cambodge", correct: true }, // Position 3
-      { text: "Chine", correct: false },
+      { text: "Rapidement", correct: true },
+      { text: "Rapide", correct: false },
+      { text: "Rapidité", correct: false },
+      { text: "Rapider", correct: false },
     ],
   },
   {
@@ -2078,12 +2026,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Quelle ville est célèbre pour ses canaux et ses gondoles ?",
+    question: "Quel est le pluriel de 'journal' ?",
     answers: [
-      { text: "Amsterdam", correct: false },
-      { text: "Venise", correct: true }, // Position 2
-      { text: "Bruges", correct: false },
-      { text: "Stockholm", correct: false },
+      { text: "Journals", correct: false },
+      { text: "Journales", correct: false },
+      { text: "Journaux", correct: true },
+      { text: "Journalx", correct: false },
     ],
   },
   {
@@ -2105,12 +2053,12 @@ export const quizQuestions = [
     ],
   },
   {
-    question: "Quelle est la plus haute tour du monde (située à Dubaï) ?",
+    question: "Qui a fondé Amazon ?",
     answers: [
-      { text: "Empire State Building", correct: false },
-      { text: "Tour Eiffel", correct: false },
-      { text: "Burj Khalifa", correct: true }, // Position 3
-      { text: "Shanghai Tower", correct: false },
+      { text: "Jeff Bezos", correct: true },
+      { text: "Elon Musk", correct: false },
+      { text: "Mark Zuckerberg", correct: false },
+      { text: "Jack Ma", correct: false },
     ],
   },
   {
