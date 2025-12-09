@@ -95,9 +95,51 @@ const TOTAL_QUESTIONS = 100;
 // User info
 let currentUser = null;
 
+// ==================== CONTRÔLES AUDIO ====================
+function setupAudioControls() {
+  const audioToggleBtn = document.getElementById('audio-toggle-btn');
+  if (!audioToggleBtn || !window.audioManager) return;
+  
+  // Mettre à jour l'icône selon l'état
+  function updateAudioButton() {
+    const isEnabled = window.audioManager.isEnabled();
+    const icon = audioToggleBtn.querySelector('i');
+    
+    if (isEnabled) {
+      icon.className = 'fa-solid fa-volume-high';
+      audioToggleBtn.title = 'Désactiver le son';
+      audioToggleBtn.classList.remove('muted');
+    } else {
+      icon.className = 'fa-solid fa-volume-xmark';
+      audioToggleBtn.title = 'Activer le son';
+      audioToggleBtn.classList.add('muted');
+    }
+  }
+  
+  // Initialiser l'icône
+  updateAudioButton();
+  
+  // Gérer le clic
+  audioToggleBtn.addEventListener('click', () => {
+    const enabled = window.audioManager.toggle();
+    updateAudioButton();
+    
+    // Jouer un son de test si on active
+    if (enabled) {
+      window.audioManager.playSound('correct');
+    }
+  });
+}
+
 // ==================== INITIALISATION ====================
 window.addEventListener("DOMContentLoaded", async () => {
   try {
+    // Initialiser l'audio manager
+    if (window.audioManager) {
+      window.audioManager.init();
+      setupAudioControls(); // Configurer le bouton audio
+    }
+    
     await checkExistingSession();
     setupAuthEvents();
     setupQuizEvents();
@@ -1233,6 +1275,11 @@ function startQuiz() {
 }
 
 function startQuizGame() {
+  // SON DE DÉMARRAGE DU JEU
+  if (window.audioManager) {
+    window.audioManager.playSound('gameStart');
+  }
+  
   lives = 2;
   currentQuestionIndex = 0;
   score = 0;
@@ -1353,6 +1400,15 @@ function selectAnswer(event) {
 
   const selectedButton = event.target;
   const isCorrect = selectedButton.dataset.correct === "true";
+  
+  // JOUER LE SON CORRESPONDANT
+  if (window.audioManager) {
+    if (isCorrect) {
+      window.audioManager.playSound('correct');
+    } else {
+      window.audioManager.playSound('wrong');
+    }
+  }
 
   if (answersContainer) {
     Array.from(answersContainer.children).forEach((button) => {
@@ -1366,6 +1422,12 @@ function selectAnswer(event) {
 
   if (isCorrect) {
     score++;
+    
+    // SON MILESTONE : Quand on atteint exactement 50 points !
+    if (score === 50 && window.audioManager) {
+      window.audioManager.playSound('milestone');
+    }
+    
     if (scoreSpan) scoreSpan.textContent = score;
 
     setTimeout(() => {
@@ -1423,6 +1485,11 @@ function showFinalResults() {
   showScreen("result");
 
   const finalScore = Math.round((score / TOTAL_QUESTIONS) * 100);
+  
+  // SON GAME-OVER si score < 30
+  if (finalScore < 30 && window.audioManager) {
+    window.audioManager.playSound('gameOver');
+  }
 
   if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
   if (questionsDoneSpan) questionsDoneSpan.textContent = score;
@@ -1874,8 +1941,6 @@ function updateConnectionMessage() {
   }
 }
 
-// ==================== FONCTION CALCUL RANG ====================
-
 // ==================== FONCTION CALCUL RANG AMÉLIORÉE ====================
 function getUserRankingPosition(userId, highscores) {
     if (!userId || !highscores || highscores.length === 0) {
@@ -2072,13 +2137,13 @@ function updateRankingDisplay(rankingData) {
             
             if (rankingData.position === 1) {
                 rankText = "🥇 1er";
-                rankIcon = "👑";
+                rankIcon = '<i class="fa-solid fa-trophy"></i>';
             } else if (rankingData.position === 2) {
                 rankText = "🥈 2ème";
-                rankIcon = "⭐";
+                rankIcon = '<i class="fa-solid fa-star"></i>';
             } else if (rankingData.position === 3) {
                 rankText = "🥉 3ème";
-                rankIcon = "⭐";
+                rankIcon = '<i class="fa-solid fa-star"></i>';
             }
             
             rankingElement.innerHTML = `
@@ -2229,4 +2294,3 @@ function getMotivationalMessage(score, position) {
     return found ? found.msg : "Chaque partie vous rapproche du sommet !";
 }
 
- 

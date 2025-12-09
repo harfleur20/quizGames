@@ -207,7 +207,7 @@
 .see-all-stats-btn {
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -223,8 +223,8 @@
 
 .see-all-stats-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
-  background: linear-gradient(135deg, #43a047 0%, #276829 100%);
+  box-shadow: 0 6px 15px rgba(135, 83, 183, 0.3);
+  background: linear-gradient(135deg, #8a9df1 0%, #8968a9 100%);
 }
 
 .see-all-stats-btn:active {
@@ -291,7 +291,7 @@
 .ranking-label {
     display: block;
     font-size: 12px;
-    color: #666;
+    color: #121a4b;
     margin-bottom: 8px;
     font-weight: bold;
     text-transform: uppercase;
@@ -317,15 +317,15 @@
 }
 
 .ranking-badge.rank-1 {
-    background: linear-gradient(135deg, #FFD700 0%, #FFEC8B 100%);
-    color: #333;
-    border: 2px solid #DAA520;
+    background: linear-gradient(135deg, #fff5be 0%, #d9c149 100%);
+    color: #161515;
+    border: 1px solid #f4eddc;
 }
 
 .ranking-badge.rank-2 {
     background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%);
     color: #333;
-    border: 2px solid #A9A9A9;
+    border: 1px solid #A9A9A9;
 }
 
 .ranking-badge.rank-3 {
@@ -341,9 +341,9 @@
 }
 
 .ranking-badge.rank-11-plus {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border: 2px solid #545b62;
+    border: 1px solid #f1daee;
 }
 
 .ranking-badge.rank-outside {
@@ -355,7 +355,7 @@
 .ranking-details {
     display: block;
     font-size: 14px;
-    color: #555;
+    color: #210a2a;
     margin-top: 8px;
     line-height: 1.4;
 }
@@ -374,7 +374,7 @@
 .ranking-hint {
     display: block;
     font-size: 11px;
-    color: #888;
+    color: #5f1886;
     margin-top: 5px;
     font-style: italic;
 }
@@ -389,7 +389,7 @@
 
 .ranking-progress-bar {
     height: 100%;
-    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 3px;
     transition: width 0.5s ease;
 }

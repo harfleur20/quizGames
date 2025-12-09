@@ -1,0 +1,77 @@
+/* Styles pour le bouton audio - AJOUTEZ APRÈS LES STYLES EXISTANTS */
+
+.audio-toggle-btn {
+    background: linear-gradient(135deg, #c0516c 0%, #e0c146 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(236, 239, 236, 0.3);
+    position: relative;
+    z-index: 10;
+}
+
+.audio-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(211, 211, 211, 0.4);
+}
+
+.audio-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.audio-toggle-btn.muted {
+    background: linear-gradient(135deg, #757575 0%, #424242 100%);
+    box-shadow: 0 4px 8px rgba(117, 117, 117, 0.3);
+}
+
+.audio-toggle-btn.muted:hover {
+    background: linear-gradient(135deg, #666666 0%, #333333 100%);
+    box-shadow: 0 6px 12px rgba(117, 117, 117, 0.4);
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@keyframes audioPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.audio-toggle-btn.pulse {
+    animation: audioPulse 0.5s ease;
+}
+
+.audio-toggle-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.audio-toggle-btn:hover::after {
+    opacity: 1;
+}
