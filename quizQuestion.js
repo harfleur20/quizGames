@@ -6,17 +6,17 @@ export const quizQuestions = [
     answers: [
       { text: "Munich", correct: false },
       { text: "Hambourg", correct: false },
-      { text: "Berlin", correct: true },
       { text: "Francfort", correct: false },
+      { text: "Berlin", correct: true },
     ],
   },
   {
     question: "Quel est l’élément chimique représenté par le symbole O ?",
     answers: [
       { text: "Or", correct: false },
-      { text: "Oxygène", correct: true },
-      { text: "Osmium", correct: false },
       { text: "Oxalium", correct: false },
+      { text: "Osmium", correct: false },
+      { text: "Oxygène", correct: true },
     ],
   },
   {
@@ -58,9 +58,9 @@ export const quizQuestions = [
   {
     question: "Qui a peint la Joconde ?",
     answers: [
+      { text: "Léonard de Vinci", correct: true },
       { text: "Michel-Ange", correct: false },
       { text: "Raphaël", correct: false },
-      { text: "Léonard de Vinci", correct: true },
       { text: "Donatello", correct: false },
     ],
   },
@@ -133,8 +133,8 @@ export const quizQuestions = [
     question: "En quelle année YouTube a-t-il été créé ?",
     answers: [
       { text: "2003", correct: false },
-      { text: "2005", correct: true },
       { text: "2007", correct: false },
+      { text: "2005", correct: true },
       { text: "2010", correct: false },
     ],
   },
@@ -232,9 +232,9 @@ export const quizQuestions = [
     question: "Quel est l’instrument de musique avec 6 cordes ?",
     answers: [
       { text: "Violon", correct: false },
-      { text: "Guitare", correct: true },
       { text: "Ukulélé", correct: false },
       { text: "Basse", correct: false },
+      { text: "Guitare", correct: true },
     ],
   },
   {
