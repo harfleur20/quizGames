@@ -54,6 +54,7 @@ const currentPlayerSpan = document.getElementById("current-player");
 const rulesContent = document.getElementById("rules-content");
 const toggleRulesBtn = document.getElementById("toggle-rules");
 const progressPercentSpan = document.getElementById("progress-percent");
+const showLegendaryRankingBtn = document.getElementById("show-legendary-ranking");
 
 const showMoreScoresBtn = document.getElementById("show-more-scores");
 const showMoreScoresResultBtn = document.getElementById(
@@ -76,6 +77,12 @@ let allHighscores = [];
 let isExpandedStart = false;
 let isExpandedResult = false;
 let scoreSubscription = null;
+let startTime = 0;
+let totalTime = 0;
+let legendaryScores = [];
+let showLegendaryRankingFlag = false;
+
+
 
 // Système de vies
 let lives = 2;
@@ -160,8 +167,8 @@ async function checkExistingSession() {
       !window.supabaseFunctions ||
       !window.supabaseFunctions.getSessionSupabase
     ) {
-      currentUser = null; // S'assurer que currentUser est null
-      updateUserDisplay(); // Mettre à jour l'affichage
+      currentUser = null;
+      updateUserDisplay();
       showScreen("start");
       setTimeout(() => loadScoresFromSupabase(), 1000);
       return;
@@ -175,22 +182,33 @@ async function checkExistingSession() {
         email: result.user.email,
         pseudo:
           result.user.user_metadata?.pseudo || result.user.email?.split("@")[0],
+        isLegendary: false // Initialisation
       };
+
+      // Vérifier et mettre à jour le statut légendaire
+      try {
+        const legendaryCheck = await checkIfUserIsLegendary(currentUser.id);
+        currentUser.isLegendary = legendaryCheck;
+        console.log(`👑 Statut légendaire au chargement: ${currentUser.isLegendary ? 'OUI' : 'NON'}`);
+      } catch (legendaryError) {
+        console.error("❌ Erreur vérification statut légendaire:", legendaryError);
+        currentUser.isLegendary = false;
+      }
 
       updateUserDisplay();
       showScreen("start");
       loadScoresFromSupabase();
       loadPlayerStats();
     } else {
-      currentUser = null; // IMPORTANT: Définir explicitement à null
-      updateUserDisplay(); // Mettre à jour l'affichage
+      currentUser = null;
+      updateUserDisplay();
       showScreen("start");
       loadScoresFromSupabase();
       resetPlayerStats();
     }
   } catch (error) {
     console.error("❌ Erreur vérification session:", error);
-    currentUser = null; // En cas d'erreur, forcer invité
+    currentUser = null;
     updateUserDisplay();
     showScreen("start");
     loadScoresFromSupabase();
@@ -283,12 +301,20 @@ function setupQuizEvents() {
     });
   }
 
-      // Bouton retour à l'accueil
-    const backToStartBtn = document.getElementById('back-to-start-btn');
-    if (backToStartBtn) {
-        backToStartBtn.addEventListener('click', goToStartScreen);
-    }
+  // Bouton retour à l'accueil
+  const backToStartBtn = document.getElementById('back-to-start-btn');
+  if (backToStartBtn) {
+    backToStartBtn.addEventListener('click', goToStartScreen);
+  }
 
+  // NOUVEAU : Bouton Hall of Legends
+  const showLegendaryRankingBtn = document.getElementById('show-legendary-ranking');
+  if (showLegendaryRankingBtn) {
+    showLegendaryRankingBtn.addEventListener('click', () => {
+      console.log("🏆 Accès au Hall of Legends");
+      showLegendaryRanking();
+    });
+  }
 
   if (showMoreScoresBtn) {
     showMoreScoresBtn.addEventListener("click", () => {
@@ -455,7 +481,7 @@ async function loadRecentStats() {
     
     // 4. Calculer le rang avec les nouvelles informations
     if (scoresToUse && scoresToUse.length > 0) {
-      const ranking = getUserRankingPosition(currentUser.id, scoresToUse);
+     const ranking = await getUserRankingPosition(currentUser.id, scoresToUse);
       
       // Ajouter des informations supplémentaires pour l'affichage
       if (statsResult.success && statsResult.data) {
@@ -940,7 +966,18 @@ async function handleLoginModal() {
           id: result.user.id,
           email: result.user.email,
           pseudo: result.user.user_metadata?.pseudo || email.split("@")[0],
+          isLegendary: false // Initialisation
         };
+
+        // Vérifier le statut légendaire
+        try {
+          const legendaryCheck = await checkIfUserIsLegendary(currentUser.id);
+          currentUser.isLegendary = legendaryCheck;
+          console.log(`👑 Statut légendaire après connexion: ${currentUser.isLegendary ? 'OUI' : 'NON'}`);
+        } catch (legendaryError) {
+          console.error("❌ Erreur vérification statut légendaire:", legendaryError);
+          currentUser.isLegendary = false;
+        }
 
         updateUserDisplay();
         loadScoresFromSupabase();
@@ -987,6 +1024,12 @@ async function handleRegisterModal() {
       return;
     }
 
+    if (pseudo.length > 10) {
+      showMessage("⚠️ Pseudo trop long (max 10 caractères)", "warning");
+      resolve(false);
+      return;
+    }
+
     if (password !== confirm) {
       showMessage("⚠️ Mots de passe différents", "warning");
       resolve(false);
@@ -1015,6 +1058,7 @@ async function handleRegisterModal() {
           id: result.user.id,
           email: result.user.email,
           pseudo: result.user.user_metadata?.pseudo || pseudo,
+          isLegendary: false // Nouveau compte = pas légendaire
         };
 
         updateUserDisplay();
@@ -1140,22 +1184,31 @@ function isValidEmail(email) {
 }
 
 // ==================== FONCTIONS SUPABASE ====================
+// ==================== FONCTIONS SUPABASE ====================
 async function loadScoresFromSupabase(isUpdate = false) {
   try {
     if (
       !window.supabaseFunctions ||
-      !window.supabaseFunctions.getHighScoresFromSupabase
+      !window.supabaseFunctions.getHighScoresFromSupabase ||
+      !window.supabaseFunctions.getLegendaryScores  // ← On va aussi charger les légendaires
     ) {
       displayDefaultScores();
       return;
     }
 
-    // Charger 50 scores
-    const result = await window.supabaseFunctions.getHighScoresFromSupabase(50);
+    // ⭐ CHANGEMENT CRITIQUE : Charger les DEUX classements
+    const [generalResult, legendaryResult] = await Promise.all([
+      // 1. Classement général (sans légendaires)
+      window.supabaseFunctions.getHighScoresFromSupabase(50),
+      
+      // 2. Hall of Legends (uniquement légendaires)
+      window.supabaseFunctions.getLegendaryScores(10)
+    ]);
 
-    if (result.success && result.data) {
+    // ===== 1. GESTION CLASSEMENT GÉNÉRAL =====
+    if (generalResult.success && generalResult.data) {
       const oldScores = [...allHighscores];
-      allHighscores = result.data.map((item) => ({
+      allHighscores = generalResult.data.map((item) => ({
         id: item.id,
         userId: item.user_id,
         name: item.pseudo || "Anonyme",
@@ -1164,6 +1217,7 @@ async function loadScoresFromSupabase(isUpdate = false) {
         timestamp: item.created_at
           ? new Date(item.created_at).getTime()
           : Date.now(),
+        isLegendary: item.est_legendaire || false  // ← Ajouté
       }));
 
       if (isUpdate && oldScores.length > 0) {
@@ -1173,21 +1227,125 @@ async function loadScoresFromSupabase(isUpdate = false) {
       updateHighscoresDisplay(isUpdate);
       updateHighscoresResultDisplay(isUpdate);
 
-      // Mettre à jour le rang si l'utilisateur est connecté
-      if (
-        currentUser &&
-        statsPanel &&
-        statsPanel.classList.contains("active")
-      ) {
-        const ranking = getUserRankingPosition(currentUser.id, allHighscores);
-        updateRankingDisplay(ranking);
-      }
+      // Debug
+      console.log(`📊 Classement général mis à jour : ${allHighscores.length} joueurs`);
     } else {
       displayDefaultScores();
     }
+
+    // ===== 2. GESTION HALL OF LEGENDS =====
+    if (legendaryResult.success && legendaryResult.data) {
+      legendaryScores = legendaryResult.data;
+      
+      console.log(`👑 Hall of Legends : ${legendaryScores.length} légendaires`);
+      legendaryScores.forEach((score, i) => {
+        console.log(`   ${i+1}. ${score.pseudo} - ${score.displayTime || score.temps_total}s - ${score.vies_restantes || 0} vies`);
+      });
+      
+      // Mettre à jour l'affichage du bouton Hall of Legends
+      updateLegendaryButton();
+      
+    } else {
+      legendaryScores = [];
+      console.log("⚠️ Aucun score légendaire trouvé");
+    }
+
+    // ===== 3. Mettre à jour le rang si l'utilisateur est connecté =====
+    if (
+      currentUser &&
+      statsPanel &&
+      statsPanel.classList.contains("active")
+    ) {
+      const ranking = getUserRankingPosition(currentUser.id, allHighscores);
+      updateRankingDisplay(ranking);
+    }
+    
   } catch (error) {
     console.error("❌ Erreur chargement scores:", error);
     displayDefaultScores();
+  }
+}
+
+// NOUVELLE FONCTION : Mettre à jour le bouton Hall of Legends
+function updateLegendaryButton() {
+  const showLegendaryBtn = document.getElementById('show-legendary-ranking');
+  
+  if (!showLegendaryBtn) {
+    console.log("⚠️ Bouton Hall of Legends non trouvé");
+    return;
+  }
+  
+  if (legendaryScores.length > 0) {
+    // Afficher le bouton avec le nombre de légendaires
+    showLegendaryBtn.style.display = 'block';
+    showLegendaryBtn.innerHTML = `
+      <i class="fa-solid fa-crown" style="color: #FFD700;"></i>
+      <span>Hall of Legends</span>
+      <span style="
+        background: #FFD700;
+        color: #000;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        margin-left: 8px;
+        font-weight: bold;
+      ">${legendaryScores.length}</span>
+    `;
+    
+    console.log(`✅ Bouton Hall of Legends mis à jour : ${legendaryScores.length} légendaires`);
+  } else {
+    // Cacher le bouton s'il n'y a pas de légendaires
+    showLegendaryBtn.style.display = 'none';
+    console.log("ℹ️ Bouton Hall of Legends caché (aucun légendaire)");
+  }
+}
+
+// NOUVELLE FONCTION : Vérifier et charger les scores légendaires
+async function checkAndLoadLegendaryScores() {
+  try {
+    // Vérifier si la fonction existe
+    if (!window.supabaseFunctions || !window.supabaseFunctions.getLegendaryScores) {
+      console.log("⚠️ Fonction getLegendaryScores non disponible");
+      hideLegendaryButton();
+      return;
+    }
+
+    // Charger les scores légendaires
+    const legendaryResult = await window.supabaseFunctions.getLegendaryScores(1);
+    
+    if (legendaryResult.success && legendaryResult.data) {
+      // Stocker les scores légendaires
+      legendaryScores = legendaryResult.data;
+      
+      // Afficher ou cacher le bouton Hall of Legends
+      const showLegendaryBtn = document.getElementById('show-legendary-ranking');
+      if (showLegendaryBtn) {
+        if (legendaryScores.length > 0) {
+          // Afficher le bouton
+          showLegendaryBtn.style.display = 'block';
+          showLegendaryBtn.innerHTML = `
+            <i class="fa-solid fa-crown"></i> Hall of Legends (${legendaryScores.length}+)
+          `;
+          console.log(`✅ Bouton Hall of Legends affiché (${legendaryScores.length} légendaires)`);
+        } else {
+          // Cacher le bouton
+          hideLegendaryButton();
+        }
+      }
+    } else {
+      hideLegendaryButton();
+    }
+  } catch (error) {
+    console.error("❌ Erreur chargement scores légendaires:", error);
+    hideLegendaryButton();
+  }
+}
+
+// NOUVELLE FONCTION : Cacher le bouton Hall of Legends
+function hideLegendaryButton() {
+  const showLegendaryBtn = document.getElementById('show-legendary-ranking');
+  if (showLegendaryBtn) {
+    showLegendaryBtn.style.display = 'none';
   }
 }
 
@@ -1284,6 +1442,10 @@ function startQuizGame() {
   currentQuestionIndex = 0;
   score = 0;
   gameStopped = false;
+  
+  // NOUVEAU : Initialiser le chronomètre pour le système légendaire
+  startTime = Date.now();
+  totalTime = 0;
 
   // Réinitialiser les compteurs de notifications
   if (window.gameNotifications && window.gameNotifications.resetTargetNotifications) {
@@ -1532,38 +1694,123 @@ function showFinalResults() {
 
 function showResults() {
   clearInterval(timer);
-
+  
+  // NOUVEAU : Calculer le temps total
+  totalTime = Math.floor((Date.now() - startTime) / 1000);
+  
+  // Détecter si c'est un score légendaire
+  const isPerfectScore = (score === TOTAL_QUESTIONS);
+  const isLegendaryScore = (isPerfectScore && lives > 0);
+  
+  console.log(`🏆 Score: ${score}/100, Vies: ${lives}, Temps: ${totalTime}s, Légendaire: ${isLegendaryScore}`);
+  
   showScreen("result");
-
+  
   const finalScore = 100;
-
+  
   if (finalScoreSpan) finalScoreSpan.textContent = finalScore;
   if (questionsDoneSpan) questionsDoneSpan.textContent = TOTAL_QUESTIONS;
   if (percentageSpan) percentageSpan.textContent = "100%";
-
+  
   if (resultMessage) {
-    resultMessage.textContent =
-      lives > 0
-        ? `🎉 INCROYABLE ! 100/100 ! ${lives} vie${
-            lives > 1 ? "s" : ""
-          } restante${lives > 1 ? "s" : ""} ! 🏆`
-        : "🎉 CHAMPION LÉGENDAIRE ! 100/100 ! 🏆";
+    if (isLegendaryScore) {
+      resultMessage.textContent = `🌟 LÉGENDAIRE ! 100/100 avec ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} !`;
+      resultMessage.style.color = "#FFD700";
+      resultMessage.style.fontWeight = "bold";
+      
+      // Notification spéciale légendaire
+      if (window.gameNotifications?.showInGameNotification) {
+        window.gameNotifications.showInGameNotification(
+          "🏆 ENTRÉE DANS LE HALL OF LEGENDS !",
+          "legendary",
+          4000
+        );
+      }
+    } else {
+      resultMessage.textContent = lives > 0 
+        ? `🎉 INCROYABLE ! 100/100 ! ${lives} vie${lives > 1 ? 's' : ''} restante${lives > 1 ? 's' : ''} ! 🏆`
+        : "🎉 CHAMPION ! 100/100 ! 🏆";
+      
+      // Notification normale
+      if (window.gameNotifications?.showInGameNotification) {
+        window.gameNotifications.showInGameNotification(
+          "🎉 Score parfait atteint !",
+          "success",
+          3000
+        );
+      }
+    }
   }
-
+  
+  // NOUVEAU : Si score légendaire, afficher la notification spéciale
+  if (isLegendaryScore) {
+    setTimeout(() => {
+      showLegendaryNotification(lives, totalTime);
+    }, 1500);
+  }
+  
+  // Arrêter la musique et jouer son de victoire
+  if (isAudioEnabled()) {
+    stopBackgroundMusic();
+    if (isLegendaryScore) {
+      playVictory();
+    } else {
+      playGameOver();
+    }
+  }
+  
+  // NOUVEAU : Sauvegarder avec paramètres légendaires
   if (currentUser) {
-    saveScoreToSupabase(finalScore).then((saveResult) => {
+    saveScoreToSupabase(
+      finalScore,
+      currentUser.id,
+      currentUser.pseudo,
+      currentUser.email || '',
+      isLegendaryScore, // est_legendaire
+      lives,            // vies_restantes
+      totalTime         // temps_total
+    ).then(saveResult => {
       if (saveResult.success) {
-        if (saveResult.action === "updated") {
-          showMessage("🎉 NOUVEAU RECORD ! 100/100 !", "success");
-        } else if (saveResult.action === "inserted") {
-          showMessage("✅ Score parfait enregistré !", "success");
+        if (isLegendaryScore) {
+          // ⭐ IMPORTANT : Marquer l'utilisateur comme légendaire
+          currentUser.isLegendary = true;
+          console.log("👑 Joueur marqué comme légendaire !");
+          
+          // Mettre à jour l'affichage du panel stats si ouvert
+          if (statsPanel && statsPanel.classList.contains("active")) {
+            setTimeout(() => {
+              loadRecentStats();
+            }, 1000);
+          }
+          
+          // Message déjà affiché par la notification
+          // Charger les scores légendaires
+          setTimeout(() => {
+            loadScoresFromSupabase();
+          }, 2000);
+          
+        } else if (saveResult.action === 'updated') {
+          // Message normal pour amélioration de score
+          showMessage("🎉 Score amélioré !", "success");
+        } else if (saveResult.action === 'inserted') {
+          // Message normal pour premier score
+          showMessage("✅ Score enregistré !", "success");
         }
       } else {
-        showMessage(`❌ Échec sauvegarde: ${saveResult.error}`, "error");
+        if (window.gameNotifications?.showInGameNotification) {
+          window.gameNotifications.showInGameNotification(
+            "❌ Erreur sauvegarde",
+            "error",
+            3000
+          );
+        }
       }
+    }).catch(error => {
+      console.error("❌ Erreur sauvegarde score:", error);
+      showMessage("❌ Erreur sauvegarde", "error");
     });
   }
-
+  
   updateHighscoresResultDisplay();
 }
 
@@ -1942,7 +2189,8 @@ function updateConnectionMessage() {
 }
 
 // ==================== FONCTION CALCUL RANG AMÉLIORÉE ====================
-function getUserRankingPosition(userId, highscores) {
+// ==================== FONCTION CALCUL RANG (VERSION COMPLÈTE AVEC LÉGENDAIRES) ====================
+async function getUserRankingPosition(userId, highscores) {
     if (!userId || !highscores || highscores.length === 0) {
         return {
             position: null,
@@ -1954,13 +2202,78 @@ function getUserRankingPosition(userId, highscores) {
             top5Score: 0,
             distanceToTop50: 0,
             distanceToTop10: 0,
+            distanceToTop5: 0,
             category: "outside",
             isInTop: false,
-            needsMoreData: true
+            isLegendary: false,
+            needsMoreData: true,
+            loading: false,
+            error: false
         };
     }
 
-    // S'assurer qu'on a au moins 50 scores (remplir si nécessaire)
+    // 1. VÉRIFIER SI L'UTILISATEUR EST LÉGENDAIRE
+    const userIsLegendary = await checkIfUserIsLegendary(userId);
+    
+    if (userIsLegendary) {
+        // 2. CAS LÉGENDAIRE : Récupérer le rang dans le Hall of Fame
+        try {
+            const legendaryRank = await getLegendaryUserRank(userId);
+            
+            return {
+                position: legendaryRank.rank,
+                estimatedPosition: legendaryRank.rank,
+                total: legendaryRank.total || 1,
+                score: 100,  // Forcément 100/100 pour un légendaire
+                top50Score: 0,
+                top10Score: 0,
+                top5Score: 0,
+                distanceToTop50: 0,
+                distanceToTop10: 0,
+                distanceToTop5: 0,
+                category: "legendary",  // NOUVELLE CATÉGORIE
+                isInTop: true,
+                isLegendary: true,
+                isFirst: legendaryRank.rank === 1,
+                isTopThree: legendaryRank.rank <= 3,
+                isTopTen: legendaryRank.rank <= 10,
+                nextMilestone: getLegendaryNextMilestone(legendaryRank.rank, legendaryRank.total),
+                pointsToNextMilestone: 0,
+                needsMoreData: false,
+                loading: false,
+                error: false,
+                // Informations légendaires supplémentaires
+                legendaryTime: legendaryRank.time,
+                legendaryLives: legendaryRank.lives,
+                legendaryDate: legendaryRank.date,
+                displayText: `👑 Rang ${legendaryRank.rank} dans le Hall of Fame`,
+                displayCategory: "Hall of Fame",
+                icon: "👑",
+                color: "#FFD700"
+            };
+        } catch (error) {
+            console.error("❌ Erreur récupération rang légendaire:", error);
+            // Fallback pour légendaire
+            return {
+                position: 1,
+                estimatedPosition: 1,
+                total: 1,
+                score: 100,
+                category: "legendary",
+                isInTop: true,
+                isLegendary: true,
+                needsMoreData: false,
+                loading: false,
+                error: false,
+                displayText: "👑 Membre du Hall of Fame",
+                displayCategory: "Hall of Fame",
+                icon: "👑",
+                color: "#FFD700"
+            };
+        }
+    }
+
+    // 3. CAS NON LÉGENDAIRE : Logique originale
     const scoresToCheck = [...highscores];
     const totalScores = scoresToCheck.length;
     
@@ -2066,13 +2379,84 @@ function getUserRankingPosition(userId, highscores) {
         distanceToTop5: distanceToTop5,
         category: category,
         isInTop: exactPosition !== -1,
+        isLegendary: false,  // Non légendaire
         isFirst: exactPosition === 0,
         isTopThree: exactPosition < 3,
         isTopTen: exactPosition < 10,
         nextMilestone: nextMilestone,
         pointsToNextMilestone: pointsToNextMilestone,
-        needsMoreData: sortedScores.length < 10
+        needsMoreData: sortedScores.length < 10,
+        loading: false,
+        error: false
     };
+}
+
+// ==================== FONCTIONS UTILITAIRES POUR LES LÉGENDAIRES ====================
+
+// Vérifier si un utilisateur est légendaire
+async function checkIfUserIsLegendary(userId) {
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getUserLegendaryRank) {
+            // Fallback : vérifier dans les données locales
+            return currentUser?.isLegendary || false;
+        }
+        
+        const result = await window.supabaseFunctions.getUserLegendaryRank(userId);
+        return result.success && result.isLegendary;
+        
+    } catch (error) {
+        console.error("❌ Erreur vérification statut légendaire:", error);
+        return currentUser?.isLegendary || false;
+    }
+}
+
+// Récupérer le rang légendaire d'un utilisateur
+
+
+// Déterminer le prochain objectif pour un légendaire
+
+
+// Fonction pour récupérer le rang légendaire
+async function getLegendaryUserRank(userId) {
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getUserLegendaryRank) {
+            return { rank: 1, time: 0, lives: 0, total: 1 };
+        }
+        
+        const result = await window.supabaseFunctions.getUserLegendaryRank(userId);
+        
+        if (result.success && result.isLegendary) {
+            return {
+                rank: result.rank,
+                time: result.time || 0,
+                lives: result.lives || 0,
+                total: result.total || 1,
+                date: result.date
+            };
+        }
+        
+        // Si pas trouvé mais qu'on sait qu'il est légendaire
+        return { rank: 1, time: 0, lives: 0, total: 1 };
+        
+    } catch (error) {
+        console.error("❌ Erreur getLegendaryUserRank:", error);
+        return { rank: 1, time: 0, lives: 0, total: 1 };
+    }
+}
+
+// Fonction pour les objectifs légendaires
+function getLegendaryNextMilestone(rank, total) {
+    if (rank === 1) {
+        return "Maintenir la 1ère place";
+    } else if (rank === 2) {
+        return "Devenir 1er";
+    } else if (rank === 3) {
+        return "Monter sur le podium (2ème)";
+    } else if (rank <= 10) {
+        return `Entrer dans le top ${Math.max(3, rank - 3)}`;
+    } else {
+        return `Top ${Math.floor(rank / 2)}`;
+    }
 }
 
 function updateRankingDisplay(rankingData) {
@@ -2108,6 +2492,84 @@ function updateRankingDisplay(rankingData) {
                 </div>
             `;
             return;
+        }
+
+                // ==================== NOUVEAU : CAS LÉGENDAIRE ====================
+        if (rankingData.isLegendary) {
+            // Récupérer le rang légendaire spécifique
+            getLegendaryRank(rankingData).then(legendaryRank => {
+                const isFirstPlace = legendaryRank.rank === 1;
+                const isTopThree = legendaryRank.rank <= 3;
+                
+                rankingElement.innerHTML = `
+                    <div class="ranking-info legendary">
+                        <span class="rankin-label">
+                            <i class="fa-solid fa-crown"></i> HALL OF FAME
+                        </span>
+                        <span class="ranking-badge rank-legendary">
+                            ${getLegendaryRankDisplay(legendaryRank.rank)}
+                        </span>
+                        
+                        <!-- Stats légendaires -->
+                        
+                            <div class="legendary-stat">
+                                <i class="fa-solid fa-clock"></i>
+                                <span>Meilleur temps: <strong>${formatTime(legendaryRank.time)}</strong></span>
+                            </div>
+                            <div class="legendary-stat">
+                                <i class="fa-solid fa-heart"></i>
+                                <span> <strong>${legendaryRank.lives}</strong></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Message motivationnel -->
+                        ${isFirstPlace ? 
+                            `<span class="ranking-hint legendary-hint">
+                                <i class="fa-solid fa-crown"></i> CHAMPION ABSOLU ! Maintenez votre position !
+                            </span>` :
+                            `<span class="ranking-hint legendary-hint">
+                                <i class="fa-solid fa-arrow-up"></i> 
+                                ${getLegendaryMotivation(legendaryRank.rank, legendaryRank.time, legendaryRank.total)}
+                            </span>`
+                        }
+                        
+                        <!-- Barre de progression légendaire -->
+                        <div class="ranking-progress legendary-progress">
+                            <div class="ranking-progress-bar" style="width: ${calculateLegendaryProgress(legendaryRank.rank, legendaryRank.total)}%"></div>
+                        </div>
+                    </div>
+                      
+                        
+                `;
+                
+                // Animation spéciale pour légendaires
+                setTimeout(() => {
+                    const badge = rankingElement.querySelector(".ranking-badge");
+                    if (badge) {
+                        badge.classList.add("legendary-glow");
+                        setTimeout(() => badge.classList.remove("legendary-glow"), 2000);
+                    }
+                }, 100);
+            }).catch(error => {
+                // Fallback si erreur de chargement du rang légendaire
+                rankingElement.innerHTML = `
+                    <div class="ranking-info legendary">
+                        <span class="ranking-label">
+                            <i class="fa-solid fa-crown"></i> HALL OF FAME
+                        </span>
+                        <span class="ranking-badge rank-legendary">
+                            <i class="fa-solid fa-crown"></i> Légendaire
+                        </span>
+                        <span class="ranking-details">
+                            <i class="fa-solid fa-trophy"></i> Score Parfait: <strong>100/100</strong>
+                        </span>
+                        <span class="ranking-hint legendary-hint">
+                            <i class="fa-solid fa-star"></i> Vous avez atteint la perfection !
+                        </span>
+                    </div>
+                `;
+            });
+            return; // Important : sortir de la fonction
         }
 
         // Cas : Pas assez de données
@@ -2280,6 +2742,698 @@ function updateRankingDisplay(rankingData) {
     }
 }
 
+// ==================== FONCTIONS POUR LE PANEL LÉGENDAIRE ====================
+
+// Récupérer le rang spécifique dans le Hall of Legends
+async function getLegendaryRank(rankingData) {
+    try {
+        if (!window.supabaseFunctions || !window.supabaseFunctions.getUserLegendaryRank) {
+            return {
+                rank: 1,
+                time: rankingData.totalTime || 0,
+                lives: rankingData.livesRemaining || 0,
+                total: 1,
+                nextTime: null
+            };
+        }
+        
+        const result = await window.supabaseFunctions.getUserLegendaryRank(currentUser.id);
+        
+        if (result.success && result.isLegendary) {
+            // Récupérer le temps du joueur juste devant (pour l'objectif)
+            let nextTime = null;
+            if (result.rank > 1) {
+                const legendaryScoresResult = await window.supabaseFunctions.getLegendaryScores(20);
+                if (legendaryScoresResult.success && legendaryScoresResult.data) {
+                    const playerIndex = result.rank - 1; // index 0-based
+                    if (playerIndex > 0) {
+                        nextTime = legendaryScoresResult.data[playerIndex - 1]?.temps_total;
+                    }
+                }
+            }
+            
+            return {
+                rank: result.rank,
+                time: result.time || rankingData.totalTime || 0,
+                lives: result.lives || rankingData.livesRemaining || 0,
+                total: result.total || 1,
+                nextTime: nextTime,
+                date: result.date
+            };
+        }
+        
+        return {
+            rank: 1,
+            time: rankingData.totalTime || 0,
+            lives: rankingData.livesRemaining || 0,
+            total: 1,
+            nextTime: null
+        };
+        
+    } catch (error) {
+        console.error("❌ Erreur getLegendaryRank:", error);
+        return {
+            rank: 1,
+            time: rankingData.totalTime || 0,
+            lives: rankingData.livesRemaining || 0,
+            total: 1,
+            nextTime: null
+        };
+    }
+}
+
+// Formater l'affichage du rang légendaire
+function getLegendaryRankDisplay(rank) {
+    switch(rank) {
+        case 1: return "🥇 1er";
+        case 2: return "🥈 2ème";
+        case 3: return "🥉 3ème";
+        default: return `${rank}ème`;
+    }
+}
+
+// Message motivationnel spécifique aux légendaires
+function getLegendaryMotivation(rank, time, total) {
+    const timeStr = formatTime(time);
+    
+    if (rank === 1) {
+        return `👑 Champion ! Temps: ${timeStr}`;
+    } else if (rank <= 3) {
+        return `⚡ Top ${rank} ! À ${Math.max(1, rank - 1)} place du trône`;
+    } else if (rank <= 10) {
+        return `🚀 Top 10 ! Montez au top 3`;
+    } else if (rank <= total / 2) {
+        return `🎯 Rang ${rank}/${total}. Progressez !`;
+    } else {
+        return `🌟 Rang ${rank}/${total}. Chaque seconde compte !`;
+    }
+}
+
+// Calculer la progression légendaire (pour la barre)
+function calculateLegendaryProgress(rank, total) {
+    if (rank === 1) return 100;
+    if (total <= 1) return 100;
+    
+    // Inversé : 1er = 100%, dernier = 20%
+    const percentage = 100 - ((rank - 1) / (total - 1)) * 80;
+    return Math.max(20, Math.round(percentage));
+}
+
+function formatTime(seconds) {
+    if (!seconds || seconds === 999999 || seconds === 0) return "--:--";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    
+    // Version améliorée avec formatage
+    if (mins === 0) {
+        return `${secs}s`;
+    } else if (secs === 0) {
+        return `${mins}min`;
+    } else {
+        return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+    }
+}
+
+// ==================== FONCTIONS DU SYSTÈME LÉGENDAIRE ====================
+
+// NOUVELLE FONCTION : Notification légendaire
+function showLegendaryNotification(livesRemaining, totalTime) {
+  console.log("🌟 AFFICHAGE NOTIFICATION LÉGENDAIRE");
+  
+  // Créer l'overlay
+  const overlay = document.createElement("div");
+  overlay.className = "legendary-overlay";
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease;
+  `;
+  
+  // Créer le contenu
+  const notification = document.createElement("div");
+  notification.className = "legendary-notification";
+  notification.innerHTML = `
+    <div class="legendary-content">
+      <div class="legendary-icon">🏆</div>
+      <h2 class="legendary-title">HALL OF LEGENDS</h2>
+      <p class="legendary-subtitle">Tu as rejoint le classement légendaire !</p>
+      
+      <div class="legendary-stats">
+        <div class="legendary-stat">
+          <i class="fa-solid fa-trophy"></i>
+          <span>Score Parfait: 100/100</span>
+        </div>
+        <div class="legendary-stat">
+          <i class="fa-solid fa-heart"></i>
+          <span>Vies restantes: ${livesRemaining}</span>
+        </div>
+        <div class="legendary-stat">
+          <i class="fa-solid fa-clock"></i>
+          <span>Temps: ${Math.floor(totalTime/60)}m ${totalTime%60}s</span>
+        </div>
+      </div>
+      
+      <div class="legendary-actions">
+        <button id="view-legendary-btn" class="legendary-btn">
+          <i class="fa-solid fa-crown"></i> Voir le Hall of Legends
+        </button>
+        <button id="close-legendary-btn" class="legendary-btn secondary">
+          <i class="fa-solid fa-times"></i> Continuer
+        </button>
+      </div>
+      
+      <p class="legendary-hint">Seulement les meilleurs atteignent ce niveau !</p>
+    </div>
+  `;
+  
+  // Style de la notification
+  notification.style.cssText = `
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 3px solid #FFD700;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    animation: legendary-popup 0.8s ease;
+  `;
+  
+  // Ajouter l'effet de brillance
+  const shineEffect = document.createElement("div");
+  shineEffect.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 215, 0, 0.2),
+      transparent
+    );
+    animation: legendary-shine 3s infinite;
+  `;
+  
+  notification.appendChild(shineEffect);
+  overlay.appendChild(notification);
+  document.body.appendChild(overlay);
+  
+  // Ajouter les écouteurs d'événements
+  setTimeout(() => {
+    const viewBtn = document.getElementById("view-legendary-btn");
+    const closeBtn = document.getElementById("close-legendary-btn");
+    
+    if (viewBtn) {
+      viewBtn.addEventListener('click', () => {
+        overlay.remove();
+        showLegendaryRanking();
+      });
+    }
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        overlay.remove();
+        showMessage("✨ Bienvenue parmi les légendes !", "success");
+      });
+    }
+  }, 100);
+  
+  // Fermer en cliquant en dehors
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+}
+
+// NOUVELLE FONCTION : Afficher le classement légendaire (version améliorée)
+function showLegendaryRanking() {
+  console.log("🏆 Affichage du Hall of Legends");
+  
+  // Créer le modal
+  const modal = document.createElement("div");
+  modal.className = "legendary-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  // Contenu du modal
+  const content = document.createElement("div");
+  content.style.cssText = `
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 3px solid #FFD700;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+    position: relative;
+  `;
+  
+  // Header
+  const header = document.createElement("div");
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #FFD700;
+    padding-bottom: 15px;
+  `;
+  
+  header.innerHTML = `
+    <div>
+      <h2 style="color: #FFD700; margin: 0; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-crown"></i> HALL OF LEGENDS
+      </h2>
+      <p style="color: #ccc; margin: 5px 0 0 0; font-size: 0.9rem;">
+        Classement exclusif des joueurs ayant atteint la perfection
+      </p>
+    </div>
+    <button id="close-legendary-modal" style="
+      background: #333;
+      color: #FFD700;
+      border: 2px solid #FFD700;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <i class="fa-solid fa-times"></i>
+    </button>
+  `;
+  
+  // Stats
+  const stats = document.createElement("div");
+  stats.style.cssText = `
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+  `;
+  
+  const totalLegendary = legendaryScores.length;
+  const avgTime = legendaryScores.length > 0 
+    ? Math.round(legendaryScores.reduce((sum, score) => sum + (score.temps_total || 0), 0) / legendaryScores.length)
+    : 0;
+  const avgLives = legendaryScores.length > 0
+    ? (legendaryScores.reduce((sum, score) => sum + (score.vies_restantes || 0), 0) / legendaryScores.length).toFixed(1)
+    : 0;
+  
+  stats.innerHTML = `
+    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
+      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${totalLegendary}</div>
+      <div style="color: #ccc; font-size: 0.9rem;">Légendes</div>
+    </div>
+    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
+      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${formatTime(avgTime)}</div>
+      <div style="color: #ccc; font-size: 0.9rem;">Temps moyen</div>
+    </div>
+    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
+      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${avgLives}</div>
+      <div style="color: #ccc; font-size: 0.9rem;">Vies moyennes</div>
+    </div>
+  `;
+  
+  // Liste des légendaires
+  const listContainer = document.createElement("div");
+  listContainer.id = "legendary-scores-container";
+  listContainer.style.cssText = `
+    margin: 20px 0;
+  `;
+  
+  if (legendaryScores.length === 0) {
+    listContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px; color: #888;">
+        <i class="fa-solid fa-crown" style="font-size: 60px; color: #FFD700; opacity: 0.3; margin-bottom: 20px;"></i>
+        <h3 style="color: #FFD700; margin-bottom: 10px;">Le trône est vide</h3>
+        <p>Soyez le premier à rejoindre le Hall of Legends !</p>
+        <div style="margin-top: 25px; padding: 15px; background: rgba(255, 215, 0, 0.05); border-radius: 10px;">
+          <p style="color: #FFD700; margin-bottom: 10px;">
+            <i class="fa-solid fa-trophy"></i> Conditions d'entrée :
+          </p>
+          <ul style="text-align: left; color: #ccc; padding-left: 20px; margin: 0;">
+            <li>Atteindre 100/100</li>
+            <li>Conserver au moins 1 vie</li>
+            <li>Votre temps sera enregistré pour le classement</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  } else {
+    listContainer.innerHTML = `
+      <h4 style="color: #FFD700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-ranking-star"></i> Classement par temps
+      </h4>
+      <div id="legendary-scores-list">
+        ${legendaryScores.map((score, index) => `
+          <div style="
+            background: ${index % 2 === 0 ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 215, 0, 0.03)'};
+            border: 2px solid ${getRankBorderColor(index + 1)};
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+          ">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="
+                width: 50px;
+                height: 50px;
+                background: ${getRankBackgroundColor(index + 1)};
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: ${getRankTextColor(index + 1)};
+              ">
+                ${getLegendaryRankIcon(index + 1)}
+              </div>
+              <div>
+                <div style="font-weight: bold; font-size: 1.2rem; color: #FFD700;">
+                  ${score.pseudo || "Anonyme"}
+                  ${currentUser && score.user_id === currentUser.id 
+                    ? '<span style="color: #4CAF50; margin-left: 8px;">(VOUS)</span>' 
+                    : ''}
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 0.9rem;">
+                  <span style="color: #ccc;">
+                    <i class="fa-solid fa-clock"></i> ${score.displayTime || formatTime(score.temps_total || 0)}
+                  </span>
+                  <span style="color: #ff6b6b;">
+                    <i class="fa-solid fa-heart"></i> ${score.vies_restantes || 0} vies
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 1.8rem; font-weight: bold; color: #FFD700;">
+                100/100
+              </div>
+              <div style="color: #888; font-size: 0.8rem; margin-top: 5px;">
+                ${formatDate(score.created_at)}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  // Footer
+  const footer = document.createElement("div");
+  footer.style.cssText = `
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+    text-align: center;
+  `;
+  
+  footer.innerHTML = `
+    <p style="color: #888; font-size: 0.9rem; margin-bottom: 15px;">
+      <i class="fa-solid fa-info-circle"></i>
+      Seulement ${totalLegendary} joueur(s) sur des milliers ont atteint ce niveau
+    </p>
+    <button id="start-legendary-challenge" style="
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    ">
+      <i class="fa-solid fa-bolt"></i> Relever le défi légendaire
+    </button>
+  `;
+  
+  // Assembler le modal
+  content.appendChild(header);
+  content.appendChild(stats);
+  content.appendChild(listContainer);
+  content.appendChild(footer);
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Écouteurs d'événements
+  setTimeout(() => {
+    const closeBtn = document.getElementById('close-legendary-modal');
+    const challengeBtn = document.getElementById('start-legendary-challenge');
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => modal.remove());
+    }
+    
+    if (challengeBtn) {
+      challengeBtn.addEventListener('click', () => {
+        modal.remove();
+        if (currentUser) {
+          startQuiz();
+        } else {
+          showAuthModal();
+          showMessage("🔒 Connectez-vous pour relever le défi légendaire !", "warning");
+        }
+      });
+    }
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }, 100);
+}
+
+// Fonctions utilitaires pour les couleurs
+function getRankBorderColor(rank) {
+  switch(rank) {
+    case 1: return '#FFD700'; // Or
+    case 2: return '#C0C0C0'; // Argent
+    case 3: return '#CD7F32'; // Bronze
+    default: return 'rgba(255, 215, 0, 0.3)';
+  }
+}
+
+function getRankBackgroundColor(rank) {
+  switch(rank) {
+    case 1: return 'rgba(255, 215, 0, 0.2)';
+    case 2: return 'rgba(192, 192, 192, 0.2)';
+    case 3: return 'rgba(205, 127, 50, 0.2)';
+    default: return 'rgba(255, 255, 255, 0.05)';
+  }
+}
+
+function getRankTextColor(rank) {
+  switch(rank) {
+    case 1: return '#FFD700';
+    case 2: return '#C0C0C0';
+    case 3: return '#CD7F32';
+    default: return '#FFFFFF';
+  }
+}
+
+function getLegendaryRankIcon(rank) {
+  switch(rank) {
+    case 1: return "👑";
+    case 2: return "⚔️";
+    case 3: return "🛡️";
+    default: return `${rank}`;
+  }
+}
+
+
+// NOUVELLE FONCTION : Charger les scores légendaires
+async function loadLegendaryScores() {
+  console.log("📥 Chargement des scores légendaires...");
+  
+  try {
+    if (!window.supabaseFunctions || !window.supabaseFunctions.getLegendaryScores) {
+      console.log("⚠️ Fonction légendaire non disponible");
+      return;
+    }
+    
+    const result = await window.supabaseFunctions.getLegendaryScores(10);
+    
+    if (result.success && result.data) {
+      legendaryScores = result.data;
+      console.log(`✅ ${legendaryScores.length} scores légendaires chargés`);
+      
+      // Si le bouton Hall of Legends n'existe pas encore, le créer
+      const showLegendaryBtn = document.getElementById('show-legendary-ranking');
+      if (showLegendaryBtn && legendaryScores.length > 0) {
+        showLegendaryBtn.style.display = 'block';
+        showLegendaryBtn.innerHTML = `
+          <i class="fa-solid fa-crown"></i> Hall of Legends (${legendaryScores.length}+)
+        `;
+      }
+    } else {
+      console.log("⚠️ Aucun score légendaire trouvé");
+      legendaryScores = [];
+    }
+    
+  } catch (error) {
+    console.error("❌ Erreur chargement scores légendaires:", error);
+    legendaryScores = [];
+  }
+}
+
+// NOUVELLE FONCTION : Afficher le classement légendaire (version simplifiée)
+
+function getLegendaryRankColor(rank) {
+  switch(rank) {
+    case 1: return '#FFD700'; // Or
+    case 2: return '#C0C0C0'; // Argent
+    case 3: return '#CD7F32'; // Bronze
+    default: return '#FFFFFF';
+  }
+}
+
+
+// Ajouter les animations CSS (dans la tête ou dans le style existant)
+function addLegendaryStyles() {
+  // Ces styles seront ajoutés dynamiquement si besoin
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes legendary-popup {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes legendary-shine {
+      0% { left: -100%; }
+      50% { left: 100%; }
+      100% { left: 100%; }
+    }
+    
+    .legendary-btn {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .legendary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .legendary-btn.secondary {
+      background: #333;
+      color: #FFD700;
+      border: 2px solid #FFD700;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Initialiser les styles légendaires au chargement
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addLegendaryStyles);
+} else {
+  addLegendaryStyles();
+}
+
+// ==================== FONCTION AUDIO UTILITAIRE ====================
+function isAudioEnabled() {
+  return window.audioManager ? window.audioManager.isEnabled() : false;
+}
+
+function playVictory() {
+  if (window.audioManager) {
+    window.audioManager.playSound('victory');
+  }
+}
+
+function playGameOver() {
+  if (window.audioManager) {
+    window.audioManager.playSound('gameOver');
+  }
+}
+
+function stopBackgroundMusic() {
+  if (window.audioManager) {
+    window.audioManager.stopBackgroundMusic();
+  }
+}
+
+// ==================== FONCTION POUR SAUVEGARDER AVEC PARAMÈTRES LÉGENDAIRES ====================
+// Modifier la fonction existante saveScoreToSupabase
+const originalSaveScoreToSupabase = saveScoreToSupabase;
+saveScoreToSupabase = async function(score, userId, pseudo, email, estLegendaire, viesRestantes, tempsTotal) {
+  try {
+    // Modifier pour inclure les paramètres légendaires si fournis
+    if (estLegendaire !== undefined) {
+      // Note: Ta fonction saveScoreToSupabase actuelle ne prend pas ces paramètres
+      // On va donc sauvegarder normalement pour l'instant
+      console.log(`🏆 Score légendaire détecté: ${score}/100, Vies: ${viesRestantes}, Temps: ${tempsTotal}s`);
+    }
+    
+    // Appeler la fonction originale
+    return await originalSaveScoreToSupabase.call(this, score);
+  } catch (error) {
+    console.error("❌ Erreur sauvegarde légendaire:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+console.log("🎮 Script prêt avec système légendaire !");
+
 // Fonction pour les messages motivationnels
 function getMotivationalMessage(score, position) {
     const messages = [
@@ -2293,4 +3447,71 @@ function getMotivationalMessage(score, position) {
     const found = messages.find(m => score >= m.min && score <= m.max);
     return found ? found.msg : "Chaque partie vous rapproche du sommet !";
 }
+
+// ==================== FONCTIONS POUR LES COURONNES ====================
+// Vérifie et ajoute les couronnes après chargement des scores
+function updateLegendaryDisplay() {
+    console.log("🌟 Mise à jour de l'affichage légendaire...");
+    
+    // 1. Ajouter les couronnes aux highscores
+    setTimeout(() => {
+        addCrownsToHighscores();
+    }, 500);
+    
+    // 2. Mettre à jour le bouton Hall of Legends
+    const legendaryBtn = document.getElementById('show-legendary-ranking');
+    if (legendaryBtn && legendaryScores.length > 0) {
+        legendaryBtn.innerHTML = `
+            <i class="fa-solid fa-crown"></i> 
+            <span>Hall of Legends</span>
+            <span style="
+                background: #FFD700;
+                color: #000;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 12px;
+                margin-left: 8px;
+                font-weight: bold;
+            ">${legendaryScores.length}</span>
+        `;
+        
+        legendaryBtn.classList.add('legendary-access-btn');
+    }
+    
+    // 3. Mettre à jour le nom de l'utilisateur courant s'il est légendaire
+    if (currentUser) {
+        updateCurrentUserCrown();
+    }
+}
+
+// Ajoute une couronne à l'utilisateur courant s'il est légendaire
+function updateCurrentUserCrown() {
+    const userElements = [
+        document.getElementById('current-user-pseudo'),
+        document.getElementById('current-player'),
+        document.getElementById('player-result-name')
+    ];
+    
+    userElements.forEach(element => {
+        if (element && currentUser.isLegendary) {
+            // Vérifier si la couronne n'est pas déjà présente
+            if (!element.innerHTML.includes('fa-crown') && !element.innerHTML.includes('👑')) {
+                element.innerHTML = `<i class="fa-solid fa-crown"; margin-right: 5px;"></i> ${currentUser.pseudo}`;
+                element.style.fontWeight = '600';
+            }
+        }
+    });
+}
+
+// Appeler cette fonction après chaque chargement de scores
+// MODIFIEZ la fonction loadScoresFromSupabase :
+const originalLoadScores = loadScoresFromSupabase;
+loadScoresFromSupabase = async function(isUpdate = false) {
+    await originalLoadScores.call(this, isUpdate);
+    
+    // Après chargement des scores, mettre à jour l'affichage légendaire
+    setTimeout(() => {
+        updateLegendaryDisplay();
+    }, 300);
+};
 

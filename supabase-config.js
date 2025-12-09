@@ -1,48 +1,30 @@
-// supabase-config.js - VERSION AVEC updated_at CORRIGÉ
+// supabase-config.js - VERSION COMPLÈTE AVEC SYSTÈME DE DEUX CLASSEMENTS
 const SUPABASE_URL = "https://darzscuvrvvguljtuwhg.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcnpzY3V2cnZ2Z3VsanR1d2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MzYwNDAsImV4cCI6MjA4MDUxMjA0MH0.drgwBrdS3yXsoXnL8qWFB7BYm9opdAwcN8n5CoUcYIY";
-
-// Logs de démarrage supprimés pour propreté
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcnpzY3V2cnZ2Z3VsanR1d2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MzYwNDAsImV4cCI6MjA4MDUxMjA0MH0.drgwBrdS3yXsoXnL8qWFB7BYm9opdAwcN8n5CoUcYIY";
 
 if (typeof window.supabase === "undefined") {
   console.error("❌ Supabase.js non chargé !");
   window.supabaseFunctions = null;
 } else {
-  // Créer le client
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ============ INSCRIPTION SIMPLE ============
+  // ============ INSCRIPTION ============
   async function signUpSupabase(email, password, pseudo) {
     try {
-      // 1. Créer l'utilisateur dans AUTH
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
-        options: {
-          data: {
-            pseudo: pseudo,
-            created_at: new Date().toISOString(),
-          },
-        },
+        options: { data: { pseudo: pseudo, created_at: new Date().toISOString() } },
       });
 
       if (authError) {
-        console.error("❌ ERREUR AUTH:", authError.message);
         return {
           success: false,
-          error: authError.message.includes("already")
-            ? "Cet email est déjà utilisé"
-            : authError.message,
+          error: authError.message.includes("already") ? "Cet email est déjà utilisé" : authError.message,
         };
       }
 
-      // 2. AJOUTER À LA TABLE JOUEURS
-
+      // Ajouter à la table joueurs
       const joueurData = {
         user_id: authData.user.id,
         pseudo: pseudo,
@@ -50,41 +32,20 @@ if (typeof window.supabase === "undefined") {
         created_at: new Date().toISOString(),
       };
 
-      const { data: joueurResult, error: joueurError } = await supabase
-        .from("joueurs")
-        .insert([joueurData])
-        .select();
+      await supabase.from("joueurs").insert([joueurData]);
 
-      if (joueurError) {
-        console.error("❌ ERREUR TABLE JOUEURS:", joueurError);
-        console.warn("⚠️ Joueur non ajouté à la table, mais compte auth OK");
-      } else {
-      }
-
-      // 3. Connecter automatiquement
-
-      const { data: loginData, error: loginError } =
-        await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
+      // Connecter automatiquement
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
       if (loginError) {
-        console.error("❌ ERREUR CONNEXION:", loginError.message);
-        return {
-          success: true,
-          user: authData.user,
-          message: "Inscription réussie ! Veuillez vous connecter.",
-        };
+        return { success: true, user: authData.user, message: "Inscription réussie ! Veuillez vous connecter." };
       }
 
-      return {
-        success: true,
-        user: loginData.user,
-        session: loginData.session,
-      };
+      return { success: true, user: loginData.user, session: loginData.session };
     } catch (error) {
-      console.error("💥 ERREUR FATALE inscription:", error);
       return { success: false, error: error.message };
     }
   }
@@ -92,11 +53,7 @@ if (typeof window.supabase === "undefined") {
   // ============ CONNEXION ============
   async function signInSupabase(email, password) {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       return { success: true, user: data.user, session: data.session };
     } catch (error) {
@@ -118,222 +75,311 @@ if (typeof window.supabase === "undefined") {
   async function getSessionSupabase() {
     try {
       const { data } = await supabase.auth.getSession();
-      return {
-        success: true,
-        session: data.session,
-        user: data.session?.user,
-      };
+      return { success: true, session: data.session, user: data.session?.user };
     } catch (error) {
       return { success: false, error: error.message };
     }
   }
 
-  // ============ SAUVEGARDER SCORE AVEC HISTORIQUE ============
- 
-  async function saveScoreWithHistory(
-  score,
-  userId,
-  userPseudo,
-  userEmail = ""
-) {
+  // ============ SAUVEGARDE SCORE AVEC SYSTÈME LÉGENDAIRE ============
+ // ============ SAUVEGARDE SCORE - LÉGENDAIRES IMMORTELS ============
+async function saveScoreWithHistory(score, userId, userPseudo, userEmail = "", estLegendaire = false, viesRestantes = 0, tempsTotal = 0) {
   try {
-    // 1. UPSERT dans la table 'scores' (meilleur score seulement)
+    const estAutoLegendaire = (score === 100 && viesRestantes > 0);
+    const estParfait = (score === 100);
 
-    // D'abord, récupérer l'ancien score
+    // 1. Récupérer ancien score avec TOUTES les données
     const { data: oldScoreData, error: fetchError } = await supabase
       .from("scores")
-      .select("score, created_at, updated_at")
+      .select("score, created_at, updated_at, est_legendaire, vies_restantes, temps_total")
       .eq("user_id", userId)
       .maybeSingle();
 
+    if (fetchError) console.error("❌ Erreur récupération ancien score:", fetchError);
+
     const oldScore = oldScoreData?.score || 0;
+    const oldIsLegendary = oldScoreData?.est_legendaire || false;
+    const oldLives = oldScoreData?.vies_restantes || 0;
+    const oldTime = oldScoreData?.temps_total || 999999;
+    
     const isNewRecord = score > oldScore;
     const now = new Date().toISOString();
 
-    // Données pour l'upsert - CORRECTION IMPORTANTE ICI
+    // 2. LOGIQUE CRITIQUE : Un légendaire reste toujours légendaire
+    let finalEstLegendaire = oldIsLegendary || estLegendaire || estAutoLegendaire;
+    
+    // Logique de MEILLEURE performance
+    let bestScore = oldScore;
+    let bestLives = oldLives;
+    let bestTime = oldTime;
+    let scoreImproved = false;
+    let timeImproved = false;
+    let livesImproved = false;
+
+    if (oldIsLegendary) {
+      // DÉJÀ LÉGENDAIRE → Conserve toujours son statut
+      console.log("👑 JOUEUR DÉJÀ LÉGENDAIRE - Statut préservé");
+      
+      // Ne peut qu'améliorer son temps, pas son score (déjà 100)
+      if (score === 100 && viesRestantes > 0) {
+        // Seulement si nouveau temps MEILLEUR
+        if (tempsTotal < oldTime) {
+          bestTime = tempsTotal;
+          timeImproved = true;
+          console.log(`🏆 Amélioration temps: ${oldTime}s → ${bestTime}s (-${oldTime - bestTime}s)`);
+        }
+        
+        // Seulement si plus de vies
+        if (viesRestantes > oldLives) {
+          bestLives = viesRestantes;
+          livesImproved = true;
+          console.log(`💖 Amélioration vies: ${oldLives} → ${bestLives} vies`);
+        }
+      }
+      // Score < 100 → IGNORÉ, garde son 100/100 légendaire
+      
+    } else if (estAutoLegendaire) {
+      // NOUVEAU LÉGENDAIRE
+      console.log(`🎉 NOUVEAU LÉGENDAIRE ! ${tempsTotal}s avec ${viesRestantes} vies`);
+      bestScore = 100;
+      bestLives = viesRestantes;
+      bestTime = tempsTotal;
+      scoreImproved = true;
+      finalEstLegendaire = true;
+    } else {
+      // JOUEUR NORMAL → logique normale
+      bestScore = isNewRecord ? score : oldScore;
+      bestLives = viesRestantes;
+      bestTime = tempsTotal;
+      scoreImproved = isNewRecord;
+    }
+
+    // 3. Préparer données pour table scores
     const scoreData = {
       user_id: userId,
-      score: isNewRecord ? score : oldScore,
+      score: bestScore,              // Toujours le meilleur score
       pseudo: userPseudo,
       name: userPseudo,
       email: userEmail || "",
-      updated_at: now, // Toujours mettre à jour pour la dernière modification
+      updated_at: now,
+      // COLONNES LÉGENDAIRES
+      est_legendaire: finalEstLegendaire,
+      vies_restantes: bestLives,      // Meilleures vies
+      temps_total: bestTime,          // Meilleur temps
+      est_parfait: (bestScore === 100)
     };
 
-    // GESTION CRITIQUE DE LA DATE DE CRÉATION
+    // Gestion des dates
     if (!oldScoreData) {
-      // Première fois : créer avec la date actuelle
       scoreData.created_at = now;
-    } else if (isNewRecord) {
-      // Nouveau record : créer une NOUVELLE date de création
-      scoreData.created_at = now; // ← Date du nouveau record
+    } else if (scoreImproved) {
+      scoreData.created_at = now; // Nouveau record = nouvelle date
     } else {
-      // Pas de nouveau record : conserver l'ancienne date de création
-      scoreData.created_at = oldScoreData.created_at; // ← Conserver l'original
+      scoreData.created_at = oldScoreData.created_at;
     }
 
-    const { data: bestScoreData, error: bestScoreError } = await supabase
+    // 4. UPSERT dans scores
+    const { data: upsertResult, error: upsertError } = await supabase
       .from("scores")
-      .upsert(scoreData, {
-        onConflict: "user_id",
-        ignoreDuplicates: false,
-      })
-      .select()
-      .single();
+      .upsert(scoreData, { onConflict: 'user_id' })
+      .select();
 
-    if (bestScoreError) {
-      console.error("❌ Erreur upsert scores:", bestScoreError);
-      throw bestScoreError;
-    }
-
-    // 2. INSERT dans la table 'game_history' (toutes les parties)
-    const { data: historyData, error: historyError } = await supabase
-      .from("game_history")
-      .insert({
+    if (upsertError) {
+      console.error("❌ Erreur upsert scores:", upsertError);
+      // FALLBACK simplifié
+      const scoreDataFallback = {
         user_id: userId,
+        score: bestScore,
         pseudo: userPseudo,
-        score: score,
-        played_at: now,
-      })
-      .select()
-      .single();
-
-    if (historyError) {
-      console.error("❌ Erreur insertion historique:", historyError);
-      // On continue quand même
+        name: userPseudo,
+        email: userEmail || "",
+        updated_at: now,
+        created_at: !oldScoreData ? now : oldScoreData.created_at
+      };
+      
+      const { data: fallbackResult, error: fallbackError } = await supabase
+        .from("scores")
+        .upsert(scoreDataFallback, { onConflict: 'user_id' })
+        .select();
+        
+      if (fallbackError) throw new Error(`Erreur fallback: ${fallbackError.message}`);
+    } else {
+      console.log(`✅ Score traité: ${bestScore}/100 ${finalEstLegendaire ? '👑 LÉGENDAIRE' : ''}`);
+      if (finalEstLegendaire) {
+        console.log(`   📊 Stats: ${bestTime}s, ${bestLives} vies`);
+      }
     }
 
-    // 3. Analyse détaillée
-    let messageType = "";
+    // 5. Historique (TOUJOURS enregistrer la partie actuelle)
+    const historyEntry = {
+      user_id: userId,
+      score: score,
+      played_at: now
+    };
+
+    // Ajouter colonnes légendaires
+    const historyColumns = await checkHistoryColumns();
+    if (historyColumns.hasLegendary) historyEntry.is_legendary = estAutoLegendaire || estLegendaire;
+    if (historyColumns.hasLives) historyEntry.lives_remaining = viesRestantes;
+    if (historyColumns.hasTime) historyEntry.total_time = tempsTotal;
+    if (historyColumns.hasPerfect) historyEntry.is_perfect = estParfait;
+
+    await supabase.from("game_history").insert([historyEntry]);
+
+    // 6. Type de message
+    let messageType = "normal";
     let details = {};
 
     if (!oldScoreData) {
-      // Première partie
       messageType = "first_time";
-      details = { isPerfect: score === 100 };
-    } else if (isNewRecord) {
-      // Nouveau record
-      const improvement = score - oldScore;
-      const percentage =
-        oldScore > 0 ? Math.round((improvement / oldScore) * 100) : 100;
-
-      let improvementLevel = "small";
-      if (improvement >= 30) improvementLevel = "huge";
-      else if (improvement >= 20) improvementLevel = "major";
-      else if (improvement >= 10) improvementLevel = "good";
-      else if (improvement >= 5) improvementLevel = "small";
-
+      details = { isPerfect: estParfait };
+    } else if (scoreImproved) {
+      const improvement = bestScore - oldScore;
+      const percentage = oldScore > 0 ? Math.round((improvement / oldScore) * 100) : 100;
+      let level = "small";
+      if (improvement >= 20) level = "huge";
+      else if (improvement >= 15) level = "major";
+      else if (improvement >= 10) level = "good";
+      
       messageType = "record_beaten";
-      details = {
-        improvement: improvement,
-        percentage: percentage,
-        level: improvementLevel,
-        wasPerfect: oldScore === 100,
-        isPerfect: score === 100,
-      };
+      details = { improvement, percentage, level, isPerfect: estParfait };
     } else if (score === oldScore) {
-      // Score égal
       messageType = "equal_score";
     } else {
-      // Score inférieur
       messageType = "lower_score";
-      details = {
-        difference: oldScore - score,
-        needed: Math.max(1, oldScore - score + 1),
-      };
+      const difference = oldScore - score;
+      details = { difference, needed: difference + 1 };
     }
 
+    // 7. Retour complet
     return {
       success: true,
-      data: {
-        bestScore: bestScoreData,
-        historyEntry: historyData,
-      },
-      action: isNewRecord ? "updated" : "skipped",
-      messageType: messageType,
-      details: details,
+      action: scoreImproved ? "updated" : "skipped",
+      messageType,
+      details,
       previousScore: oldScore,
-      newScore: score,
-      hasImproved: isNewRecord,
+      newScore: bestScore,
+      hasImproved: scoreImproved,
       isFirstTime: !oldScoreData,
       timestamp: now,
-      // Ajouter la date du record pour l'affichage
       recordDate: scoreData.created_at,
+      isLegendary: finalEstLegendaire,
+      isPerfect: (bestScore === 100),
+      livesRemaining: bestLives,
+      totalTime: bestTime,
+      improvedTime: timeImproved,
+      improvedLives: livesImproved,
+      improvedScore: scoreImproved,
+      oldTime: oldTime,
+      newTime: bestTime,
+      oldLives: oldLives,
+      newLives: bestLives,
+      oldIsLegendary: oldIsLegendary,
+      newIsLegendary: finalEstLegendaire,
+      statusChanged: (oldIsLegendary !== finalEstLegendaire)
     };
+
   } catch (error) {
-    console.error("💥 Erreur sauvegarde avec historique:", error);
-
-    // Fallback simple
-    try {
-      const { data, error: simpleError } = await supabase
-        .from("scores")
-        .upsert({
-          user_id: userId,
-          score: score,
-          pseudo: userPseudo,
-          name: userPseudo,
-          email: userEmail || "",
-          created_at: new Date().toISOString(),
-        })
-        .select();
-
-      if (!simpleError) {
-        return {
-          success: true,
-          data: data,
-          action: "inserted_fallback",
-          messageType: "first_time",
-          previousScore: 0,
-          newScore: score,
-          isFirstTime: true,
-        };
-      }
-    } catch (fallbackError) {
-      console.error("💥 Fallback échoué:", fallbackError);
-    }
-
-    return {
-      success: false,
-      error: error.message,
-      action: "error",
-    };
+    console.error("💥 Erreur sauvegarde:", error);
+    return { success: false, error: error.message, action: "failed" };
   }
 }
 
-  // ============ RÉCUPÉRER LES SCORES ============
-  async function getHighScoresFromSupabase(limit = 10) {
+  // ============ VÉRIFIER COLONNES DISPONIBLES ============
+  async function checkHistoryColumns() {
     try {
+      // Tester avec une requête simple
       const { data, error } = await supabase
-        .from("scores")
-        .select("*")
-        .order("score", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return { success: true, data: data || [] };
-    } catch (error) {
-      return { success: false, data: [], error: error.message };
+        .from("game_history")
+        .select("id")
+        .limit(1);
+        
+      // Si erreur spécifique sur les colonnes, on sait lesquelles manquent
+      return {
+        hasLegendary: true, // À ajuster selon vos tests
+        hasLives: true,
+        hasTime: true,
+        hasPerfect: true
+      };
+    } catch {
+      return { hasLegendary: false, hasLives: false, hasTime: false, hasPerfect: false };
     }
   }
+
+  // ============ SCORES LÉGENDAIRES ============
+ // ============ SCORES LÉGENDAIRES (SEULEMENT LES LÉGENDAIRES) ============
+async function getLegendaryScores(limit = 10) {
+  try {
+    const { data, error } = await supabase
+      .from("scores")
+      .select("*")
+      .eq("est_legendaire", true)    // ← UNIQUEMENT les légendaires
+      .eq("est_parfait", true)       // ← Doit être 100/100
+      .order("temps_total", { ascending: true })   // ← Tri par temps (plus rapide d'abord)
+      .order("vies_restantes", { ascending: false }) // ← Puis par vies restantes
+      .order("created_at", { ascending: true })     // ← En cas d'égalité
+      .limit(limit);
+
+    if (error) throw error;
+    
+    // Formater le temps pour l'affichage
+    const formattedData = data?.map(item => ({
+      ...item,
+      displayTime: formatLegendaryTime(item.temps_total)
+    })) || [];
+    
+    console.log(`👑 Hall of Legends : ${formattedData.length} légendaires`);
+    formattedData?.forEach((item, i) => {
+      console.log(`   ${i+1}. ${item.pseudo} - ${item.temps_total}s - ${item.vies_restantes} vies`);
+    });
+    
+    return { success: true, data: formattedData };
+  } catch (error) {
+    return { success: false, error: error.message, data: [] };
+  }
+}
+
+// Fonction utilitaire pour formater le temps
+function formatLegendaryTime(seconds) {
+  if (!seconds) return "N/A";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
+
+  // ============ SCORES NORMAUX ============
+ // ============ SCORES NORMAUX (EXCLUANT LES LÉGENDAIRES) ============
+async function getHighScoresFromSupabase(limit = 10) {
+  try {
+    const { data, error } = await supabase
+      .from("scores")
+      .select("*")
+      .eq("est_legendaire", false)  // ← CRITIQUE : exclure les légendaires
+      .order("score", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    
+    // Debug : vérifier ce qu'on récupère
+    console.log(`📊 Classement général : ${data?.length || 0} joueurs (légendaires exclus)`);
+    data?.forEach((item, i) => {
+      console.log(`   ${i+1}. ${item.pseudo} - ${item.score}/100 (légendaire: ${item.est_legendaire})`);
+    });
+    
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error("❌ Erreur getHighScoresFromSupabase:", error);
+    return { success: false, data: [], error: error.message };
+  }
+}
 
   // ============ TEMPS RÉEL ============
   async function subscribeToScores(callback) {
     try {
       const subscription = supabase
         .channel("scores-changes")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "scores",
-          },
-          (payload) => {
-            callback(payload);
-          }
-        )
-        .subscribe((status) => {});
-
+        .on("postgres_changes", { event: "*", schema: "public", table: "scores" }, callback)
+        .subscribe();
       return subscription;
     } catch (error) {
       console.error("❌ Erreur subscription:", error);
@@ -343,184 +389,59 @@ if (typeof window.supabase === "undefined") {
 
   function unsubscribeFromScores(subscription) {
     try {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
+      if (subscription) supabase.removeChannel(subscription);
     } catch (error) {
       console.error("❌ Erreur désabonnement:", error);
     }
   }
 
-  // ============ STATISTIQUES AVEC HISTORIQUE ============
+  // ============ STATISTIQUES ============
   async function getPlayerStatsWithHistory(userId) {
     try {
-      // 1. Récupérer le meilleur score - IMPORTANT: créé le bon commentaire
       const { data: bestScoreData, error: bestScoreError } = await supabase
         .from("scores")
-        .select("score, updated_at, created_at")
+        .select("score, created_at, est_legendaire, vies_restantes")
         .eq("user_id", userId)
         .maybeSingle();
 
-      // 2. Récupérer l'historique complet
+      // Historique (sans colonnes légendaires pour éviter les erreurs)
       const { data: historyData, error: historyError } = await supabase
         .from("game_history")
         .select("score, played_at")
         .eq("user_id", userId)
         .order("played_at", { ascending: false });
 
-      if (historyError) {
-        console.error("❌ Erreur historique:", historyError);
-        return await getPlayerStatsFallback(userId);
-      }
+      if (historyError) console.error("❌ Erreur historique:", historyError);
 
       const history = historyData || [];
-
-      // 3. Calculer les statistiques
-      // CORRECTION CRITIQUE: Utiliser created_at pour la date d'obtention du record
       const bestScore = bestScoreData?.score || 0;
-      const bestDate = bestScoreData?.created_at || null; // ← CORRECTION ICI
+      const bestDate = bestScoreData?.created_at || null;
       const totalGames = history.length;
 
-      // Score moyen
       let averageScore = 0;
       if (totalGames > 0) {
         const total = history.reduce((sum, game) => sum + game.score, 0);
         averageScore = Math.round(total / totalGames);
       }
 
-      // Dernière partie
-      let lastGame = null;
-      let lastGameDate = null;
-      let lastGameScore = 0;
-      if (history.length > 0) {
-        lastGame = history[0];
-        lastGameDate = lastGame.played_at;
-        lastGameScore = lastGame.score;
-      }
-
-      // Tendances (dernières 5 parties)
-      const last5Games = history.slice(0, 5);
-      const last5Average =
-        last5Games.length > 0
-          ? Math.round(
-              last5Games.reduce((sum, game) => sum + game.score, 0) /
-                last5Games.length
-            )
-          : 0;
-
-      // Progression (première vs dernière partie)
-      let progression = 0;
-      let progressionPercent = 0;
-      if (history.length >= 2) {
-        const firstScore = history[history.length - 1].score;
-        const lastScore = history[0].score;
-        progression = lastScore - firstScore;
-        if (firstScore > 0) {
-          progressionPercent = Math.round((progression / firstScore) * 100);
-        }
-      }
-
       return {
         success: true,
         data: {
-          bestScore: bestScore,
-          bestDate: bestDate, // ← Maintenant c'est la date d'obtention du record
-          totalGames: totalGames,
-          averageScore: averageScore,
-          lastGame: lastGame,
-          lastGameScore: lastGameScore,
-          lastGameDate: lastGameDate,
-          history: history,
-          last5Average: last5Average,
-          progression: progression,
-          progressionPercent: progressionPercent,
-          isImproving: progression > 0,
+          bestScore,
+          bestDate,
+          totalGames,
+          averageScore,
+          isLegendary: bestScoreData?.est_legendaire || false,
+          legendaryLives: bestScoreData?.vies_restantes || 0
         },
       };
     } catch (error) {
-      console.error("❌ Erreur getPlayerStatsWithHistory:", error);
-      return await getPlayerStatsFallback(userId);
-    }
-  }
-
-  // Fallback si l'historique n'est pas disponible
-  async function getPlayerStatsFallback(userId) {
-    try {
-      const { data: scores, error } = await supabase
-        .from("scores")
-        .select("score, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const scoresList = scores || [];
-      const totalGames = scoresList.length > 0 ? 1 : 0;
-
-      let bestScore = 0;
-      let bestDate = null;
-      let averageScore = 0;
-
-      if (scoresList.length > 0) {
-        bestScore = scoresList[0].score || 0;
-        bestDate = scoresList[0].created_at || null;
-        averageScore = bestScore;
-      }
-
-      return {
-        success: true,
-        data: {
-          bestScore: bestScore,
-          bestDate: bestDate,
-          totalGames: totalGames,
-          averageScore: averageScore,
-          lastGame: null,
-          lastGameScore: 0,
-          lastGameDate: null,
-          history: [],
-          last5Average: 0,
-          progression: 0,
-          progressionPercent: 0,
-          isImproving: false,
-        },
-      };
-    } catch (fallbackError) {
-      console.error("❌ Erreur fallback:", fallbackError);
+      console.error("❌ Erreur stats:", error);
       return {
         success: false,
-        error: fallbackError.message,
-        data: {
-          bestScore: 0,
-          bestDate: null,
-          totalGames: 0,
-          averageScore: 0,
-          lastGame: null,
-          lastGameScore: 0,
-          lastGameDate: null,
-          history: [],
-          last5Average: 0,
-          progression: 0,
-          progressionPercent: 0,
-          isImproving: false,
-        },
+        error: error.message,
+        data: { bestScore: 0, bestDate: null, totalGames: 0, averageScore: 0 }
       };
-    }
-  }
-
-  // ============ ANCIENNES FONCTIONS (pour compatibilité) ============
-  async function getPersonalBest(userId) {
-    try {
-      const result = await getPlayerStatsWithHistory(userId);
-      if (result.success) {
-        return {
-          success: true,
-          bestScore: result.data.bestScore,
-          bestDate: result.data.bestDate,
-        };
-      }
-      return result;
-    } catch (error) {
-      return { success: false, error: error.message };
     }
   }
 
@@ -534,12 +455,7 @@ if (typeof window.supabase === "undefined") {
         .limit(limit);
 
       if (error) throw error;
-
-      return {
-        success: true,
-        data: data || [],
-        lastScores: (data || []).map((item) => item.score),
-      };
+      return { success: true, data: data || [] };
     } catch (error) {
       return { success: false, error: error.message, data: [] };
     }
@@ -553,17 +469,23 @@ if (typeof window.supabase === "undefined") {
     getSessionSupabase,
     saveScoreToSupabase: saveScoreWithHistory,
     getHighScoresFromSupabase,
-    getPersonalBest,
     getPlayerStats: getPlayerStatsWithHistory,
     getScoreHistory,
-    checkEmailExists: async function (email) {
-      return { success: true, exists: false };
-    },
+    getLegendaryScores,
+    checkEmailExists: async () => ({ success: true, exists: false }),
     subscribeToScores,
     unsubscribeFromScores,
-
-    // Nouvelles fonctions pour l'historique
-    getGameHistory: async function (userId, limit = 10) {
+    
+    // Compatibilité
+    getPersonalBest: async (userId) => {
+      const result = await getPlayerStatsWithHistory(userId);
+      if (result.success) {
+        return { success: true, bestScore: result.data.bestScore, bestDate: result.data.bestDate };
+      }
+      return result;
+    },
+    
+    getGameHistory: async (userId, limit = 10) => {
       try {
         const { data, error } = await supabase
           .from("game_history")
@@ -571,29 +493,92 @@ if (typeof window.supabase === "undefined") {
           .eq("user_id", userId)
           .order("played_at", { ascending: false })
           .limit(limit);
-
         if (error) throw error;
         return { success: true, data: data || [] };
       } catch (error) {
         return { success: false, error: error.message, data: [] };
       }
     },
-
-    getRecentGames: async function (limit = 5) {
+    
+    // ============ NOUVELLES FONCTIONS POUR LE SYSTÈME DE DEUX CLASSEMENTS ============
+    
+    // Récupère le classement Hall of Legends (trié par temps)
+    getLegendaryRanking: async function(limit = 20) {
       try {
+        // Récupère uniquement les légendaires, triés par temps (plus rapide d'abord)
         const { data, error } = await supabase
-          .from("game_history")
+          .from("scores")
           .select("*")
-          .order("played_at", { ascending: false })
+          .eq("est_legendaire", true)
+          .eq("est_parfait", true)
+          .order("temps_total", { ascending: true })  // Les plus rapides d'abord
+          .order("vies_restantes", { ascending: false }) // Puis ceux avec plus de vies
+          .order("created_at", { ascending: true })  // Puis les plus anciens
           .limit(limit);
 
         if (error) throw error;
-        return { success: true, data: data || [] };
+        
+        return { 
+          success: true, 
+          data: data || [],
+          total: data?.length || 0
+        };
       } catch (error) {
         return { success: false, error: error.message, data: [] };
       }
     },
+    
+    // Récupère le rang spécifique d'un utilisateur dans le Hall of Legends
+    getUserLegendaryRank: async function(userId) {
+      try {
+        // 1. Récupérer tous les légendaires triés
+        const { data: allLegendary, error } = await supabase
+          .from("scores")
+          .select("user_id, temps_total, vies_restantes, created_at")
+          .eq("est_legendaire", true)
+          .eq("est_parfait", true)
+          .order("temps_total", { ascending: true })
+          .order("vies_restantes", { ascending: false })
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        
+        // 2. Trouver la position de l'utilisateur
+        const legendaryList = allLegendary || [];
+        const userIndex = legendaryList.findIndex(item => item.user_id === userId);
+        
+        if (userIndex === -1) {
+          return { success: true, isLegendary: false, rank: null, total: legendaryList.length };
+        }
+        
+        // 3. Récupérer les infos détaillées du joueur
+        const { data: userData, error: userError } = await supabase
+          .from("scores")
+          .select("score, vies_restantes, temps_total, created_at")
+          .eq("user_id", userId)
+          .eq("est_legendaire", true)
+          .single();
+        
+        if (userError) {
+          console.error("❌ Erreur récupération données légendaires:", userError);
+        }
+        
+        return {
+          success: true,
+          isLegendary: true,
+          rank: userIndex + 1,  // Position (1 = premier)
+          total: legendaryList.length,
+          score: userData?.score || 100,
+          lives: userData?.vies_restantes || 0,
+          time: userData?.temps_total || 0,
+          date: userData?.created_at || null
+        };
+        
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
   };
 
-  // Prêt (logs supprimés)
+  console.log("✅ Supabase config chargé avec système de deux classements !");
 }
