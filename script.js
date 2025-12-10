@@ -2619,7 +2619,7 @@ function updateRankingDisplay(rankingData) {
                     </span>
                     ${rankingData.position === 1 ? 
                         `<span class="ranking-hint success">
-                            <i class="fa-solid fa-crown"></i> CHAMPION EN TITRE !
+                            <i class="fa-solid fa-crown"></i> Bravo ! Bientôt dans le Hall of Fame !
                         </span>` : 
                         `<span class="ranking-hint">
                             <i class="fa-solid fa-arrow-up"></i> ${rankingData.nextMilestone}: +${rankingData.pointsToNextMilestone} pts
@@ -2979,9 +2979,10 @@ function showLegendaryNotification(livesRemaining, totalTime) {
   });
 }
 
-// NOUVELLE FONCTION : Afficher le classement légendaire (version améliorée)
+
+// NOUVELLE FONCTION : Afficher le classement légendaire (design moderne adapté)
 function showLegendaryRanking() {
-  console.log("🏆 Affichage du Hall of Legends");
+  console.log(" Affichage du Hall of Legends (design adapté)");
   
   // Créer le modal
   const modal = document.createElement("div");
@@ -2992,7 +2993,7 @@ function showLegendaryRanking() {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.9);
     z-index: 10000;
     display: flex;
     justify-content: center;
@@ -3003,85 +3004,95 @@ function showLegendaryRanking() {
   // Contenu du modal
   const content = document.createElement("div");
   content.style.cssText = `
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     color: white;
     border-radius: 20px;
     padding: 30px;
-    max-width: 800px;
-    width: 90%;
+    max-width: 900px;
+    width: 95%;
     max-height: 90vh;
     overflow-y: auto;
-    border: 3px solid #FFD700;
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
     position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 215, 0, 0.3);
   `;
   
   // Header
   const header = document.createElement("div");
   header.style.cssText = `
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #FFD700;
-    padding-bottom: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.2);
   `;
   
   header.innerHTML = `
-    <div>
-      <h2 style="color: #FFD700; margin: 0; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-crown"></i> HALL OF LEGENDS
-      </h2>
-      <p style="color: #ccc; margin: 5px 0 0 0; font-size: 0.9rem;">
-        Classement exclusif des joueurs ayant atteint la perfection
-      </p>
-    </div>
-    <button id="close-legendary-modal" style="
-      background: #333;
-      color: #FFD700;
-      border: 2px solid #FFD700;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 18px;
+    <div style="
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
     ">
-      <i class="fa-solid fa-times"></i>
-    </button>
+      <span style="
+        font-size: 2.8rem;
+        color: #eccb0fff;
+      ">🏆</span>
+      <h2 style="
+        font-size: 2.2rem;
+        margin: 0;
+        color: #debc0fff;
+        font-weight: 700;
+        letter-spacing: 1px;
+      ">
+        HALL OF LEGENDS
+      </h2>
+    </div>
+    <p style="
+      color: #aaa;
+      font-size: 1.1rem;
+      margin-top: 10px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    ">
+      Classement exclusif des joueurs ayant atteint la perfection (100/100)
+    </p>
   `;
   
-  // Stats
-  const stats = document.createElement("div");
-  stats.style.cssText = `
+  // Section statistiques
+  const statsSection = document.createElement("div");
+  statsSection.style.cssText = `
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 20px;
+    margin-bottom: 35px;
   `;
   
   const totalLegendary = legendaryScores.length;
+  
+  // Calculer les statistiques
+  const perfectScores = legendaryScores.length;
   const avgTime = legendaryScores.length > 0 
     ? Math.round(legendaryScores.reduce((sum, score) => sum + (score.temps_total || 0), 0) / legendaryScores.length)
     : 0;
-  const avgLives = legendaryScores.length > 0
-    ? (legendaryScores.reduce((sum, score) => sum + (score.vies_restantes || 0), 0) / legendaryScores.length).toFixed(1)
-    : 0;
   
-  stats.innerHTML = `
-    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
-      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${totalLegendary}</div>
-      <div style="color: #ccc; font-size: 0.9rem;">Légendes</div>
+  statsSection.innerHTML = `
+    <div class="legendary-stat-card">
+      <div class="legendary-stat-number">${totalLegendary}</div>
+      <div class="legendary-stat-label">Légendes totales</div>
     </div>
-    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
-      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${formatTime(avgTime)}</div>
-      <div style="color: #ccc; font-size: 0.9rem;">Temps moyen</div>
+    
+    <div class="legendary-stat-card">
+      <div class="legendary-stat-number">${perfectScores}</div>
+      <div class="legendary-stat-label">Scores parfaits</div>
     </div>
-    <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; text-align: center;">
-      <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">${avgLives}</div>
-      <div style="color: #ccc; font-size: 0.9rem;">Vies moyennes</div>
+    
+    <div class="legendary-stat-card">
+      <div class="legendary-stat-number">${formatTime(avgTime)}</div>
+      <div class="legendary-stat-label">Temps moyen</div>
     </div>
   `;
   
@@ -3089,84 +3100,72 @@ function showLegendaryRanking() {
   const listContainer = document.createElement("div");
   listContainer.id = "legendary-scores-container";
   listContainer.style.cssText = `
-    margin: 20px 0;
+    margin: 30px 0;
   `;
   
   if (legendaryScores.length === 0) {
     listContainer.innerHTML = `
-      <div style="text-align: center; padding: 40px 20px; color: #888;">
-        <i class="fa-solid fa-crown" style="font-size: 60px; color: #FFD700; opacity: 0.3; margin-bottom: 20px;"></i>
-        <h3 style="color: #FFD700; margin-bottom: 10px;">Le trône est vide</h3>
-        <p>Soyez le premier à rejoindre le Hall of Legends !</p>
-        <div style="margin-top: 25px; padding: 15px; background: rgba(255, 215, 0, 0.05); border-radius: 10px;">
-          <p style="color: #FFD700; margin-bottom: 10px;">
-            <i class="fa-solid fa-trophy"></i> Conditions d'entrée :
-          </p>
-          <ul style="text-align: left; color: #ccc; padding-left: 20px; margin: 0;">
-            <li>Atteindre 100/100</li>
-            <li>Conserver au moins 1 vie</li>
-            <li>Votre temps sera enregistré pour le classement</li>
+      <div class="legendary-empty-state">
+        <div class="legendary-empty-icon">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h3 class="legendary-empty-title">Le trône est vide</h3>
+        <p class="legendary-empty-text">
+          Soyez le premier à rejoindre le Hall of Legends !
+        </p>
+        <div class="legendary-requirements">
+          <p><i class="fa-solid fa-trophy"></i> Conditions d'entrée :</p>
+          <ul>
+            <li>Atteindre 100/100 au quiz</li>
+            <li>Conserver au moins 1 vie restante</li>
+            <li>Votre temps sera enregistré</li>
           </ul>
         </div>
       </div>
     `;
   } else {
     listContainer.innerHTML = `
-      <h4 style="color: #FFD700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-ranking-star"></i> Classement par temps
-      </h4>
+      <div class="legendary-list-header">
+        <h4><i class="fa-solid fa-ranking-star"></i> Classement par temps</h4>
+        <div class="legendary-count-badge">
+          ${legendaryScores.length} Légende${legendaryScores.length > 1 ? 's' : ''}
+        </div>
+      </div>
+      
       <div id="legendary-scores-list">
         ${legendaryScores.map((score, index) => `
-          <div style="
-            background: ${index % 2 === 0 ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 215, 0, 0.03)'};
-            border: 2px solid ${getRankBorderColor(index + 1)};
-            border-radius: 12px;
-            padding: 15px;
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s ease;
-          ">
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <div style="
-                width: 50px;
-                height: 50px;
-                background: ${getRankBackgroundColor(index + 1)};
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: ${getRankTextColor(index + 1)};
-              ">
-                ${getLegendaryRankIcon(index + 1)}
-              </div>
-              <div>
-                <div style="font-weight: bold; font-size: 1.2rem; color: #FFD700;">
-                  ${score.pseudo || "Anonyme"}
-                  ${currentUser && score.user_id === currentUser.id 
-                    ? '<span style="color: #4CAF50; margin-left: 8px;">(VOUS)</span>' 
-                    : ''}
-                </div>
-                <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 0.9rem;">
-                  <span style="color: #ccc;">
-                    <i class="fa-solid fa-clock"></i> ${score.displayTime || formatTime(score.temps_total || 0)}
-                  </span>
-                  <span style="color: #ff6b6b;">
-                    <i class="fa-solid fa-heart"></i> ${score.vies_restantes || 0} vies
-                  </span>
-                </div>
+          <div class="legendary-player-card ${index === 0 ? 'first-place' : ''} ${currentUser && score.user_id === currentUser.id ? 'current-user' : ''}">
+            <div class="player-rank">
+              <div class="rank-badge rank-${index + 1}">
+                ${getLegendaryRankNumber(index + 1)}
               </div>
             </div>
-            <div style="text-align: right;">
-              <div style="font-size: 1.8rem; font-weight: bold; color: #FFD700;">
-                100/100
+            
+            <div class="player-info">
+              <div class="player-name">
+                ${score.pseudo || "Anonyme"}
+                ${currentUser && score.user_id === currentUser.id ? 
+                  '<span class="you-badge">VOUS</span>' : 
+                  ''
+                }
               </div>
-              <div style="color: #888; font-size: 0.8rem; margin-top: 5px;">
-                ${formatDate(score.created_at)}
+              <div class="player-stats">
+                <span class="player-stat">
+                  <i class="fa-solid fa-clock"></i> ${formatTime(score.temps_total || 0)}
+                </span>
+                <span class="player-stat">
+                  <i class="fa-solid fa-heart"></i> ${score.vies_restantes || 0} vies
+                </span>
+                <span class="player-stat">
+                  <i class="fa-solid fa-calendar"></i> ${formatGameDate(score.created_at)}
+                </span>
               </div>
+            </div>
+            
+            <div class="player-score">
+              <div class="score-value">100</div>
+              <div class="score-divider">/</div>
+              <div class="score-total">100</div>
             </div>
           </div>
         `).join('')}
@@ -3177,39 +3176,44 @@ function showLegendaryRanking() {
   // Footer
   const footer = document.createElement("div");
   footer.style.cssText = `
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid #444;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
   `;
   
   footer.innerHTML = `
-    <p style="color: #888; font-size: 0.9rem; margin-bottom: 15px;">
+    <p class="legendary-footer-text">
       <i class="fa-solid fa-info-circle"></i>
-      Seulement ${totalLegendary} joueur(s) sur des milliers ont atteint ce niveau
+      ${totalLegendary === 1 ? 
+        'Seulement 1 joueur a atteint ce niveau de perfection.' :
+        `Seulement ${totalLegendary} joueurs ont atteint ce niveau de perfection.`
+      }
     </p>
-    <button id="start-legendary-challenge" style="
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      color: #000;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1rem;
-    ">
-      <i class="fa-solid fa-bolt"></i> Relever le défi légendaire
-    </button>
+    
+    <div class="legendary-actions">
+      <button id="start-legendary-challenge" class="legendary-btn primary">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Relever le défi légendaire</span>
+      </button>
+      
+      <button id="close-legendary-modal" class="legendary-btn secondary">
+        <i class="fa-solid fa-times"></i>
+        <span>Fermer</span>
+      </button>
+    </div>
   `;
   
   // Assembler le modal
   content.appendChild(header);
-  content.appendChild(stats);
+  content.appendChild(statsSection);
   content.appendChild(listContainer);
   content.appendChild(footer);
   modal.appendChild(content);
   document.body.appendChild(modal);
+  
+  // Ajouter les styles CSS dynamiquement
+  addLegendaryModalStyles();
   
   // Écouteurs d'événements
   setTimeout(() => {
@@ -3232,13 +3236,369 @@ function showLegendaryRanking() {
       });
     }
     
-    // Fermer en cliquant en dehors
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.remove();
       }
     });
+    
+    content.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
   }, 100);
+}
+
+// Fonction pour ajouter les styles CSS
+function addLegendaryModalStyles() {
+  if (document.getElementById('legendary-modal-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'legendary-modal-styles';
+  style.textContent = `
+    /* Styles pour le modal légendaire */
+    .legendary-stat-card {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.04) 100%);
+      // border: 1px solid rgba(255, 215, 0, 0.1);
+      border-radius: 16px;
+      padding: 25px 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .legendary-stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+      // border-color: rgba(255, 215, 0, 0.2);
+    }
+    
+    .legendary-stat-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #e6dfbaff;
+      margin-bottom: 5px;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .legendary-stat-label {
+      font-size: 0.95rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+    
+    .legendary-empty-state {
+      text-align: center;
+      padding: 60px 30px;
+      color: #888;
+      border: 2px dashed rgba(255, 215, 0, 0.2);
+      border-radius: 16px;
+      background: rgba(255, 215, 0, 0.02);
+    }
+    
+    .legendary-empty-icon {
+      font-size: 80px;
+      color: rgba(255, 215, 0, 0.15);
+      margin-bottom: 20px;
+    }
+    
+    .legendary-empty-title {
+      color: #FFD700;
+      margin-bottom: 15px;
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+    
+    .legendary-empty-text {
+      color: #aaa;
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+    
+    .legendary-requirements {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 215, 0, 0.05);
+      border-radius: 12px;
+      border-left: 4px solid #FFD700;
+      text-align: left;
+    }
+    
+    .legendary-requirements p {
+      color: #FFD700;
+      margin-bottom: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+    }
+    
+    .legendary-requirements ul {
+      color: #ccc;
+      padding-left: 20px;
+      margin: 0;
+      line-height: 1.8;
+    }
+    
+    .legendary-list-header {
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .legendary-list-header h4 {
+      color: #FFD700;
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .legendary-count-badge {
+      color: #aaa;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Cartes de joueur */
+    .legendary-player-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 25px;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+    }
+    
+    .legendary-player-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .legendary-player-card.first-place {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+      border-color: rgba(255, 215, 0, 0.4);
+      transform: scale(1.02);
+    }
+    
+    .legendary-player-card.current-user {
+      border-left: 4px solid #a8af4cff;
+    }
+    
+    .player-rank {
+      flex-shrink: 0;
+    }
+    
+    .rank-badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .rank-1 {
+      background: linear-gradient(135deg, #d8d3b3ff 0%, #f3e0bcff 100%);
+      color: #000;
+    }
+    
+    .rank-2 {
+      background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%);
+      color: #000;
+    }
+    
+    .rank-3 {
+      background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+      color: #000;
+    }
+    
+    .rank-4, .rank-5, .rank-6, .rank-7, .rank-8, .rank-9, .rank-10 {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    
+    .player-info {
+      flex: 1;
+    }
+    
+    .player-name {
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .you-badge {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4CAF50;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .player-stats {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.95rem;
+      color: #aaa;
+    }
+    
+    .player-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .player-score {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    
+    .score-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #FFD700;
+      line-height: 1;
+    }
+    
+    .score-divider {
+      font-size: 1.2rem;
+      color: #aaa;
+      font-weight: 500;
+    }
+    
+    .score-total {
+      font-size: 1.2rem;
+      color: #aaa;
+      font-weight: 500;
+    }
+    
+    .legendary-footer-text {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .legendary-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .legendary-btn {
+      padding: 16px 35px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: none;
+    }
+    
+    .legendary-btn.primary {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
+      box-shadow: 0 5px 25px rgba(255, 215, 0, 0.3);
+    }
+    
+    .legendary-btn.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 35px rgba(255, 215, 0, 0.5);
+    }
+    
+    .legendary-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .legendary-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    /* Animation et scrollbar */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .legendary-modal > div::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .legendary-modal > div::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+    
+    .legendary-modal > div::-webkit-scrollbar-thumb {
+      background: rgba(255, 215, 0, 0.3);
+      border-radius: 4px;
+    }
+    
+    .legendary-modal > div::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 215, 0, 0.5);
+    }
+  `;
+  
+  document.head.appendChild(style);
+}
+
+// Fonctions utilitaires
+function getLegendaryRankNumber(rank) {
+  switch(rank) {
+    case 1: return "🥇";
+    case 2: return "🥈";
+    case 3: return "🥉";
+    default: return rank;
+  }
+}
+
+function getStatColor(value, type) {
+  if (type === 'time') {
+    if (value < 300) return '#4CAF50';
+    if (value < 600) return '#2196F3';
+    if (value < 900) return '#FF9800';
+    return '#f44336';
+  } else if (type === 'lives') {
+    if (value === 2) return '#4CAF50';
+    if (value === 1) return '#FF9800';
+    return '#f44336';
+  }
+  return '#fff';
 }
 
 // Fonctions utilitaires pour les couleurs
