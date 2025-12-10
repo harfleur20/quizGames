@@ -3035,12 +3035,9 @@ function showLegendaryRanking() {
       gap: 15px;
       margin-bottom: 10px;
     ">
-      <span style="
-        font-size: 2.8rem;
-        color: #eccb0fff;
-      ">🏆</span>
+      
       <h2 style="
-        font-size: 2.2rem;
+        font-size: 5rem;
         margin: 0;
         color: #debc0fff;
         font-weight: 700;
@@ -3100,7 +3097,10 @@ function showLegendaryRanking() {
   const listContainer = document.createElement("div");
   listContainer.id = "legendary-scores-container";
   listContainer.style.cssText = `
-    margin: 30px 0;
+    margin:30px 0;
+    min-height: 200px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
   `;
   
   if (legendaryScores.length === 0) {
