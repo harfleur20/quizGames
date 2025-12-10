@@ -3194,7 +3194,7 @@ function showLegendaryRanking() {
     <div class="legendary-actions">
       <button id="start-legendary-challenge" class="legendary-btn primary">
         <i class="fa-solid fa-bolt"></i>
-        <span>Relever le défi légendaire</span>
+        <span>Entre dans la légende</span>
       </button>
       
       <button id="close-legendary-modal" class="legendary-btn secondary">
