@@ -25,6 +25,10 @@ const registerPasswordModal = document.getElementById(
 );
 const registerConfirmModal = document.getElementById("register-confirm-modal");
 const registerBtnModal = document.getElementById("register-btn-modal");
+const forgotPasswordModalBtn = document.getElementById(
+  "forgot-password-modal"
+);
+const passwordToggleButtons = document.querySelectorAll(".password-toggle-btn");
 
 // User info elements
 const currentUserPseudo = document.getElementById("current-user-pseudo");
@@ -81,6 +85,7 @@ let startTime = 0;
 let totalTime = 0;
 let legendaryScores = [];
 let showLegendaryRankingFlag = false;
+let hallModalEscapeHandler = null;
 
 
 
@@ -182,36 +187,59 @@ async function checkExistingSession() {
         email: result.user.email,
         pseudo:
           result.user.user_metadata?.pseudo || result.user.email?.split("@")[0],
-        isLegendary: false // Initialisation
+        isLegendary: false
       };
 
-      // Vérifier et mettre à jour le statut légendaire
       try {
         const legendaryCheck = await checkIfUserIsLegendary(currentUser.id);
         currentUser.isLegendary = legendaryCheck;
-        console.log(`👑 Statut légendaire au chargement: ${currentUser.isLegendary ? 'OUI' : 'NON'}`);
+        console.log(`Legendary status on load: ${currentUser.isLegendary ? 'YES' : 'NO'}`);
       } catch (legendaryError) {
-        console.error("❌ Erreur vérification statut légendaire:", legendaryError);
+        console.error("Legendary status check error:", legendaryError);
         currentUser.isLegendary = false;
       }
 
       updateUserDisplay();
       showScreen("start");
-      loadScoresFromSupabase();
-      loadPlayerStats();
-    } else {
-      currentUser = null;
-      updateUserDisplay();
-      showScreen("start");
-      loadScoresFromSupabase();
-      resetPlayerStats();
+
+      // Une erreur de chargement annexe ne doit pas deconnecter l'utilisateur
+      try {
+        await loadScoresFromSupabase();
+      } catch (scoresError) {
+        console.error("Startup scores load error:", scoresError);
+      }
+
+      try {
+        await loadPlayerStats();
+      } catch (statsError) {
+        console.error("Startup stats load error:", statsError);
+      }
+      return;
     }
-  } catch (error) {
-    console.error("❌ Erreur vérification session:", error);
+
     currentUser = null;
     updateUserDisplay();
     showScreen("start");
-    loadScoresFromSupabase();
+
+    try {
+      await loadScoresFromSupabase();
+    } catch (scoresError) {
+      console.error("Guest scores load error:", scoresError);
+    }
+
+    resetPlayerStats();
+  } catch (error) {
+    console.error("Session check error:", error);
+    currentUser = null;
+    updateUserDisplay();
+    showScreen("start");
+
+    try {
+      await loadScoresFromSupabase();
+    } catch (scoresError) {
+      console.error("Scores load after session error failed:", scoresError);
+    }
+
     resetPlayerStats();
   }
 }
@@ -249,6 +277,12 @@ function setupAuthEvents() {
     });
   }
 
+  setupPasswordToggleEvents();
+
+  if (forgotPasswordModalBtn) {
+    forgotPasswordModalBtn.addEventListener("click", handleForgotPassword);
+  }
+
   if (loginBtnModal) {
     loginBtnModal.addEventListener("click", async () => {
       const success = await handleLoginModal();
@@ -281,6 +315,53 @@ function setupAuthEvents() {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", handleLogout);
   }
+}
+
+function setupPasswordToggleEvents() {
+  if (!passwordToggleButtons || passwordToggleButtons.length === 0) return;
+
+  passwordToggleButtons.forEach((toggleBtn) => {
+    toggleBtn.addEventListener("click", () => {
+      const targetInputId = toggleBtn.dataset.target;
+      if (!targetInputId) return;
+
+      const targetInput = document.getElementById(targetInputId);
+      if (!targetInput) return;
+
+      const showPassword = targetInput.type === "password";
+      targetInput.type = showPassword ? "text" : "password";
+
+      const icon = toggleBtn.querySelector("i");
+      if (icon) {
+        icon.className = showPassword
+          ? "fa-solid fa-eye-slash"
+          : "fa-solid fa-eye";
+      }
+
+      toggleBtn.setAttribute(
+        "aria-label",
+        showPassword
+          ? "Masquer le mot de passe"
+          : "Afficher le mot de passe"
+      );
+    });
+  });
+}
+
+function resetPasswordVisibility() {
+  if (loginPasswordModal) loginPasswordModal.type = "password";
+  if (registerPasswordModal) registerPasswordModal.type = "password";
+  if (registerConfirmModal) registerConfirmModal.type = "password";
+
+  if (!passwordToggleButtons || passwordToggleButtons.length === 0) return;
+
+  passwordToggleButtons.forEach((toggleBtn) => {
+    const icon = toggleBtn.querySelector("i");
+    if (icon) {
+      icon.className = "fa-solid fa-eye";
+    }
+    toggleBtn.setAttribute("aria-label", "Afficher le mot de passe");
+  });
 }
 
 function setupQuizEvents() {
@@ -903,6 +984,11 @@ function showAuthModal() {
       if (registerEmailModal) registerEmailModal.value = "";
       if (registerPasswordModal) registerPasswordModal.value = "";
       if (registerConfirmModal) registerConfirmModal.value = "";
+      resetPasswordVisibility();
+      if (forgotPasswordModalBtn) {
+        forgotPasswordModalBtn.disabled = false;
+        forgotPasswordModalBtn.textContent = "Mot de passe oublié ?";
+      }
 
       if (
         loginTabModal &&
@@ -924,6 +1010,57 @@ function showAuthModal() {
 function hideAuthModal() {
   if (authModal) {
     authModal.classList.remove("active");
+  }
+}
+
+async function handleForgotPassword() {
+  if (!loginEmailModal) {
+    showMessage("⚠️ Champ email introuvable", "error");
+    return;
+  }
+
+  const email = loginEmailModal.value.trim();
+
+  if (!email) {
+    showMessage("⚠️ Entrez votre email puis réessayez", "warning");
+    loginEmailModal.focus();
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    showMessage("⚠️ Email invalide", "warning");
+    loginEmailModal.focus();
+    return;
+  }
+
+  if (
+    !window.supabaseFunctions ||
+    !window.supabaseFunctions.resetPasswordSupabase
+  ) {
+    showMessage("❌ Réinitialisation indisponible", "error");
+    return;
+  }
+
+  if (forgotPasswordModalBtn) {
+    forgotPasswordModalBtn.disabled = true;
+    forgotPasswordModalBtn.textContent = "Envoi en cours...";
+  }
+
+  try {
+    const result = await window.supabaseFunctions.resetPasswordSupabase(email);
+    if (result.success) {
+      showMessage("📧 Email de réinitialisation envoyé", "success");
+    } else {
+      showMessage(`❌ ${result.error}`, "error");
+    }
+  } catch (error) {
+    console.error("❌ Erreur mot de passe oublié:", error);
+    showMessage("❌ Erreur pendant la réinitialisation", "error");
+  } finally {
+    if (forgotPasswordModalBtn) {
+      forgotPasswordModalBtn.disabled = false;
+      forgotPasswordModalBtn.textContent = "Mot de passe oublié ?";
+    }
   }
 }
 
@@ -1054,6 +1191,34 @@ async function handleRegisterModal() {
       );
 
       if (result.success) {
+        if (!result.session || !result.user) {
+          currentUser = null;
+          updateUserDisplay();
+
+          if (
+            loginTabModal &&
+            registerTabModal &&
+            loginFormModal &&
+            registerFormModal
+          ) {
+            loginTabModal.classList.add("active");
+            registerTabModal.classList.remove("active");
+            loginFormModal.classList.add("active");
+            registerFormModal.classList.remove("active");
+          }
+
+          if (loginEmailModal) loginEmailModal.value = email;
+          if (loginPasswordModal) loginPasswordModal.value = "";
+
+          showMessage(
+            result.message ||
+              "Inscription reussie. Verifiez votre email puis connectez-vous.",
+            "warning"
+          );
+          resolve(false);
+          return;
+        }
+
         currentUser = {
           id: result.user.id,
           email: result.user.email,
@@ -1381,7 +1546,15 @@ function animateScoreChanges(oldScores, newScores) {
   });
 }
 
-async function saveScoreToSupabase(score) {
+async function saveScoreToSupabase(
+  score,
+  userId = null,
+  pseudo = null,
+  email = "",
+  estLegendaire = false,
+  viesRestantes = 0,
+  tempsTotal = 0
+) {
   try {
     if (
       !window.supabaseFunctions ||
@@ -1390,15 +1563,35 @@ async function saveScoreToSupabase(score) {
       throw new Error("Fonctions Supabase non disponibles");
     }
 
-    if (!currentUser || !currentUser.id) {
+    const effectiveUserId = userId || currentUser?.id;
+    const effectivePseudo = pseudo || currentUser?.pseudo || "Joueur";
+    const effectiveEmail = email || currentUser?.email || "";
+
+    if (!effectiveUserId) {
       throw new Error("Utilisateur non connecté");
+    }
+
+    if (window.supabaseFunctions.getSessionSupabase) {
+      const sessionResult = await window.supabaseFunctions.getSessionSupabase();
+      const sessionUserId = sessionResult?.user?.id || null;
+
+      if (!sessionResult?.success || !sessionUserId) {
+        throw new Error("Session expirée. Reconnectez-vous puis recommencez.");
+      }
+
+      if (sessionUserId !== effectiveUserId) {
+        throw new Error("Session invalide. Reconnectez-vous.");
+      }
     }
 
     const result = await window.supabaseFunctions.saveScoreToSupabase(
       score,
-      currentUser.id,
-      currentUser.pseudo,
-      currentUser.email || ""
+      effectiveUserId,
+      effectivePseudo,
+      effectiveEmail,
+      estLegendaire,
+      viesRestantes,
+      tempsTotal
     );
 
     if (result.success) {
@@ -2056,6 +2249,7 @@ function updateHighscoresDisplay(isUpdate = false) {
       scoreElement.className = "highscore-item";
       scoreElement.dataset.scoreId = scoreData.id;
       scoreElement.dataset.userId = scoreData.userId;
+      scoreElement.dataset.isLegendary = scoreData.isLegendary ? "true" : "false";
 
       if (isUpdate) {
         scoreElement.classList.add("update-animation");
@@ -2077,12 +2271,17 @@ function updateHighscoresDisplay(isUpdate = false) {
       scoreElement.innerHTML = `
                 <div class="highscore-rank">${rankIcon}</div>
                 <div class="highscore-name">${scoreData.name}</div>
-                <div class="highscore-score">${scoreData.score}/100</div>
+                <div class="highscore-score">
+                  <span class="highscore-score-main">${scoreData.score}</span>
+                  <span class="highscore-score-total">/100</span>
+                </div>
                 <div class="highscore-date">${scoreData.date}</div>
             `;
 
       highscoresListStart.appendChild(scoreElement);
     });
+
+    addCrownsToHighscores();
   } catch (error) {
     console.error("❌ Erreur updateHighscoresDisplay:", error);
   }
@@ -2120,6 +2319,7 @@ function updateHighscoresResultDisplay(isUpdate = false) {
       scoreElement.className = "highscore-item";
       scoreElement.dataset.scoreId = scoreData.id;
       scoreElement.dataset.userId = scoreData.userId;
+      scoreElement.dataset.isLegendary = scoreData.isLegendary ? "true" : "false";
 
       if (isUpdate) {
         scoreElement.classList.add("update-animation");
@@ -2141,12 +2341,17 @@ function updateHighscoresResultDisplay(isUpdate = false) {
       scoreElement.innerHTML = `
                 <div class="highscore-rank">${rankIcon}</div>
                 <div class="highscore-name">${scoreData.name}</div>
-                <div class="highscore-score">${scoreData.score}/100</div>
+                <div class="highscore-score">
+                  <span class="highscore-score-main">${scoreData.score}</span>
+                  <span class="highscore-score-total">/100</span>
+                </div>
                 <div class="highscore-date">${scoreData.date}</div>
             `;
 
       highscoresListResult.appendChild(scoreElement);
     });
+
+    addCrownsToHighscores();
   } catch (error) {
     console.error("❌ Erreur updateHighscoresResultDisplay:", error);
   }
@@ -2981,7 +3186,7 @@ function showLegendaryNotification(livesRemaining, totalTime) {
 
 
 // NOUVELLE FONCTION : Afficher le classement légendaire (design moderne adapté)
-function showLegendaryRanking() {
+function showLegendaryRankingLegacy() {
   console.log(" Affichage du Hall of Legends (design adapté)");
   
   // Créer le modal
@@ -3213,7 +3418,7 @@ function showLegendaryRanking() {
   document.body.appendChild(modal);
   
   // Ajouter les styles CSS dynamiquement
-  addLegendaryModalStyles();
+  addLegendaryModalStylesLegacy();
   
   // Écouteurs d'événements
   setTimeout(() => {
@@ -3249,7 +3454,7 @@ function showLegendaryRanking() {
 }
 
 // Fonction pour ajouter les styles CSS
-function addLegendaryModalStyles() {
+function addLegendaryModalStylesLegacy() {
   if (document.getElementById('legendary-modal-styles')) return;
   
   const style = document.createElement('style');
@@ -3577,6 +3782,742 @@ function addLegendaryModalStyles() {
   document.head.appendChild(style);
 }
 
+// Version redesign du modal Hall of Legends (responsive)
+function showLegendaryRanking() {
+  console.log("🏆 Affichage Hall of Legends");
+
+  if (hallModalEscapeHandler) {
+    document.removeEventListener("keydown", hallModalEscapeHandler);
+    hallModalEscapeHandler = null;
+  }
+
+  const existingModal = document.getElementById("hall-modal-overlay");
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const ranking = [...legendaryScores]
+    .filter((entry) => entry && typeof entry === "object")
+    .sort((a, b) => {
+      const timeA = Number(a.temps_total) || Number.MAX_SAFE_INTEGER;
+      const timeB = Number(b.temps_total) || Number.MAX_SAFE_INTEGER;
+      if (timeA !== timeB) return timeA - timeB;
+
+      const livesA = Number(a.vies_restantes) || 0;
+      const livesB = Number(b.vies_restantes) || 0;
+      if (livesA !== livesB) return livesB - livesA;
+
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateA - dateB;
+    });
+
+  const validTimes = ranking
+    .map((entry) => Number(entry.temps_total))
+    .filter((value) => Number.isFinite(value) && value > 0 && value !== 999999);
+
+  const totalLegendary = ranking.length;
+  const avgTime = validTimes.length
+    ? Math.round(validTimes.reduce((sum, value) => sum + value, 0) / validTimes.length)
+    : 0;
+  const bestTime = validTimes.length ? Math.min(...validTimes) : 0;
+
+  const modal = document.createElement("div");
+  modal.id = "hall-modal-overlay";
+  modal.className = "hall-modal";
+
+  modal.innerHTML = `
+    <section class="hall-modal__panel" role="dialog" aria-modal="true" aria-labelledby="hall-modal-title">
+      <header class="hall-modal__header">
+        <div class="hall-modal__title-wrap">
+          <span class="hall-modal__eyebrow">Classement elite</span>
+          <h2 id="hall-modal-title" class="hall-modal__title">Hall of Legends</h2>
+          <p class="hall-modal__subtitle">Classement reserve aux joueurs ayant atteint 100/100 avec au moins une vie.</p>
+        </div>
+        <button type="button" class="hall-modal__close" data-action="close-hall" aria-label="Fermer le Hall of Legends">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </header>
+
+      <section class="hall-modal__stats">
+        <article class="hall-stat">
+          <p class="hall-stat__label">Legendes</p>
+          <p class="hall-stat__value">${totalLegendary}</p>
+        </article>
+        <article class="hall-stat">
+          <p class="hall-stat__label">Meilleur temps</p>
+          <p class="hall-stat__value">${formatTime(bestTime)}</p>
+        </article>
+        <article class="hall-stat">
+          <p class="hall-stat__label">Temps moyen</p>
+          <p class="hall-stat__value">${formatTime(avgTime)}</p>
+        </article>
+      </section>
+
+      <section class="hall-modal__body">
+        <div id="hall-modal-list-host"></div>
+      </section>
+
+      <footer class="hall-modal__footer">
+        <p class="hall-modal__note">
+          ${totalLegendary === 1
+            ? "1 seul joueur a atteint ce niveau pour l'instant."
+            : `${totalLegendary} joueurs ont atteint ce niveau de perfection.`}
+        </p>
+        <div class="hall-modal__actions">
+          <button type="button" id="start-legendary-challenge" class="hall-btn hall-btn--primary">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Lancer un defi</span>
+          </button>
+          <button type="button" class="hall-btn hall-btn--ghost" data-action="close-hall">
+            <i class="fa-solid fa-xmark"></i>
+            <span>Fermer</span>
+          </button>
+        </div>
+      </footer>
+    </section>
+  `;
+
+  const listHost = modal.querySelector("#hall-modal-list-host");
+  if (listHost) {
+    if (ranking.length === 0) {
+      listHost.innerHTML = `
+        <div class="hall-empty">
+          <div class="hall-empty__icon"><i class="fa-solid fa-crown"></i></div>
+          <h3 class="hall-empty__title">Le trone est encore libre</h3>
+          <p class="hall-empty__text">Soyez le premier a rejoindre le Hall of Legends.</p>
+          <ul class="hall-empty__rules">
+            <li>Atteindre un score parfait de 100/100</li>
+            <li>Terminer avec au moins 1 vie</li>
+            <li>Faire le meilleur temps possible</li>
+          </ul>
+        </div>
+      `;
+    } else {
+      const escapeHTML = (value) =>
+        String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+      listHost.innerHTML = `
+        <div class="hall-modal__list-header">
+          <h3><i class="fa-solid fa-ranking-star"></i> Classement par rapidite</h3>
+          <span class="hall-modal__count">${ranking.length} legende${ranking.length > 1 ? "s" : ""}</span>
+        </div>
+        <div class="hall-list">
+          ${ranking
+            .map((score, index) => {
+              const rank = index + 1;
+              const safePseudo = escapeHTML(score.pseudo || "Anonyme");
+              const isCurrentUser = Boolean(currentUser && score.user_id === currentUser.id);
+              const rankClass = rank === 1 ? "is-gold" : rank === 2 ? "is-silver" : rank === 3 ? "is-bronze" : "";
+
+              return `
+                <article class="hall-row ${isCurrentUser ? "is-current" : ""}">
+                  <div class="hall-row__rank-badge ${rankClass}">${rank}</div>
+                  <div class="hall-row__content">
+                    <div class="hall-row__name-line">
+                      <h4 class="hall-row__name">${safePseudo}</h4>
+                      ${isCurrentUser ? '<span class="hall-row__you">Vous</span>' : ""}
+                    </div>
+                    <div class="hall-row__meta">
+                      <span><i class="fa-regular fa-clock"></i>${formatTime(Number(score.temps_total) || 0)}</span>
+                      <span><i class="fa-solid fa-heart"></i>${Number(score.vies_restantes) || 0} vies</span>
+                      <span><i class="fa-regular fa-calendar"></i>${formatGameDate(score.created_at)}</span>
+                    </div>
+                  </div>
+                  <div class="hall-row__score">
+                    <strong>100</strong><span>/100</span>
+                  </div>
+                </article>
+              `;
+            })
+            .join("")}
+        </div>
+      `;
+    }
+  }
+
+  addLegendaryModalStyles();
+  document.body.appendChild(modal);
+
+  const closeModal = () => {
+    if (!modal.parentNode) return;
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+      modal.remove();
+    }, 180);
+    if (hallModalEscapeHandler) {
+      document.removeEventListener("keydown", hallModalEscapeHandler);
+      hallModalEscapeHandler = null;
+    }
+  };
+
+  const handleEscapeClose = (event) => {
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  };
+
+  hallModalEscapeHandler = handleEscapeClose;
+  document.addEventListener("keydown", hallModalEscapeHandler);
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  const panel = modal.querySelector(".hall-modal__panel");
+  if (panel) {
+    panel.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  }
+
+  modal.querySelectorAll('[data-action="close-hall"]').forEach((button) => {
+    button.addEventListener("click", closeModal);
+  });
+
+  const challengeBtn = modal.querySelector("#start-legendary-challenge");
+  if (challengeBtn) {
+    challengeBtn.addEventListener("click", () => {
+      closeModal();
+      if (currentUser) {
+        startQuiz();
+      } else {
+        showAuthModal();
+        showMessage("🔒 Connectez-vous pour relever le defi legendaire !", "warning");
+      }
+    });
+  }
+}
+
+function addLegendaryModalStyles() {
+  const existingStyle = document.getElementById("legendary-modal-styles");
+  if (existingStyle) {
+    existingStyle.remove();
+  }
+
+  const style = document.createElement("style");
+  style.id = "legendary-modal-styles";
+  style.textContent = `
+    .hall-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: clamp(10px, 2.2vw, 28px);
+      background:
+        radial-gradient(circle at top right, rgba(255, 215, 0, 0.18), transparent 35%),
+        radial-gradient(circle at bottom left, rgba(102, 126, 234, 0.22), transparent 42%),
+        rgba(6, 8, 16, 0.85);
+      backdrop-filter: blur(3px);
+      animation: hall-fade-in 0.2s ease-out;
+    }
+
+    .hall-modal.is-closing {
+      animation: hall-fade-out 0.18s ease-in forwards;
+    }
+
+    .hall-modal__panel {
+      width: min(1080px, 100%);
+      max-height: min(92vh, 900px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background:
+        linear-gradient(155deg, rgba(17, 20, 34, 0.98) 0%, rgba(10, 12, 24, 0.98) 45%, rgba(16, 18, 28, 0.98) 100%);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .hall-modal__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 26px 26px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hall-modal__title-wrap {
+      max-width: 760px;
+    }
+
+    .hall-modal__eyebrow {
+      display: inline-block;
+      padding: 4px 10px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #ffd86b;
+      background: rgba(255, 216, 107, 0.15);
+      border: 1px solid rgba(255, 216, 107, 0.35);
+    }
+
+    .hall-modal__title {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: 0.02em;
+      color: #ffffff;
+    }
+
+    .hall-modal__subtitle {
+      margin: 8px 0 0;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: clamp(0.9rem, 1.7vw, 1rem);
+      line-height: 1.45;
+    }
+
+    .hall-modal__close {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .hall-modal__close:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .hall-modal__stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px 26px 18px;
+    }
+
+    .hall-stat {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+      min-height: 74px;
+    }
+
+    .hall-stat__label {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.68);
+      font-weight: 600;
+    }
+
+    .hall-stat__value {
+      margin: 6px 0 0;
+      font-size: clamp(1.15rem, 2.3vw, 1.7rem);
+      font-weight: 800;
+      color: #ffd86b;
+      line-height: 1.1;
+    }
+
+    .hall-modal__body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 26px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 216, 107, 0.45) transparent;
+    }
+
+    .hall-modal__body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .hall-modal__body::-webkit-scrollbar-thumb {
+      background: rgba(255, 216, 107, 0.4);
+      border-radius: 999px;
+    }
+
+    .hall-modal__list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 0 12px;
+    }
+
+    .hall-modal__list-header h3 {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hall-modal__count {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hall-list {
+      display: grid;
+      gap: 10px;
+      padding-bottom: 2px;
+    }
+
+    .hall-row {
+      display: grid;
+      grid-template-columns: 62px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .hall-row:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 216, 107, 0.44);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+    }
+
+    .hall-row.is-current {
+      border-color: rgba(76, 175, 80, 0.5);
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.16), rgba(255, 255, 255, 0.04));
+    }
+
+    .hall-row__rank-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .hall-row__rank-badge.is-gold {
+      color: #201400;
+      background: linear-gradient(145deg, #ffe38a, #f7bf4b);
+      border-color: rgba(255, 216, 107, 0.9);
+    }
+
+    .hall-row__rank-badge.is-silver {
+      color: #111;
+      background: linear-gradient(145deg, #f2f2f2, #b8c0ca);
+      border-color: rgba(225, 225, 225, 0.9);
+    }
+
+    .hall-row__rank-badge.is-bronze {
+      color: #1b0f07;
+      background: linear-gradient(145deg, #f4be84, #bf7442);
+      border-color: rgba(204, 133, 72, 0.95);
+    }
+
+    .hall-row__content {
+      min-width: 0;
+    }
+
+    .hall-row__name-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .hall-row__name {
+      margin: 0;
+      font-size: clamp(0.98rem, 2vw, 1.1rem);
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .hall-row__you {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #2f8f37;
+      background: rgba(114, 227, 124, 0.18);
+      border: 1px solid rgba(114, 227, 124, 0.42);
+      flex-shrink: 0;
+    }
+
+    .hall-row__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.82rem;
+    }
+
+    .hall-row__meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hall-row__score {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      color: #ffd86b;
+      font-weight: 800;
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+
+    .hall-row__score strong {
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .hall-row__score span {
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .hall-empty {
+      border: 1px dashed rgba(255, 216, 107, 0.38);
+      border-radius: 16px;
+      background: rgba(255, 216, 107, 0.05);
+      text-align: center;
+      padding: clamp(24px, 6vw, 52px) clamp(14px, 4vw, 28px);
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .hall-empty__icon {
+      font-size: clamp(2rem, 10vw, 3.2rem);
+      color: #ffd86b;
+      margin-bottom: 10px;
+    }
+
+    .hall-empty__title {
+      margin: 0;
+      font-size: clamp(1.05rem, 3vw, 1.45rem);
+      color: #ffffff;
+    }
+
+    .hall-empty__text {
+      margin: 8px 0 0;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .hall-empty__rules {
+      margin: 16px auto 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      max-width: 460px;
+      text-align: left;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .hall-empty__rules li {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 0.9rem;
+    }
+
+    .hall-modal__footer {
+      padding: 14px 26px 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hall-modal__note {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.88rem;
+    }
+
+    .hall-modal__actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hall-btn {
+      border: none;
+      border-radius: 11px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    .hall-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .hall-btn--primary {
+      color: #111;
+      background: linear-gradient(135deg, #ffd86b, #f8b938);
+      box-shadow: 0 8px 20px rgba(248, 185, 56, 0.32);
+    }
+
+    .hall-btn--primary:hover {
+      box-shadow: 0 12px 26px rgba(248, 185, 56, 0.45);
+    }
+
+    .hall-btn--ghost {
+      color: #f0f4ff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .hall-btn--ghost:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    @keyframes hall-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes hall-fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    @media (max-width: 980px) {
+      .hall-modal__panel {
+        max-height: 94vh;
+      }
+
+      .hall-modal__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .hall-modal {
+        padding: 10px;
+      }
+
+      .hall-modal__panel {
+        border-radius: 16px;
+      }
+
+      .hall-modal__header {
+        padding: 18px 14px 12px;
+      }
+
+      .hall-modal__stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px 14px 12px;
+      }
+
+      .hall-modal__body {
+        padding: 0 14px 12px;
+      }
+
+      .hall-modal__list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .hall-row {
+        grid-template-columns: 54px 1fr;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .hall-row__score {
+        grid-column: 2;
+        justify-self: start;
+        margin-top: 2px;
+      }
+
+      .hall-row__meta {
+        font-size: 0.78rem;
+        gap: 7px 10px;
+      }
+
+      .hall-modal__footer {
+        padding: 12px 14px 14px;
+      }
+
+      .hall-modal__actions {
+        width: 100%;
+        flex-direction: column-reverse;
+      }
+
+      .hall-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hall-modal__eyebrow {
+        font-size: 0.66rem;
+      }
+
+      .hall-row__rank-badge {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+      }
+
+      .hall-row__score strong {
+        font-size: 1.35rem;
+      }
+
+      .hall-modal__count {
+        font-size: 0.7rem;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
 // Fonctions utilitaires
 function getLegendaryRankNumber(rank) {
   switch(rank) {
@@ -3772,26 +4713,6 @@ function stopBackgroundMusic() {
   }
 }
 
-// ==================== FONCTION POUR SAUVEGARDER AVEC PARAMÈTRES LÉGENDAIRES ====================
-// Modifier la fonction existante saveScoreToSupabase
-const originalSaveScoreToSupabase = saveScoreToSupabase;
-saveScoreToSupabase = async function(score, userId, pseudo, email, estLegendaire, viesRestantes, tempsTotal) {
-  try {
-    // Modifier pour inclure les paramètres légendaires si fournis
-    if (estLegendaire !== undefined) {
-      // Note: Ta fonction saveScoreToSupabase actuelle ne prend pas ces paramètres
-      // On va donc sauvegarder normalement pour l'instant
-      console.log(`🏆 Score légendaire détecté: ${score}/100, Vies: ${viesRestantes}, Temps: ${tempsTotal}s`);
-    }
-    
-    // Appeler la fonction originale
-    return await originalSaveScoreToSupabase.call(this, score);
-  } catch (error) {
-    console.error("❌ Erreur sauvegarde légendaire:", error);
-    return { success: false, error: error.message };
-  }
-};
-
 console.log("🎮 Script prêt avec système légendaire !");
 
 // Fonction pour les messages motivationnels
@@ -3810,6 +4731,40 @@ function getMotivationalMessage(score, position) {
 
 // ==================== FONCTIONS POUR LES COURONNES ====================
 // Vérifie et ajoute les couronnes après chargement des scores
+function addCrownsToHighscores() {
+    try {
+        const legendaryIds = new Set(
+            (legendaryScores || [])
+                .map((entry) => String(entry?.user_id || entry?.userId || ""))
+                .filter(Boolean)
+        );
+
+        const scoreItems = document.querySelectorAll(".highscore-item");
+        scoreItems.forEach((item) => {
+            const nameElement = item.querySelector(".highscore-name");
+            if (!nameElement) return;
+
+            const userId = String(item.dataset.userId || "");
+            const isLegendary =
+                item.dataset.isLegendary === "true" ||
+                (userId && legendaryIds.has(userId));
+
+            const existingBadge = nameElement.querySelector(".legend-crown");
+            if (isLegendary && !existingBadge) {
+                const badge = document.createElement("span");
+                badge.className = "legend-crown";
+                badge.innerHTML = '<i class="fa-solid fa-crown"></i>';
+                badge.title = "Joueur legendaire";
+                nameElement.prepend(badge);
+            } else if (!isLegendary && existingBadge) {
+                existingBadge.remove();
+            }
+        });
+    } catch (error) {
+        console.error("❌ Erreur addCrownsToHighscores:", error);
+    }
+}
+
 function updateLegendaryDisplay() {
     console.log("🌟 Mise à jour de l'affichage légendaire...");
     

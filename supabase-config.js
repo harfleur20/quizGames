@@ -6,7 +6,37 @@ if (typeof window.supabase === "undefined") {
   console.error("❌ Supabase.js non chargé !");
   window.supabaseFunctions = null;
 } else {
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
+
+  async function getAuthenticatedUserOrNull() {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error("❌ Erreur lecture session:", sessionError);
+      return null;
+    }
+
+    if (sessionData?.session?.user) {
+      return sessionData.session.user;
+    }
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (!userError && userData?.user) {
+      return userData.user;
+    }
+
+    const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
+    if (!refreshError && refreshedData?.session?.user) {
+      return refreshedData.session.user;
+    }
+
+    return null;
+  }
 
   // ============ INSCRIPTION ============
   async function signUpSupabase(email, password, pseudo) {
@@ -40,11 +70,22 @@ if (typeof window.supabase === "undefined") {
         password: password,
       });
 
-      if (loginError) {
-        return { success: true, user: authData.user, message: "Inscription réussie ! Veuillez vous connecter." };
+      if (loginError || !loginData?.session || !loginData?.user) {
+        return {
+          success: true,
+          user: authData.user,
+          session: null,
+          requiresEmailConfirmation: true,
+          message: "Inscription reussie. Verifiez votre email puis connectez-vous.",
+        };
       }
 
-      return { success: true, user: loginData.user, session: loginData.session };
+      return {
+        success: true,
+        user: loginData.user,
+        session: loginData.session,
+        requiresEmailConfirmation: false,
+      };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -55,6 +96,9 @@ if (typeof window.supabase === "undefined") {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (!data?.session || !data?.user) {
+        return { success: false, error: "Session manquante apres connexion. Verifiez votre email puis reconnectez-vous." };
+      }
       return { success: true, user: data.user, session: data.session };
     } catch (error) {
       return { success: false, error: error.message };
@@ -74,8 +118,28 @@ if (typeof window.supabase === "undefined") {
   // ============ SESSION ============
   async function getSessionSupabase() {
     try {
-      const { data } = await supabase.auth.getSession();
-      return { success: true, session: data.session, user: data.session?.user };
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      let session = data?.session || null;
+      let user = session?.user || null;
+
+      if (!user) {
+        user = await getAuthenticatedUserOrNull();
+      }
+
+      return { success: true, session, user };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // ============ MOT DE PASSE OUBLIE ============
+  async function resetPasswordSupabase(email) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -85,6 +149,23 @@ if (typeof window.supabase === "undefined") {
  // ============ SAUVEGARDE SCORE - LÉGENDAIRES IMMORTELS ============
 async function saveScoreWithHistory(score, userId, userPseudo, userEmail = "", estLegendaire = false, viesRestantes = 0, tempsTotal = 0) {
   try {
+    const authenticatedUser = await getAuthenticatedUserOrNull();
+    if (!authenticatedUser?.id) {
+      return {
+        success: false,
+        error: "Session expiree. Reconnectez-vous avant de sauvegarder.",
+        action: "auth_required",
+      };
+    }
+
+    if (authenticatedUser.id !== userId) {
+      return {
+        success: false,
+        error: "Session invalide pour cet utilisateur. Reconnectez-vous.",
+        action: "forbidden",
+      };
+    }
+
     const estAutoLegendaire = (score === 100 && viesRestantes > 0);
     const estParfait = (score === 100);
 
@@ -186,6 +267,12 @@ async function saveScoreWithHistory(score, userId, userPseudo, userEmail = "", e
 
     if (upsertError) {
       console.error("❌ Erreur upsert scores:", upsertError);
+      const upsertMessage = String(upsertError.message || "").toLowerCase();
+      const upsertIsRls = upsertError.code === "42501" || upsertMessage.includes("row-level security");
+      if (upsertIsRls) {
+        throw new Error("Permission refusee par la policy RLS sur scores. Verifiez la session active et les policies INSERT/UPDATE.");
+      }
+
       // FALLBACK simplifié
       const scoreDataFallback = {
         user_id: userId,
@@ -202,7 +289,14 @@ async function saveScoreWithHistory(score, userId, userPseudo, userEmail = "", e
         .upsert(scoreDataFallback, { onConflict: 'user_id' })
         .select();
         
-      if (fallbackError) throw new Error(`Erreur fallback: ${fallbackError.message}`);
+      if (fallbackError) {
+        const fallbackMessage = String(fallbackError.message || "").toLowerCase();
+        const fallbackIsRls = fallbackError.code === "42501" || fallbackMessage.includes("row-level security");
+        if (fallbackIsRls) {
+          throw new Error("Permission refusee par la policy RLS sur scores. Verifiez la session active et les policies INSERT/UPDATE.");
+        }
+        throw new Error(`Erreur fallback: ${fallbackError.message}`);
+      }
     } else {
       console.log(`✅ Score traité: ${bestScore}/100 ${finalEstLegendaire ? '👑 LÉGENDAIRE' : ''}`);
       if (finalEstLegendaire) {
@@ -467,6 +561,7 @@ async function getHighScoresFromSupabase(limit = 10) {
     signInSupabase,
     signOutSupabase,
     getSessionSupabase,
+    resetPasswordSupabase,
     saveScoreToSupabase: saveScoreWithHistory,
     getHighScoresFromSupabase,
     getPlayerStats: getPlayerStatsWithHistory,
